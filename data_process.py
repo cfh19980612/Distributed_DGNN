@@ -119,6 +119,12 @@ def load_graphs(args):
             graphs = pkl.load(f)
     else:
         graphs = np.load(graph_path, allow_pickle=True, encoding='latin1')['graph']
+    # get num of nodes for each snapshot
+    Nodes_info = []
+    for i in range(args['time_steps']):
+        Nodes_info.append(graphs[i].number_of_nodes())
+    args['nodes_info'] = Nodes_info
+
     graphs = graphs[1:time_steps+1]
     adj_matrices = list(map(lambda x: nx.adjacency_matrix(x), graphs))
     # print("Loaded {} graphs ".format(len(graphs)))

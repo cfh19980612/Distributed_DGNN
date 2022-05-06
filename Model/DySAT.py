@@ -65,11 +65,17 @@ def _embedding_comm(args, x):
     world_size = args['world_size']
 
     comm_tensor = x.clone().detach()
-    
+    num_graph_per_worker = args['time_steps'] / world_size
     result_list = []
     for i in range (world_size - 1):
         if i > rank:
             break
+        if i == rank: # if send, then pad
+            zero_padding = torch.zeros(args['nodes_info'][num_graph_per_worker*(rank + 1) - 1]-comm_tensor.shape[0], num_graph_per_worker, comm_tensor.shape[0])
+            comm_tensor = torch.cat((comm_tensor, zero_padding), dim=0)
+            # structural_outputs_padded.append(padded)
+        print('rank: {} with tensor size {}'.format(rank, comm_tensor.size()))
+
         torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
         if i != rank:
             result_list.append(comm_tensor)
