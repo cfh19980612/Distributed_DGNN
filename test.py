@@ -28,10 +28,10 @@ def _test_distributed(rank, args, real_dist):
         comm_method = 'gloo'
 
     # init the communication group
-    # dist_init_method = 'tcp://{master_ip}:{master_port}'.format(
-    #         master_ip='127.0.0.1', master_port='12345')
+    dist_init_method = 'tcp://{master_ip}:{master_port}'.format(
+            master_ip='127.0.0.1', master_port='12345')
     torch.distributed.init_process_group(backend = comm_method,
-                                        #  init_method = dist_init_method,
+                                         init_method = dist_init_method,
                                          world_size = world_size,
                                          rank = rank,
                                         )
