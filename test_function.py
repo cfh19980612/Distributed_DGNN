@@ -34,7 +34,7 @@ class _My_DGNN(torch.nn.Module):
         for p in self.classificer.parameters():
             setattr(p, 'dp_comm', 'dp')
 
-    def forward(self, graphs, nids, gate):
+    def forward(self, graphs, nids, gate = None):
         final_emb = self.dgnn(graphs, gate)
         # print(nids)
         # get embeddings of nodes in the last graph
