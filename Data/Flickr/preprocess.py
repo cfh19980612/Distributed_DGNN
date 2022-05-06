@@ -90,7 +90,7 @@ for (a, b, time) in links:
         break
 
 print(Graph_nodes)
-scale = 0.3
+scale = 0.1
 temp = 0
 now = 0
 for (a, b, time) in links:
