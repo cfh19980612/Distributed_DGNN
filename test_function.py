@@ -277,6 +277,8 @@ def run_dgnn(args):
         Loss = []
         epoch_train_time = []
         epoch_time_start = time.time()
+        args['comm_cost'] = 0
+        args['temporal_cost'] = 0
         for step, (batch_x, batch_y) in enumerate(loader):
             model.train()
             batch_x = batch_x.to(device)
