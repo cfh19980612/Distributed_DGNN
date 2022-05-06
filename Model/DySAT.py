@@ -12,6 +12,7 @@ from Model.layers import StructuralAttentionLayer
 from Model.layers import TemporalAttentionLayer
 
 
+# TODO: realize the masked communication
 def _customized_embedding_comm(args, x, gate):
     r"""
     Gate: a [N, T] bool matrix, to identify the temporal dependecy for each snapshot
