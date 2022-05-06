@@ -151,7 +151,7 @@ class DySAT(nn.Module):
         self.bceloss = BCEWithLogitsLoss()
 
 
-    def forward(self, graphs, gate):
+    def forward(self, graphs, gate = None):
         # TODO: communicate the imtermediate embeddings after StructureAtt
 
         # Structural Attention forward
