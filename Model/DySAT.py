@@ -63,6 +63,7 @@ def _embedding_comm(args, x):
     mp_group = args['mp_group']
     rank = args['rank']
     world_size = args['world_size']
+    device = args['device']
 
     num_graph_per_worker = int(args['time_steps'] / world_size)
     result_list = []
@@ -91,7 +92,7 @@ def _embedding_comm(args, x):
         # step 1: pad tensor to the same size
         for i in range (len(result_list)):
             zero_pad = torch.zeros(x.shape[0] - args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2])
-            result_list[i] = torch.cat((result_list[i], zero_pad), dim=0)
+            result_list[i] = torch.cat((result_list[i], zero_pad), dim=0).to(device)
         result_list.append(x)
         # step 2: gather all tensors
         final = torch.cat(result_list, 1)
