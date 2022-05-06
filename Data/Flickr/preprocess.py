@@ -13,9 +13,12 @@ node_cnt = 0
 node_idx = {}
 idx_node = []
 
-file_path = current_path + '/soc-flickr-growth.edges'
-save_graph_path = current_path + '/data/graphs.npz'
-save_features_path = current_path + '/data/features.npz'
+# file_path = current_path + '/soc-flickr-growth.edges'
+# save_graph_path = current_path + '/data/graphs.npz'
+# save_features_path = current_path + '/data/features.npz'
+file_path = './soc-flickr-growth.edges'
+save_graph_path = './data/graphs.npz'
+save_features_path = './data/features.npz'
 
 with open(file_path) as f:
     lines = f.read().splitlines()
