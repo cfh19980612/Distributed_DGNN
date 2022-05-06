@@ -170,7 +170,7 @@ class DySAT(nn.Module):
             structural_outputs_padded.append(padded)
         structural_outputs_padded = torch.cat(structural_outputs_padded, dim=1) # [N, T, F]
 
-        print('rank: {} with tensor size {}'.format(self.args['rank'], structural_outputs_padded.size()))
+        # print('rank: {} with tensor size {}'.format(self.args['rank'], structural_outputs_padded.size()))
 
 
         # Temporal Attention forward
