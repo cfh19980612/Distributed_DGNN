@@ -48,13 +48,12 @@ def _customized_embedding_comm(args, x, gate):
             torch.distributed.broadcast(comm_tensor, src, group = mp_groups[i])
             if rank != src: # receive
                 result_list.append(comm_tensor)
-    
+    print('rank: {} with fused tensor size {}'.format(rank, result_list))
     if len(result_list) > 0:
         result_list.append(x)
         final = torch.cat(result_list, 1)
     else: final = x.clone()
 
-    # print('rank: {} with fused tensor size {}'.format(rank, final.size()))
 
     return final
 
