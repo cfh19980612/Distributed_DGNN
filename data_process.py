@@ -122,7 +122,7 @@ def load_graphs(args):
     # get num of nodes for each snapshot
     Nodes_info = []
     for i in range(args['time_steps']):
-        Nodes_info.append(graphs[i].number_of_nodes())
+        Nodes_info.append(graphs[i+1].number_of_nodes())
     args['nodes_info'] = Nodes_info
 
     graphs = graphs[1:time_steps+1]
