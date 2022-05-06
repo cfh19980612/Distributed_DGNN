@@ -75,7 +75,7 @@ def _embedding_comm(args, x):
             # structural_outputs_padded.append(padded)
         # print('rank: {} with tensor size {}'.format(rank, comm_tensor.size()))
         if i != rank:
-            comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, comm_tensor.shape[0])
+            comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, comm_tensor.shape[2])
         torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
         if i != rank:
             result_list.append(comm_tensor)
