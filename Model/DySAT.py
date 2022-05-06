@@ -64,23 +64,35 @@ def _embedding_comm(args, x):
     rank = args['rank']
     world_size = args['world_size']
 
-    comm_tensor = x.clone().detach()
     num_graph_per_worker = int(args['time_steps'] / world_size)
     result_list = []
     for i in range (world_size - 1):
         if i > rank:
             break
-        # if i == rank: # if send, then pad
-            # comm_tensor = torch.cat((comm_tensor, zero_padding), dim=0)
-            # structural_outputs_padded.append(padded)
-        # print('rank: {} with tensor size {}'.format(rank, comm_tensor.size()))
-        if i != rank:
+
+        if i == rank:
+            # Sender: copy the local data for sending
+            comm_tensor = x.clone().detach()
+        else:
+            r'''
+            Receiver: generate a empty tensor for receiving data, note that tensors generated from \
+            different process have different sizes (due to different numbers of nodes)
+            '''
             comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, comm_tensor.shape[2])
+        
+        # start to communciation
         torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
+
+        # gather the received tensors
         if i != rank:
             result_list.append(comm_tensor)
-    print('rank: {} with fused tensor size {}'.format(rank, result_list))
+
+    # print('rank: {} with fused tensor size {}'.format(rank, result_list))
     if len(result_list) > 0:
+        # step 1: pad tensor to the same size
+        for i in range (len(result_list)):
+            zero_pad = torch.zeros(x.shape[0] - args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, comm_tensor.shape[2])
+            result_list[i] = torch.cat((result_list[i], zero_pad), dim=0)
         result_list.append(x)
         final = torch.cat(result_list, 1)
         # print('rank: {} with fused tensor {}'.format(rank, final))
