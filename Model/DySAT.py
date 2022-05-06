@@ -78,7 +78,7 @@ def _embedding_comm(args, x):
             Receiver: generate a empty tensor for receiving data, note that tensors generated from \
             different process have different sizes (due to different numbers of nodes)
             '''
-            comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, comm_tensor.shape[2])
+            comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2])
         
         # start to communciation
         torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
