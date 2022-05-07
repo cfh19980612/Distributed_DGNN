@@ -176,7 +176,7 @@ def load_graphs(args):
     # print("Loaded {} graphs ".format(len(graphs)))
 
     # compute the max degree over all graphs
-    max_deg, _ = _count_max_deg(adj_matrices)
+    max_deg, _ = _count_max_deg(graphs, adj_matrices)
     print('max degree: ', max_deg)
 
     if features:
