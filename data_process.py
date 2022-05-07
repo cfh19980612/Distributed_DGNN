@@ -183,7 +183,7 @@ def load_graphs(args):
         feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
         try:
             feats = np.load(feats_path, allow_pickle=True)
-            print('loaded feats, ',feats)
+            # print('loaded feats, ',feats)
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
             # compute the max degree over all graphs
@@ -191,7 +191,7 @@ def load_graphs(args):
             # print('max degree: ', max_deg)
             print("Worker {} is Generating and saving node features ....".format(args['rank']))
             feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
-            print('saved feats, ',feats)
+            # print('saved feats, ',feats)
             np.save(feats_path, feats)
 
     #normlized adj
