@@ -45,9 +45,9 @@ def _generate_one_hot_feats(adjs, max_degree):
         max_degree: the maximum degree of total graphs
     '''
     new_feats = []
-    print(adjs)
 
     for adj in adjs:
+        print(adj)
         num_nodes = adj.shape[0]
         degree_vec, _ = _get_degree_from_adj(adj, num_nodes)
         feats_dict = {'idx': torch.cat([torch.arange(num_nodes).view(-1, 1), degree_vec.view(-1, 1)], dim=1),
@@ -177,6 +177,7 @@ def load_graphs(args):
 
     # compute the max degree over all graphs
     max_deg, _ = _count_max_deg(adj_matrices)
+    print('max degree: ', max_deg)
 
     if features:
         feats = _generate_one_hot_feats(adj_matrices, max_deg)
