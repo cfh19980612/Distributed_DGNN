@@ -72,6 +72,7 @@ slice_id = 0
 '''
 links: a list, where each element contains three contents, i.e., (source_node, target_node, timestamp)
 '''
+Create_graph = [True for i in range (25)]
 Graph_nodes = [0 for i in range(25)]
 Now_day = START_DATE
 num_nodes = 0
@@ -112,21 +113,17 @@ for (a, b, time) in links:
         temp = 0
     # print('slice_id: ', slice_id)
 
-    if slice_id == 1+prev_slice_id and slice_id > 0:
-        slices_links[slice_id] = nx.MultiGraph()
+    if slice_id == 0:
+        if Create_graph[slice_id]:
+            slices_links[slice_id] = nx.MultiGraph()
+            Create_graph[slice_id] = False
+    else:
+        if Create_graph[slice_id]:
+            slices_links[slice_id] = nx.MultiGraph()
+            Create_graph[slice_id] = False
         slices_links[slice_id].add_nodes_from(slices_links[slice_id-1].nodes(data=True))
         assert (len(slices_links[slice_id].edges()) ==0)
         #assert len(slices_links[slice_id].nodes()) >0
-
-    if slice_id ==0:
-        slices_links[slice_id] = nx.MultiGraph()
-
-    # if days_diff % SLICE_DAYS == 7 or days_diff % SLICE_DAYS == 6 or days_diff % SLICE_DAYS == 5:
-    #     if a not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(a)
-    #     if b not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(b)
-    #     slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
     # if temp < Graph_nodes[now]*scale:
     #     if a not in slices_links[slice_id]:
