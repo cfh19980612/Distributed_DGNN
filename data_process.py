@@ -56,7 +56,7 @@ def _generate_one_hot_feats(adjs, max_degree):
                       'vals': torch.ones(num_nodes)
         }
         feat = u.make_sparse_tensor(feats_dict, 'float', [num_nodes, max_degree])
-        new_feats.append(feat)
+        new_feats.append(feat.numpy())
     return new_feats
 
 
