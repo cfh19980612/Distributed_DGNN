@@ -70,7 +70,7 @@ def _gate(args):
 # TODO: complete the global forward
 def run_dgnn_distributed(args):
     args['method'] = 'dist'
-    args['connection'] = True
+    args['connection'] = False
     args['gate'] = False
     device = args['device']
     rank = args['rank']
