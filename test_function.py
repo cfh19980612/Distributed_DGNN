@@ -204,8 +204,8 @@ def run_dgnn_distributed(args):
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
             log_loss.append(np.mean(Loss))
             log_acc.append(ACC)
-            print("Epoch {:<3}, Loss = {:.3f}, F1 Score = {:.3f}, AUC = {:.3f}, ACC = {:.3f}, Time = \
-                {:.5f}: [{:.5f}({:.3f}%)|{:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage {:.2f}%".format(
+            print("Epoch {:<3}, Loss = {:.3f}, F1 Score = {:.3f}, AUC = {:.3f}, ACC = {:.3f}, Time =" \
+                "{:.5f}: [{:.5f}({:.3f}%)|{:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage {:.2f}%".format(
                                                                 epoch,
                                                                 np.mean(Loss),
                                                                 F1_result,
