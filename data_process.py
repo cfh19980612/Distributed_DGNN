@@ -192,7 +192,7 @@ def load_graphs(args):
             print("Worker {} is Generating and saving node features ....".format(args['rank']))
             feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
             print('saved feats, ',feats)
-            np.save(feats_path, data=feats)
+            np.save(feats_path, feats)
 
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
