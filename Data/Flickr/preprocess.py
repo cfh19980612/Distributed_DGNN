@@ -122,8 +122,8 @@ for (a, b, time) in links:
             slices_links[slice_id] = nx.MultiGraph()
             Create_graph[slice_id] = False
         slices_links[slice_id].add_nodes_from(slices_links[slice_id-1].nodes(data=True))
-        assert (len(slices_links[slice_id].edges()) ==0)
-        #assert len(slices_links[slice_id].nodes()) >0
+        # assert (len(slices_links[slice_id].edges()) == 0)
+        assert len(slices_links[slice_id].nodes()) > 0, 'Loaded an empty graph!'
 
     # if temp < Graph_nodes[now]*scale:
     #     if a not in slices_links[slice_id]:
