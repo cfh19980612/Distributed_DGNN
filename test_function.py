@@ -305,6 +305,8 @@ def run_dgnn(args):
             model.eval()
             graphs = [graph.to(device) for graph in graphs]
             test_result = model(graphs, torch.tensor(dataset['test_data']).to(device))
+            print('outputs: ',test_result)
+            print('True labels: ',dataset['test_labels'])
             prob_f1 = []
             prob_auc = []
             prob_f1.extend(np.argmax(test_result.detach().cpu().numpy(), axis = 1))
