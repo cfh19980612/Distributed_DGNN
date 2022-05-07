@@ -76,6 +76,7 @@ Create_graph = [True for i in range (25)]
 Graph_nodes = [0 for i in range(25)]
 Now_day = START_DATE
 num_nodes = 0
+# Note: there are redundant nodes in edges
 for (a, b, time) in links:
     datetime_object = time
     if datetime_object < START_DATE:
@@ -89,7 +90,7 @@ for (a, b, time) in links:
     Graph_nodes[slice_id] += 1
 
 print('graph nodes: ', Graph_nodes)
-scale = 0.05
+scale = 0.1
 temp = 0
 now = 0
 for (a, b, time) in links:
@@ -109,7 +110,6 @@ for (a, b, time) in links:
 
     slice_id = days_diff // SLICE_DAYS
     if slice_id != now:
-        now = slice_id
         temp = 0
     # print('slice_id: ', slice_id)
 
@@ -124,18 +124,19 @@ for (a, b, time) in links:
             Create_graph[slice_id] = False
             assert len(slices_links[slice_id].nodes()) > 0, 'Loaded an empty graph!'
 
-    # if temp < Graph_nodes[now]*scale:
-    #     if a not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(a)
-    #     if b not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(b)
-    #     slices_links[slice_id].add_edge(a,b, date=datetime_object)
+    if temp < Graph_nodes[slice_id]*scale:
+        if a not in slices_links[slice_id]:
+            slices_links[slice_id].add_node(a)
+        if b not in slices_links[slice_id]:
+            slices_links[slice_id].add_node(b)
+        temp += 1
+        slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
-    if a not in slices_links[slice_id]:
-        slices_links[slice_id].add_node(a)
-    if b not in slices_links[slice_id]:
-        slices_links[slice_id].add_node(b)
-    slices_links[slice_id].add_edge(a,b, date=datetime_object)
+    # if a not in slices_links[slice_id]:
+    #     slices_links[slice_id].add_node(a)
+    # if b not in slices_links[slice_id]:
+    #     slices_links[slice_id].add_node(b)
+    # slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
 for slice_id in slices_links:
     print ("# nodes in slice", slice_id, len(slices_links[slice_id].nodes()))
