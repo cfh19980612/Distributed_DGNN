@@ -9,10 +9,54 @@ import dgl
 import torch
 import torch_geometric as pyg
 
+import utils as u
+
 from sklearn.model_selection import train_test_split
 from torch_geometric.data import Data
 
 current_path = os.getcwd()
+
+def _count_max_deg(graphs, adjs):
+    max_deg_out = []
+    max_deg_in = []
+
+    for (graph, adj) in zip(graphs, adjs):
+        cur_out, cur_in = _get_degree_from_adj(adj,graph.number_of_nodes())
+        max_deg_out.append(cur_out.max())
+        max_deg_in.append(cur_in.max())
+    # exit()
+    max_deg_out = torch.stack(max_deg_out).max()
+    max_deg_in = torch.stack(max_deg_in).max()
+    max_deg_out = int(max_deg_out) + 1
+    max_deg_in = int(max_deg_in) + 1
+    
+    return max_deg_out, max_deg_in
+
+def _get_degree_from_adj(adj, num_nodes):
+    degs_out = adj.matmul(torch.ones(num_nodes,1,dtype = torch.long))
+    degs_in = adj.t().matmul(torch.ones(num_nodes,1,dtype = torch.long))
+    return degs_out, degs_in
+
+def _generate_one_hot_feats(adjs, max_degree):
+    r'''
+    generate the one-hot feats in a sparse tensors
+    parameters: 
+        adjs: a list of sparse adjacency_matrix
+        max_degree: the maximum degree of total graphs
+    '''
+    new_feats = []
+    print(adjs)
+
+    for adj in adjs:
+        num_nodes = adj.shape[0]
+        degree_vec, _ = _get_degree_from_adj(adj, num_nodes)
+        feats_dict = {'idx': torch.cat([torch.arange(num_nodes).view(-1, 1), degree_vec.view(-1, 1)], dim=1),
+                      'vals': torch.ones(num_nodes)
+        }
+        feat = u.make_sparse_tensor(feats_dict, 'float', [num_nodes, max_degree])
+        new_feats.append(feat)
+    return new_feats
+
 
 def _generate_feats(adjs, time_steps):
     feats = [scipy.sparse.identity(adjs[time_steps - 1].shape[0]).tocsr()[range(0, x.shape[0]), :] for x in adjs if
@@ -119,22 +163,30 @@ def load_graphs(args):
             graphs = pkl.load(f)
     else:
         graphs = np.load(graph_path, allow_pickle=True, encoding='latin1')['graph']
+    
+    graphs = graphs[1:time_steps+1]
+
     # get num of nodes for each snapshot
     Nodes_info = []
     for i in range(args['time_steps']):
-        Nodes_info.append(graphs[i+1].number_of_nodes())
+        Nodes_info.append(graphs[i].number_of_nodes())
     args['nodes_info'] = Nodes_info
 
-    graphs = graphs[1:time_steps+1]
     adj_matrices = list(map(lambda x: nx.adjacency_matrix(x), graphs))
     # print("Loaded {} graphs ".format(len(graphs)))
+
+    # compute the max degree over all graphs
+    max_deg, _ = _count_max_deg(adj_matrices)
+
+    if features:
+        feats = _generate_one_hot_feats(adj_matrices, max_deg)
 
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
 
-    # generate features
-    if features:
-        feats = _generate_feats(adj_matrices, time_steps)
+    # # generate features
+    # if features:
+    #     feats = _generate_feats(adj_matrices, time_steps)
 
     return (args, graphs, adj_matrices, feats)
 

@@ -3,6 +3,7 @@ r"""
 Utils to play with PyTorch.
 """
 import torch.distributed as dist
+import torch
 
 
 # pylint: disable=broad-except
@@ -30,3 +31,22 @@ def get_torch_default_comm():
         pass
     raise RuntimeError("Unsupported PyTorch version")
 
+def make_sparse_tensor(adj, tensor_type, torch_size):
+    if len(torch_size) == 2:
+        tensor_size = torch.Size(torch_size)
+    elif len(torch_size) == 1:
+        tensor_size = torch.Size(torch_size*2)
+
+    if tensor_type == 'float':
+        test = torch.sparse.FloatTensor(adj['idx'].t(),
+                                      adj['vals'].type(torch.float),
+                                      tensor_size)
+        return torch.sparse.FloatTensor(adj['idx'].t(),
+                                      adj['vals'].type(torch.float),
+                                      tensor_size)
+    elif tensor_type == 'long':
+        return torch.sparse.LongTensor(adj['idx'].t(),
+                                      adj['vals'].type(torch.long),
+                                      tensor_size)
+    else:
+        raise NotImplementedError('only make floats or long sparse tensors')
