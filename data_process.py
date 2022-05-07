@@ -182,7 +182,7 @@ def load_graphs(args):
     if features:
         feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
         try:
-            feats = np.load(feats_path)
+            feats = np.load(feats_path, allow_pickle=True)
             print('loaded feats, ',feats)
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
