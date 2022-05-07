@@ -33,8 +33,8 @@ def _count_max_deg(graphs, adjs):
     return max_deg_out, max_deg_in
 
 def _get_degree_from_adj(adj, num_nodes):
-    print(adj.todense())
-    adj_tensor = torch.tensor(adj)
+    # print(adj.todense())
+    adj_tensor = torch.tensor(adj.todense())
     degs_out = adj.matmul(torch.ones(num_nodes,1,dtype = torch.long))
     degs_in = adj.t().matmul(torch.ones(num_nodes,1,dtype = torch.long))
     return degs_out, degs_in
