@@ -207,7 +207,7 @@ def run_dgnn_distributed(args):
             log_loss.append(np.mean(Loss))
             log_acc.append(ACC)
             print("Epoch {:<3}, Loss = {:.3f}, F1 Score = {:.3f}, AUC = {:.3f}, ACC = {:.3f}, Time = " \
-                "{:.5f}: [{:.5f}({:.3f}%)|{:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage = {:.2f}MB ({:.2f}%)".format(
+                "{:.5f}:[{:.5f}({:.3f}%)|{:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage = {:.2f}MB ({:.2f}%)".format(
                                                                 epoch,
                                                                 np.mean(Loss),
                                                                 F1_result,
@@ -346,7 +346,7 @@ def run_dgnn(args):
             log_loss.append(np.mean(Loss))
             log_acc.append(ACC)
             print("Epoch {:<3}, Loss = {:.3f}, F1 Score = {:.3f}, AUC = {:.3f}, ACC = {:.3f}, Time = " \
-                "{:.5f}: [{:.5f}({:.3f}%)|{:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage = {:.2f}MB ({:.2f}%)".format(
+                "{:.5f}:[{:.5f}({:.3f}%)|{:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage = {:.2f}MB ({:.2f}%)".format(
                                                                 epoch,
                                                                 np.mean(Loss),
                                                                 F1_result,
