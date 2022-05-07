@@ -69,6 +69,7 @@ def _gate(args):
 
 # TODO: complete the global forward
 def run_dgnn_distributed(args):
+    args['method'] = 'dist'
     args['connection'] = False
     args['gate'] = False
     device = args['device']
@@ -231,6 +232,7 @@ def run_dgnn(args):
     r"""
     run dgnn with one process
     """
+    args['method'] = 'local'
     args['connection'] = False
     device = args['device']
     # args['time_steps'] = 4

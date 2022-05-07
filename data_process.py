@@ -184,6 +184,16 @@ def load_graphs(args):
     print('max degree: ', max_deg)
 
     if features:
+        feats_path = current_path + "/Data/{}/data/eval_{}_feats.npz".format(args['dataset'], str(args['time_steps']))
+        try:
+            feats = \
+                np.load(feats_path)
+            print("Worker {} loads node features!".format(args['rank']))
+        except IOError:
+            print("Worker {} is Generating and saving node features ....".format(args['rank']))
+            feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
+            np.savez(feats_path, data=feats)
+
         feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
 
     #normlized adj
@@ -205,13 +215,16 @@ def get_data_example(graphs, args, local_time_steps):
     """
     rank = args['rank']
     dataset = args['dataset']
-    framework = args['data_str']
+    method = args['method']
 
     eval_idx = local_time_steps - 2
     eval_graph = graphs[eval_idx]
     next_graph = graphs[eval_idx+1]
 
-    eval_path = current_path + "/Data/{}/data/eval_{}_worker{}.npz".format(dataset, str(eval_idx), rank)
+    if args['method'] == 'dist':
+        eval_path = current_path + "/Data/{}/data/eval_{}_{}_worker{}.npz".format(dataset, str(args['time_steps']), method, rank)
+    else:
+        eval_path = current_path + "/Data/{}/data/eval_{}_{}.npz".format(dataset, str(args['time_steps']), method)
     try:
         train_edges, train_edges_false, val_edges, val_edges_false, test_edges, test_edges_false = \
             np.load(eval_path, encoding='bytes', allow_pickle=True)['data']
