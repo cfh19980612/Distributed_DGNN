@@ -39,7 +39,7 @@ def _get_degree_from_adj(adj, num_nodes):
     degs_in = adj_tensor.t().matmul(torch.ones(num_nodes,1,dtype = torch.long))
     return degs_out, degs_in
 
-def _generate_one_hot_feats(adjs, max_degree):
+def _generate_one_hot_feats(graphs, adjs, max_degree):
     r'''
     generate the one-hot feats in a sparse tensors
     parameters: 
@@ -48,15 +48,16 @@ def _generate_one_hot_feats(adjs, max_degree):
     '''
     new_feats = []
 
-    for adj in adjs:
-        print(adj)
-        num_nodes = adj.shape[0]
+    for (graph, adj) in zip(graphs, adjs):
+        # print(adj)
+        num_nodes = graph.number_of_nodes()
         degree_vec, _ = _get_degree_from_adj(adj, num_nodes)
         feats_dict = {'idx': torch.cat([torch.arange(num_nodes).view(-1, 1), degree_vec.view(-1, 1)], dim=1),
                       'vals': torch.ones(num_nodes)
         }
         feat = u.make_sparse_tensor(feats_dict, 'float', [num_nodes, max_degree])
-        new_feats.append(feat.todense().numpy())
+        print(feat)
+        new_feats.append(feat.numpy().todense())
     return new_feats
 
 
@@ -182,7 +183,7 @@ def load_graphs(args):
     print('max degree: ', max_deg)
 
     if features:
-        feats = _generate_one_hot_feats(adj_matrices, max_deg)
+        feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
 
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
