@@ -273,7 +273,7 @@ def convert_graphs(graphs, adj, feats, framework):
 def slice_graph(args, graphs, adj, feats):
     world_size = args['world_size']
     rank = args['rank']
-    num_parts = len(graphs) // world_size
+    num_parts = int(len(graphs) // world_size)
 
     sliced_graphs = graphs[rank*num_parts: (rank+1)*num_parts]
     sliced_adj = adj[rank*num_parts: (rank+1)*num_parts]
