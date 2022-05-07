@@ -89,7 +89,7 @@ for (a, b, time) in links:
     if datetime_object > END_DATE:
         break
 
-print(Graph_nodes)
+print('graph nodes: ', Graph_nodes)
 scale = 0.05
 temp = 0
 now = 0
@@ -99,14 +99,11 @@ for (a, b, time) in links:
 
     datetime_object = time
     if datetime_object < START_DATE:
-        # print('Too early! ',datetime_object)
         continue
     if datetime_object > END_DATE:
-        # print('Out of date! ',datetime_object)
         break
         days_diff = (END_DATE - START_DATE).days
     else:
-        # days_diff = (datetime_object - START_DATE).days
         days_diff = (datetime_object - START_DATE).days
         temp = temp + 1
 
@@ -133,9 +130,16 @@ for (a, b, time) in links:
     #         slices_links[slice_id].add_node(b)
     #     slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
-    if a not in slices_links[slice_id] and temp < Graph_nodes[now]*scale:
+    # if temp < Graph_nodes[now]*scale:
+    #     if a not in slices_links[slice_id]:
+    #         slices_links[slice_id].add_node(a)
+    #     if b not in slices_links[slice_id]:
+    #         slices_links[slice_id].add_node(b)
+    #     slices_links[slice_id].add_edge(a,b, date=datetime_object)
+
+    if a not in slices_links[slice_id]:
         slices_links[slice_id].add_node(a)
-    if b not in slices_links[slice_id] and temp < Graph_nodes[now]*scale:
+    if b not in slices_links[slice_id]:
         slices_links[slice_id].add_node(b)
     slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
