@@ -83,7 +83,10 @@ def _embedding_comm(args, x):
             comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2])
         
         # start to communciation
+        comm_start = time.time()
         torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
+        args['comm_cost'] += time.time() - comm_start
+        
 
         # gather the received tensors
         if i != rank:
@@ -177,13 +180,13 @@ class DySAT(nn.Module):
 
         # Temporal Attention forward
         if self.args['connection']:
-            comm_start = time.time()
+            # comm_start = time.time()
             # exchange node embeddings
             if self.args['gate']:
                 fuse_structural_output = _customized_embedding_comm(self.args, structural_outputs_padded, gate)
             else:
                 fuse_structural_output = _embedding_comm(self.args, structural_outputs_padded)
-            self.args['comm_cost'] += time.time() - comm_start
+            # self.args['comm_cost'] += time.time() - comm_start
             # print('comm_cost in worker {} with time {}'.format(self.args['rank'], self.args['comm_cost']))
             temporal_time_start = time.time()
             temporal_out = self.temporal_attn(fuse_structural_output)
