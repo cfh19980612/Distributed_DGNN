@@ -89,7 +89,7 @@ for (a, b, time) in links:
     slice_id = days_diff // SLICE_DAYS
     Graph_nodes[slice_id] += 1
 
-print('graph nodes: ', Graph_nodes)
+print('graph edges: ', Graph_nodes)
 scale = 0.1
 temp = 0
 now = 0
@@ -110,6 +110,7 @@ for (a, b, time) in links:
 
     slice_id = days_diff // SLICE_DAYS
     if slice_id != now:
+        # reset for the next graph
         now = slice_id
         temp = 0
     # print('slice_id: ', slice_id)
