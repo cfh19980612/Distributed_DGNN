@@ -192,8 +192,6 @@ def load_graphs(args):
             feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
             np.savez(feats_path, data=feats)
 
-        feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
-
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
 
