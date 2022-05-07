@@ -193,11 +193,11 @@ class DySAT(nn.Module):
             # print('comm_cost in worker {} with time {}'.format(self.args['rank'], self.args['comm_cost']))
             temporal_time_start = time.time()
             temporal_out = self.temporal_attn(fuse_structural_output)
-            self.args['att_cost'] += time.time() - temporal_time_start
+            self.args['att_time'] += time.time() - temporal_time_start
         else: 
             temporal_time_start = time.time()
             temporal_out = self.temporal_attn(structural_outputs_padded)
-            self.args['att_cost'] += time.time() - temporal_time_start
+            self.args['att_time'] += time.time() - temporal_time_start
 
         return temporal_out
 
