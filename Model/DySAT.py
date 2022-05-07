@@ -161,9 +161,11 @@ class DySAT(nn.Module):
 
         # Structural Attention forward
         structural_out = []
+        gcn_time_start = time.time()
         for t in range(0, self.structural_time_steps):
             structural_out.append(self.structural_attn(graphs[t]))
         structural_outputs = [g.x[:,None,:] for g in structural_out] # list of [Ni, 1, F]
+        # self.args['gcn_time'] += time.time() - gcn_time_start
 
         # padding outputs along with Ni
         maximum_node_num = structural_outputs[-1].shape[0]
@@ -174,6 +176,7 @@ class DySAT(nn.Module):
             padded = torch.cat((out, zero_padding), dim=0)
             structural_outputs_padded.append(padded)
         structural_outputs_padded = torch.cat(structural_outputs_padded, dim=1) # [N, T, F]
+        self.args['gcn_time'] += time.time() - gcn_time_start
 
         # print('rank: {} with tensor size {}'.format(self.args['rank'], structural_outputs_padded.size()))
 
@@ -190,11 +193,11 @@ class DySAT(nn.Module):
             # print('comm_cost in worker {} with time {}'.format(self.args['rank'], self.args['comm_cost']))
             temporal_time_start = time.time()
             temporal_out = self.temporal_attn(fuse_structural_output)
-            self.args['temporal_cost'] += time.time() - temporal_time_start
+            self.args['att_cost'] += time.time() - temporal_time_start
         else: 
             temporal_time_start = time.time()
             temporal_out = self.temporal_attn(structural_outputs_padded)
-            self.args['temporal_cost'] += time.time() - temporal_time_start
+            self.args['att_cost'] += time.time() - temporal_time_start
 
         return temporal_out
 
