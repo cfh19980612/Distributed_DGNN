@@ -179,17 +179,15 @@ def load_graphs(args):
     adj_matrices = list(map(lambda x: nx.adjacency_matrix(x), graphs))
     # print("Loaded {} graphs ".format(len(graphs)))
 
-    # compute the max degree over all graphs
-    max_deg, _ = _count_max_deg(graphs, adj_matrices)
-    print('max degree: ', max_deg)
-
     if features:
         feats_path = current_path + "/Data/{}/data/eval_{}_feats.npz".format(args['dataset'], str(args['time_steps']))
         try:
-            feats = \
-                np.load(feats_path)
+            feats = np.load(feats_path)
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
+            # compute the max degree over all graphs
+            max_deg, _ = _count_max_deg(graphs, adj_matrices)
+            # print('max degree: ', max_deg)
             print("Worker {} is Generating and saving node features ....".format(args['rank']))
             feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
             np.savez(feats_path, data=feats)
