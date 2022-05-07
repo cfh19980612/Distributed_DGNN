@@ -53,11 +53,9 @@ collect data from 'START_DATE' and ends to 'END_DATE'.
 generate a graph per 'SLICE_DAYS'.
 '''
 SLICE_DAYS = 1
-START_DATE = min(ts) + timedelta(0)
+START_DATE = min(ts) + timedelta(1)
 # END_DATE =  max(ts) - timedelta(700)
-END_DATE =  min(ts) + timedelta(20)
-# START_DATE = min(ts) + timedelta(hours=1)
-# END_DATE = min(ts) + timedelta(hours=20)
+END_DATE = min(ts) + timedelta(20)
 
 # END_DATE = timedelta(100)
 
@@ -69,46 +67,70 @@ print ("End date", END_DATE)
 
 slice_id = 0
 # Split the set of links in order by slices to create the graphs.
+'''
+links: a list, where each element contains three contents, i.e., (source_node, target_node, timestamp)
+'''
+Create_graph = [True for i in range (25)]
+Graph_nodes = [0 for i in range(25)]
+Now_day = START_DATE
+num_nodes = 0
+# Note: there are redundant nodes in edges
 for (a, b, time) in links:
-    prev_slice_id = slice_id
-
     datetime_object = time
     if datetime_object < START_DATE:
-        # print('Too early! ',datetime_object)
         continue
     if datetime_object > END_DATE:
-        # print('Out of date! ',datetime_object)
         break
         days_diff = (END_DATE - START_DATE).days
     else:
         days_diff = (datetime_object - START_DATE).days
-        # days_diff = (datetime_object - START_DATE).hours
+    slice_id = days_diff // SLICE_DAYS
+    Graph_nodes[slice_id] += 1
+
+print('graph edges: ', Graph_nodes)
+scale = 0.5
+temp = 0
+now = 0
+for (a, b, time) in links:
+
+    prev_slice_id = slice_id
+
+    datetime_object = time
+    if datetime_object < START_DATE:
+        continue
+    if datetime_object > END_DATE:
+        break
+        days_diff = (END_DATE - START_DATE).days
+    else:
+        days_diff = (datetime_object - START_DATE).days
+        temp = temp + 1
 
 
     slice_id = days_diff // SLICE_DAYS
+    if slice_id != now:
+        # reset for the next graph
+        now = slice_id
+        temp = 0
     # print('slice_id: ', slice_id)
 
-    if slice_id == 1+prev_slice_id and slice_id > 0:
-        slices_links[slice_id] = nx.MultiGraph()
-        slices_links[slice_id].add_nodes_from(slices_links[slice_id-1].nodes(data=True))
-        assert (len(slices_links[slice_id].edges()) ==0)
-        #assert len(slices_links[slice_id].nodes()) >0
+    if slice_id == 0:
+        if Create_graph[slice_id]:
+            slices_links[slice_id] = nx.MultiGraph()
+            Create_graph[slice_id] = False
+    else:
+        if Create_graph[slice_id]:
+            slices_links[slice_id] = nx.MultiGraph()
+            slices_links[slice_id].add_nodes_from(slices_links[slice_id-1].nodes(data=True))
+            Create_graph[slice_id] = False
+            assert len(slices_links[slice_id].nodes()) > 0, 'Loaded an empty graph!'
 
-    if slice_id ==0:
-        slices_links[slice_id] = nx.MultiGraph()
-
-    # if days_diff % SLICE_DAYS == 7 or days_diff % SLICE_DAYS == 6 or days_diff % SLICE_DAYS == 5:
-    #     if a not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(a)
-    #     if b not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(b)
-    #     slices_links[slice_id].add_edge(a,b, date=datetime_object)
-
-    if a not in slices_links[slice_id]:
-        slices_links[slice_id].add_node(a)
-    if b not in slices_links[slice_id]:
-        slices_links[slice_id].add_node(b)
-    slices_links[slice_id].add_edge(a,b, date=datetime_object)
+    if temp < Graph_nodes[slice_id]*scale:
+        if a not in slices_links[slice_id]:
+            slices_links[slice_id].add_node(a)
+        if b not in slices_links[slice_id]:
+            slices_links[slice_id].add_node(b)
+        temp += 1
+        slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
 for slice_id in slices_links:
     print ("# nodes in slice", slice_id, len(slices_links[slice_id].nodes()))

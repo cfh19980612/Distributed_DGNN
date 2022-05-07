@@ -134,12 +134,6 @@ for (a, b, time) in links:
         temp += 1
         slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
-    # if a not in slices_links[slice_id]:
-    #     slices_links[slice_id].add_node(a)
-    # if b not in slices_links[slice_id]:
-    #     slices_links[slice_id].add_node(b)
-    # slices_links[slice_id].add_edge(a,b, date=datetime_object)
-
 for slice_id in slices_links:
     print ("# nodes in slice", slice_id, len(slices_links[slice_id].nodes()))
     print ("# edges in slice", slice_id, len(slices_links[slice_id].edges()))
