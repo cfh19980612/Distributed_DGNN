@@ -72,22 +72,20 @@ slice_id = 0
 '''
 links: a list, where each element contains three contents, i.e., (source_node, target_node, timestamp)
 '''
-Graph_nodes = []
+Graph_nodes = [0 for i in range(25)]
 Now_day = START_DATE
 num_nodes = 0
 for (a, b, time) in links:
     datetime_object = time
-    if datetime_object == Now_day:
-        num_nodes += 1
-    elif datetime_object < Now_day:
+    if datetime_object < START_DATE:
         continue
-    elif datetime_object > Now_day:
-        Now_day = Now_day + timedelta(1)
-        Graph_nodes.append(num_nodes)
-        num_nodes = 0
-    
     if datetime_object > END_DATE:
         break
+        days_diff = (END_DATE - START_DATE).days
+    else:
+        days_diff = (datetime_object - START_DATE).days
+    slice_id = days_diff // SLICE_DAYS
+    Graph_nodes[slice_id] += 1
 
 print('graph nodes: ', Graph_nodes)
 scale = 0.05
