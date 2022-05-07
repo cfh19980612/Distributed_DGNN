@@ -110,6 +110,7 @@ for (a, b, time) in links:
 
     slice_id = days_diff // SLICE_DAYS
     if slice_id != now:
+        now = slice_id
         temp = 0
     # print('slice_id: ', slice_id)
 
