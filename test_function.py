@@ -65,8 +65,6 @@ def _gate(args):
     return gate
 
 
-
-
 # TODO: complete the global forward
 def run_dgnn_distributed(args):
     args['method'] = 'dist'
