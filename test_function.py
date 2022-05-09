@@ -215,7 +215,7 @@ def run_dgnn_distributed(args):
                                                                 np.sum(epoch_gcn_time),(np.sum(epoch_gcn_time)/np.sum(epoch_train_time))*100,
                                                                 np.sum(epoch_att_time),(np.sum(epoch_att_time)/np.sum(epoch_train_time))*100,
                                                                 np.sum(epoch_comm_time),(np.sum(epoch_comm_time)/np.sum(epoch_train_time))*100,
-                                                                np.mean(epoch_mem), np.mean(epoch_mem)/16160
+                                                                np.mean(epoch_mem), (np.mean(epoch_mem)/16160)*100
                                                                 ))
 
     # print the training result info
@@ -354,7 +354,7 @@ def run_dgnn(args):
                                                                 np.sum(epoch_gcn_time),(np.sum(epoch_gcn_time)/np.sum(epoch_train_time))*100,
                                                                 np.sum(epoch_att_time),(np.sum(epoch_att_time)/np.sum(epoch_train_time))*100,
                                                                 np.sum(epoch_comm_time),(np.sum(epoch_comm_time)/np.sum(epoch_train_time))*100,
-                                                                np.mean(epoch_mem), np.mean(epoch_mem)/16160
+                                                                np.mean(epoch_mem), (np.mean(epoch_mem)/16160)*100
                                                                 ))
 
     # print the training result info
