@@ -47,6 +47,7 @@ def _gated_emb_comm(args, x, gate):
 
     if len(output) > 0:
         output.pop()
+        print(output)
         for i in range(len(output)):
             zero_pad = torch.zeros(x.shape[0] - args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2])
             output[i] = torch.cat((output[i], zero_pad), dim=0).to(device)
