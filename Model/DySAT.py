@@ -28,7 +28,8 @@ def _gated_emb_comm(args, x, gate):
         # print(current_process_worker)
         local_temp = current_process_worker[rank*num_graph_per_worker: (rank+1)*num_graph_per_worker]
         # print(local_temp)
-        comm_emb = x.clone().detach()[:,local_temp,:]
+        # comm_emb = x.clone().detach()[:,local_temp,:]
+        comm_emb = torch.zeros((3, 6, 128), dtype=torch.float32)
         print(worker, rank, comm_emb.size(), comm_emb.dtype)
         # print(args['gated_group_member'][worker])
         if rank in args['gated_group_member'][worker]:
@@ -36,12 +37,12 @@ def _gated_emb_comm(args, x, gate):
                 # print(worker, rank, gather_lists)
                 for i in args['gated_group_member'][worker]:
                     if i == 0:
-                        output.append(torch.zeros((5390, 6, 128), dtype=torch.float32))
+                        output.append(torch.zeros((3, 6, 128), dtype=torch.float32))
                         # output.append(torch.zeros((3555, 1, 128), dtype=torch.float32))
                         # print()
                     else:
                         # output.append(torch.zeros((5390, 6, 128), dtype=torch.float32))
-                        output.append(torch.zeros((3555, 1, 128), dtype=torch.float32))
+                        output.append(torch.zeros((3, 6, 128), dtype=torch.float32))
                 print('worker {} will receive embeedings at current {} communication round!'.format(rank, worker))
                 torch.distributed.gather(comm_emb, gather_list=output, dst=worker, group=mp_group[worker])
             else:
