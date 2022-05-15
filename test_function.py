@@ -69,7 +69,7 @@ def _pre_comm_group(num_workers, time_steps, gate):
     temporal_list = torch.tensor(range(time_steps))
     num_graph_per_worker = int(time_steps/num_workers)
     custom_group = []
-    group_member = []
+    group_member = [[0,0]]
     for worker in range(num_workers):
         if worker == 0: # the first worker does not need to receive emb from others
             custom_group.append(None)
@@ -77,13 +77,14 @@ def _pre_comm_group(num_workers, time_steps, gate):
             req_temporals = temporal_list[gate[worker,:]]
             members = []
             for temp in req_temporals:
-                belong_worker = temp//num_graph_per_worker
+                belong_worker = temp.item()//num_graph_per_worker
                 if belong_worker not in members: members.append(belong_worker)
-                group_member.append(members)
+            group_member.append(members)
             custom_group.append(torch.distributed.new_group(
                                     ranks = members,
                                     backend = comm_method,
                                     ))
+    
     print('group_member: ', group_member)
 
     return group_member, custom_group
