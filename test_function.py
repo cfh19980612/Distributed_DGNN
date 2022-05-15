@@ -64,12 +64,35 @@ def _gate(args):
     
     return gate
 
+def _pre_comm_group(num_workers, time_steps, gate):
+    comm_method = 'gloo'
+    temporal_list = torch.tensor(range(time_steps))
+    num_graph_per_worker = int(time_steps/num_workers)
+    custom_group = []
+    group_member = []
+    for worker in range(num_workers):
+        if worker == 0: # the first worker does not need to receive emb from others
+            custom_group.np.append(None)
+        else:
+            req_temporals = temporal_list[gate[worker,:]]
+            members = []
+            for temp in req_temporals:
+                belong_worker = temp//num_graph_per_worker
+                if belong_worker not in members: members.append(belong_worker)
+                group_member.append(members)
+            custom_group.append(torch.distributed.new_group(
+                                    ranks = members,
+                                    backend = comm_method,
+                                    ))
+    print('group_member: ', group_member)
+
+    return custom_group
 
 # TODO: complete the global forward
 def run_dgnn_distributed(args):
     args['method'] = 'dist'
     args['connection'] = True
-    args['gate'] = False
+    args['gate'] = True
     device = args['device']
     rank = args['rank']
     world_size = args['world_size']
@@ -86,6 +109,8 @@ def run_dgnn_distributed(args):
     load_g, load_adj, load_feats = slice_graph(*load_graphs(args))
     num_graph = len(load_g)
     gate = _gate(args)
+    if args['gate']:
+        args['gated_group'] = _pre_comm_group(args['world_size'], args['time_steps'], gate)
 
     # generate the num of graphs for each module in DGNN
     args['structural_time_steps'] = num_graph

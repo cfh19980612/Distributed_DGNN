@@ -12,6 +12,29 @@ from Model.layers import StructuralAttentionLayer
 from Model.layers import TemporalAttentionLayer
 
 
+def _gated_emb_comm(args, x, gate):
+    mp_group = args['gated_group']
+    world_size = args['world_size']
+    global_time_steps = args['time_steps']
+    rank = args['rank']
+    num_graph_per_worker = int(global_time_steps/world_size)
+    gather_list = []
+
+    for worker in range(world_size):
+        if worker == 0:
+            continue
+        current_process_worker = gate[worker, :]
+        local_temp = current_process_worker[worker*num_graph_per_worker: (worker+1)*num_graph_per_worker - 1]
+        comm_emb = x.clone().detach()[local_temp]
+        if comm_emb.size(0) > 0:
+            if worker == rank:
+                torch.distributed.gather(comm_emb, gather_list=gather_list, dst=worker, group=mp_group[worker])
+            else:
+                torch.distributed.gather(comm_emb, dst=worker, group=mp_group[worker])
+    print(gather_list)
+
+    return 0
+
 # TODO: realize the masked communication
 def _customized_embedding_comm(args, x, gate):
     r"""
@@ -186,7 +209,8 @@ class DySAT(nn.Module):
             # comm_start = time.time()
             # exchange node embeddings
             if self.args['gate']:
-                fuse_structural_output = _customized_embedding_comm(self.args, structural_outputs_padded, gate)
+                # fuse_structural_output = _customized_embedding_comm(self.args, structural_outputs_padded, gate)
+                fuse_structural_output = _gated_emb_comm(self.args, structural_outputs_padded, gate)
             else:
                 fuse_structural_output = _embedding_comm(self.args, structural_outputs_padded)
             # self.args['comm_cost'] += time.time() - comm_start
