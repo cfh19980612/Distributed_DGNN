@@ -220,7 +220,7 @@ def get_data_example(graphs, args, local_time_steps):
     next_graph = graphs[eval_idx+1]
 
     if args['method'] == 'dist':
-        eval_path = current_path + "/Data/{}/data/eval_{}_{}_worker{}.npz".format(dataset, str(args['time_steps']), method, rank)
+        eval_path = current_path + "/Data/{}/data/eval_{}_{}_{}_worker{}.npz".format(dataset, str(args['time_steps']), method, args['world_size'], rank)
     else:
         eval_path = current_path + "/Data/{}/data/eval_{}_{}.npz".format(dataset, str(args['time_steps']), method)
     try:
