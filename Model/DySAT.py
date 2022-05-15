@@ -40,7 +40,7 @@ def _gated_emb_comm(args, x, gate):
                 torch.distributed.gather(comm_emb, gather_list=output, dst=worker, group=mp_group[worker])
             else:
                 comm_emb = x.clone().detach()[:,local_temp,:]
-                print(worker, rank, comm_emb.size(), comm_emb.dtype)
+                # print(worker, rank, comm_emb.size(), comm_emb.dtype)
                 # print('worker {} will send embeedings at current {} communication round!'.format(rank, worker))
                 torch.distributed.gather(comm_emb, gather_list=None, dst=worker, group=mp_group[worker])
     #     print('worker, ', worker, 'complete!')
@@ -50,7 +50,7 @@ def _gated_emb_comm(args, x, gate):
         output.pop()
         # print(output)
         for i in range(len(output)):
-            zero_pad = torch.zeros(x.shape[0] - output[i].size(0), output[i].size(1), x.shape[2])
+            zero_pad = torch.zeros(x.shape[0] - output[i].size(0), output[i].size(1), x.shape[2]).to(device)
             output[i] = torch.cat((output[i], zero_pad), dim=0).to(device)
         output.append(x)
         final = torch.cat(output, 1)
