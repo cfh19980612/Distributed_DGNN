@@ -65,7 +65,7 @@ def _gate(args):
     return gate
 
 def _pre_comm_group(num_workers, time_steps, gate):
-    comm_method = 'nccl'
+    comm_method = 'gloo'
     temporal_list = torch.tensor(range(time_steps))
     num_graph_per_worker = int(time_steps/num_workers)
     custom_group = []
