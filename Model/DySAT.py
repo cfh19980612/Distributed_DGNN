@@ -37,12 +37,16 @@ def _gated_emb_comm(args, x, gate):
                 output = [torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device) for _ in range(len(args['gated_group_member'][worker]))]
                 comm_emb = torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device)
                 # print('worker {} will receive embeedings at current {} communication round!'.format(rank, worker))
+                comm_start = time.time()
                 torch.distributed.gather(comm_emb, gather_list=output, dst=worker, group=mp_group[worker])
+                args['comm_cost'] += time.time() - comm_start
             else:
                 comm_emb = x.clone().detach()[:,local_temp,:]
                 # print(worker, rank, comm_emb.size(), comm_emb.dtype)
                 # print('worker {} will send embeedings at current {} communication round!'.format(rank, worker))
+                comm_start = time.time()
                 torch.distributed.gather(comm_emb, gather_list=None, dst=worker, group=mp_group[worker])
+                args['comm_cost'] += time.time() - comm_start
     #     print('worker, ', worker, 'complete!')
     # print('communication complete!')
 
