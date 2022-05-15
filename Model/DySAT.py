@@ -36,9 +36,9 @@ def _gated_emb_comm(args, x, gate):
                 # print(worker, rank, gather_lists)
                 for i in args['gated_group_member'][worker]:
                     if i == 0:
-                        output.append(torch.zeros(args['nodes_info'][2], 1, 128))
+                        output.append(torch.zeros(3555, 1, 128))
                     else:
-                        output.append(torch.zeros(x.size(0), 3, 128))
+                        output.append(torch.zeros(5390, 6, 128))
                 print('worker {} will receive embeedings at current {} communication round!'.format(rank, worker))
                 torch.distributed.gather(comm_emb, gather_list=output, dst=worker, group=mp_group[worker])
             else:
