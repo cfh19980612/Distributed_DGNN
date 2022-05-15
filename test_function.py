@@ -86,7 +86,7 @@ def _pre_comm_group(num_workers, time_steps, gate):
                                     ))
     print('group_member: ', group_member)
 
-    return custom_group
+    return group_member, custom_group
 
 # TODO: complete the global forward
 def run_dgnn_distributed(args):
@@ -110,7 +110,7 @@ def run_dgnn_distributed(args):
     num_graph = len(load_g)
     gate = _gate(args)
     if args['gate']:
-        args['gated_group'] = _pre_comm_group(args['world_size'], args['time_steps'], gate)
+        args['gated_group_member'], args['gated_group'] = _pre_comm_group(args['world_size'], args['time_steps'], gate)
 
     # generate the num of graphs for each module in DGNN
     args['structural_time_steps'] = num_graph
