@@ -160,8 +160,12 @@ def run_dgnn_distributed(args):
     epochs_f1_score = []
     epochs_auc = []
     epochs_acc = []
+
     total_train_time = 0
+    total_gcn_time = 0
+    total_att_time = 0
     total_comm_time = 0
+
     log_loss = []
     log_acc = []
     
@@ -208,6 +212,8 @@ def run_dgnn_distributed(args):
 
         if epoch >= 5:
             total_train_time += np.sum(epoch_train_time)
+            total_gcn_time += args['gcn_time']
+            total_att_time += args['att_time']
         # print(out)
         # test
         if epoch % args['test_freq'] == 0 and rank != world_size - 1:
@@ -253,7 +259,10 @@ def run_dgnn_distributed(args):
         print("Best f1 score epoch: {}, Best f1 score: {}".format(best_f1_epoch, max(epochs_f1_score)))
         print("Best auc epoch: {}, Best auc score: {}".format(best_auc_epoch, max(epochs_auc)))
         print("Best acc epoch: {}, Best acc score: {}".format(best_acc_epoch, max(epochs_acc)))
-        print("Total training cost: {:.3f}, total communication cost: {:.3f}".format(total_train_time, total_comm_time))
+        print("Total training cost: {:.3f}, total GCN cost: {:.3f}, total ATT cost: {:.3f}, total communication cost: {:.3f}".format(
+                                                                    total_train_time, 
+
+                                                                    total_comm_time))
 
         if args['save_log']:
             df_loss=pd.DataFrame(data=log_loss)
