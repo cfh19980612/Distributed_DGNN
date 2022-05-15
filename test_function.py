@@ -72,7 +72,7 @@ def _pre_comm_group(num_workers, time_steps, gate):
     group_member = []
     for worker in range(num_workers):
         if worker == 0: # the first worker does not need to receive emb from others
-            custom_group.np.append(None)
+            custom_group.append(None)
         else:
             req_temporals = temporal_list[gate[worker,:]]
             members = []

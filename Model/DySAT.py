@@ -13,25 +13,33 @@ from Model.layers import TemporalAttentionLayer
 
 
 def _gated_emb_comm(args, x, gate):
+    def _gated_emb_comm(args, x, gate):
     mp_group = args['gated_group']
     world_size = args['world_size']
     global_time_steps = args['time_steps']
     rank = args['rank']
     num_graph_per_worker = int(global_time_steps/world_size)
-    gather_list = []
+    output = []
 
     for worker in range(world_size):
         if worker == 0:
             continue
         current_process_worker = gate[worker, :]
-        local_temp = current_process_worker[worker*num_graph_per_worker: (worker+1)*num_graph_per_worker - 1]
-        comm_emb = x.clone().detach()[local_temp]
-        if comm_emb.size(0) > 0:
+        # print(current_process_worker)
+        local_temp = current_process_worker[rank*num_graph_per_worker: (rank+1)*num_graph_per_worker]
+        # print(local_temp)
+        comm_emb = x.clone().detach()[:,local_temp,:]
+        # print(worker, rank, comm_emb.size())
+        # print(args['gated_group_member'][worker])
+        if rank in args['gated_group_member'][worker]:
             if worker == rank:
-                torch.distributed.gather(comm_emb, gather_list=gather_list, dst=worker, group=mp_group[worker])
+                # print(worker, rank, gather_lists)
+                torch.distributed.gather(comm_emb, gather_list=output, dst=worker, group=mp_group[worker])
             else:
-                torch.distributed.gather(comm_emb, dst=worker, group=mp_group[worker])
-    print(gather_list)
+                # print(worker, rank)
+                torch.distributed.gather(comm_emb, gather_list=None, dst=worker, group=mp_group[worker])
+        print('worker, ', worker, 'complete!')
+    print('communication complete!')
 
     return 0
 
