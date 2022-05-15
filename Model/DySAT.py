@@ -13,7 +13,6 @@ from Model.layers import TemporalAttentionLayer
 
 
 def _gated_emb_comm(args, x, gate):
-    def _gated_emb_comm(args, x, gate):
     mp_group = args['gated_group']
     world_size = args['world_size']
     global_time_steps = args['time_steps']
