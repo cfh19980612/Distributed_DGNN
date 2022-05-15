@@ -264,7 +264,7 @@ def run_dgnn_distributed(args):
                                                                     total_gcn_time,
                                                                     total_att_time,
                                                                     total_comm_time))
-        print(total_train_time, total_gcn_time, total_att_time, total_comm_time)
+        print('{:.3f},  {:.3f},  {:.3f},  {:.3f}'.format(total_train_time, total_gcn_time, total_att_time, total_comm_time))
 
         if args['save_log']:
             df_loss=pd.DataFrame(data=log_loss)
