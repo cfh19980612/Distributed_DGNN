@@ -93,7 +93,7 @@ def _pre_comm_group(num_workers, time_steps, gate):
 def run_dgnn_distributed(args):
     args['method'] = 'dist'
     args['connection'] = True
-    args['gate'] = False
+    args['gate'] = True
     device = args['device']
     rank = args['rank']
     world_size = args['world_size']
