@@ -132,7 +132,7 @@ def _embedding_comm(args, x):
             Receiver: generate a empty tensor for receiving data, note that tensors generated from \
             different process have different sizes (due to different numbers of nodes)
             '''
-            comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2])
+            comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2]).to(device)
         
         # start to communciation
         comm_start = time.time()
@@ -147,7 +147,7 @@ def _embedding_comm(args, x):
     if len(result_list) > 0:
         # step 1: pad tensor to the same size
         for i in range (len(result_list)):
-            zero_pad = torch.zeros(x.shape[0] - args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2])
+            zero_pad = torch.zeros(x.shape[0] - args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2]).to(device)
             result_list[i] = torch.cat((result_list[i], zero_pad), dim=0).to(device)
         result_list.append(x)
         # step 2: gather all tensors
