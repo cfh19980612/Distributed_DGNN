@@ -19,6 +19,7 @@ def _gated_emb_comm(args, x, gate):
     rank = args['rank']
     num_graph_per_worker = int(global_time_steps/world_size)
     output = []
+    print(x.size())
 
     for worker in range(world_size):
         if worker == 0:
