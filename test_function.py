@@ -261,7 +261,8 @@ def run_dgnn_distributed(args):
         print("Best acc epoch: {}, Best acc score: {}".format(best_acc_epoch, max(epochs_acc)))
         print("Total training cost: {:.3f}, total GCN cost: {:.3f}, total ATT cost: {:.3f}, total communication cost: {:.3f}".format(
                                                                     total_train_time, 
-
+                                                                    total_gcn_time,
+                                                                    total_att_time,
                                                                     total_comm_time))
 
         if args['save_log']:
