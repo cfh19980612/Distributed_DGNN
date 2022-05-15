@@ -19,7 +19,7 @@ def _gated_emb_comm(args, x, gate):
     rank = args['rank']
     num_graph_per_worker = int(global_time_steps/world_size)
     output = []
-    print(x.size())
+    # print(x.size())
 
     for worker in range(world_size):
         if worker == 0:
@@ -29,7 +29,7 @@ def _gated_emb_comm(args, x, gate):
         local_temp = current_process_worker[rank*num_graph_per_worker: (rank+1)*num_graph_per_worker]
         # print(local_temp)
         comm_emb = x.clone().detach()[:,local_temp,:]
-        # print(worker, rank, comm_emb.size())
+        print(worker, rank, comm_emb.size())
         # print(args['gated_group_member'][worker])
         if rank in args['gated_group_member'][worker]:
             if worker == rank:
