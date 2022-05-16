@@ -34,8 +34,8 @@ def _gated_emb_comm(args, x, gate):
         # print(args['gated_group_member'][worker])
         if rank in args['gated_group_member'][worker]:
             if worker == rank:
-                output = [torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 3, x.size(2))).to(device) for _ in range(len(args['gated_group_member'][worker]))]
-                comm_emb = torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 3, x.size(2))).to(device)
+                output = [torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device) for _ in range(len(args['gated_group_member'][worker]))]
+                comm_emb = torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device)
                 # print('worker {} will receive embeedings at current {} communication round!'.format(rank, worker))
                 comm_start = time.time()
                 torch.distributed.gather(comm_emb, gather_list=output, dst=worker, group=mp_group[worker])
@@ -245,6 +245,7 @@ class DySAT(nn.Module):
             # self.args['comm_cost'] += time.time() - comm_start
             # print('comm_cost in worker {} with time {}'.format(self.args['rank'], self.args['comm_cost']))
             # print('rank: {} with fused tensor size{}'.format(self.args['rank'], fuse_structural_output.size()))
+            print('attention input size: ', fuse_structural_output.size())
             temporal_time_start = time.time()
             temporal_out = self.temporal_attn(fuse_structural_output)
             self.args['att_time'] += time.time() - temporal_time_start

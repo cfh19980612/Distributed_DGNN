@@ -58,7 +58,7 @@ def _gate(args):
 
     for i in range (world_size):
         for j in range (global_time_steps):
-            if j >= i*graphs_per_worker - 3 and j < (i+1)*graphs_per_worker:
+            if j >= i*graphs_per_worker - 1 and j < (i+1)*graphs_per_worker:
                 gate[i,j] = True
             else: gate[i,j] = False
     
@@ -93,7 +93,7 @@ def _pre_comm_group(num_workers, time_steps, gate):
 def run_dgnn_distributed(args):
     args['method'] = 'dist'
     args['connection'] = True
-    args['gate'] = True
+    args['gate'] = False
     device = args['device']
     rank = args['rank']
     world_size = args['world_size']
