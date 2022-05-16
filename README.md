@@ -21,7 +21,7 @@ python test.py --json-path=./parameters.json --dataset=Epinion --test-type=local
 python test.py --json-path=./parameters.json --dataset=Epinion --world_size=4 --gate=True --test-type=dp
 ```
 #### Configuration parameters
---- dataset: 'Enron', 'Epinion', 'Youtube', 'Flickr'
---- world_size: the minimum is 1
---- gate: True for customized communication and False, otherwise
+--- dataset: 'Enron', 'Epinion', 'Youtube', 'Flickr'\\
+--- world_size: the minimum is 1\\
+--- gate: True for customized communication and False, otherwise\\
 --- test-type: dp for data parallel with CPU processes, ddp for distributed data parallel with GPUs
