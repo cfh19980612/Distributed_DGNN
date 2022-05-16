@@ -115,6 +115,14 @@ def _get_args():
                         help='the path of hyperparameter json file')
     parser.add_argument('--test-type', type=str, required=True, choices=['local', 'dp', 'ddp'],
                         help='method for DGNN training')
+    
+    # for experimental configurations
+    parser.add_argument('--world_size', type=int, default=1,
+                        help='method for DGNN training')
+    parser.add_argument('--gate', type=bool, required=True,
+                        help='method for DGNN training')
+    parser.add_argument('--dataset', type=str, required=True,
+                        help='method for DGNN training')
     args = vars(parser.parse_args())
     with open(args['json_path'],'r') as load_f:
         para = json.load(load_f)
