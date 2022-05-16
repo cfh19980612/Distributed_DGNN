@@ -119,9 +119,9 @@ def _get_args():
     # for experimental configurations
     parser.add_argument('--world_size', type=int, default=1,
                         help='method for DGNN training')
-    parser.add_argument('--gate', type=bool, required=True,
+    parser.add_argument('--gate', type=bool, default=False,
                         help='method for DGNN training')
-    parser.add_argument('--dataset', type=str, required=True,
+    parser.add_argument('--dataset', type=str, default='Epinion',
                         help='method for DGNN training')
     args = vars(parser.parse_args())
     with open(args['json_path'],'r') as load_f:
