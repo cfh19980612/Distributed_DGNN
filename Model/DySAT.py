@@ -245,7 +245,7 @@ class DySAT(nn.Module):
             # self.args['comm_cost'] += time.time() - comm_start
             # print('comm_cost in worker {} with time {}'.format(self.args['rank'], self.args['comm_cost']))
             # print('rank: {} with fused tensor size{}'.format(self.args['rank'], fuse_structural_output.size()))
-            print('attention input size: ', fuse_structural_output.size())
+            print('worker {} has the attention input size: {}'.format(self.args['rank'], fuse_structural_output.size()))
             temporal_time_start = time.time()
             temporal_out = self.temporal_attn(fuse_structural_output)
             self.args['att_time'] += time.time() - temporal_time_start
