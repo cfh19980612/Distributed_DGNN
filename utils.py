@@ -2,6 +2,8 @@
 r"""
 Utils to play with PyTorch.
 """
+from torch._C._distributed_c10d import GatherOptions
+
 import torch.distributed as dist
 import torch
 import dgnn_collectives
@@ -55,7 +57,9 @@ def make_sparse_tensor(adj, tensor_type, torch_size):
 def gather():
     output = [[torch.zeros(5) for i in range(5)]]
     input = [torch.zeros(5)]
+    opts = GatherOptions()
+    opts.rootRank = 1
     try:
-        dgnn_collectives.emb_exchange(output, input, 1)
+        dgnn_collectives.emb_exchange(output, input, opts)
     except RuntimeError:
         print("got RuntimeError as emb_exchange is not implemented.")
