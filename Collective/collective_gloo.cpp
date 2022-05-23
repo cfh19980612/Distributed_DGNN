@@ -4,6 +4,8 @@
 #include <torch/csrc/autograd/custom_function.h>
 #include <torch/extension.h>
 
+#include <nccl.h>
+
 // #include <gloo/context.h>
 
 #ifdef GLOO
@@ -39,8 +41,8 @@ torch::Tensor _emb_gather(
                 invalidArgument(str("unsupported device type ", device.type()));
         }
         // Step 2: get other default information
-        const int root_rank = getRank()
-        cout<<root_rank<<endl;
+        // const int root_rank = getRank()
+        // cout<<root_rank<<endl;
 
 
         // const auto scalarType = inputs[0].scalar_type();
@@ -68,6 +70,32 @@ torch::Tensor _emb_gather(
         // }
         // }
     } // function
+
+#include <c10d/ProcessGroupNCCL.hpp>
+
+class HackNCCLGroup: public c10d::ProcessGroupNCCL {
+public:
+    ncclComm_t getcomm(at::Device dev) {
+        ncclUniqueId ncclID;
+        int rank = getRank();
+        if (rank == 0) {
+            ncclGetUniqueId(&ncclID);
+        }
+#if defined(TORCH_VERSION_MAJOR) && (TORCH_VERSION_MAJOR > 1 || \
+        (TORCH_VERSION_MAJOR == 1 && TORCH_VERSION_MINOR >= 8))
+        broadcastUniqueNCCLID(&ncclID,
+                c10d::OpType::SEND,
+                "fastmoe_nccl_comm",
+                rank);
+#else
+        broadcastUniqueNCCLID(&ncclID);
+#endif
+        ncclComm_t comm;
+        NCCL_SAFE_CALL(ncclCommInitRank(&comm, getSize(), ncclID, rank));
+        return comm;
+    }
+};
+
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m){
     m.def("emb_exchange", &_emb_gather, "Dyanmic GNN emb gather (gloo)");
