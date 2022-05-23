@@ -4,7 +4,7 @@
 #include <torch/csrc/autograd/custom_function.h>
 #include <torch/extension.h>
 
-#include <gloo/context.h>
+// #include <gloo/context.h>
 
 #include <c10d/ProcessGroupGloo.hpp>
 #ifdef GLOO
@@ -22,7 +22,7 @@ namespace c10d{
 torch::Tensor _emb_gather(
     std::vector<std::vector<at::Tensor>>& outputs,
     std::vector<at::Tensor>& inputs,
-    const ::c10d::GatherOptions& opts){
+    const GatherOptions& opts){
         // throw std::runtime_error("No implementation!");
         static auto invalidArgument = [](const std::string& msg) {
             TORCH_CHECK(false, "ProcessGroupGloo::broadcast: " + msg);
