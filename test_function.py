@@ -17,7 +17,7 @@ from Model.MLP import Classifier
 from sklearn.metrics import f1_score, roc_auc_score
 from torch.nn.parallel import DistributedDataParallel as DDP
 from customized_ddp import DistributedGroupedDataParallel as LocalDDP
-
+from utils import *
 
 class _My_DGNN(torch.nn.Module):
     def __init__(self, args, in_feats = None):
@@ -276,6 +276,9 @@ def run_dgnn(args):
     r"""
     run dgnn with one process
     """
+    gather()
+    return 0
+
     args['method'] = 'local'
     args['connection'] = False
     device = args['device']
