@@ -56,6 +56,6 @@ def gather():
     output = torch.zeros(5)
     input = torch.zeros(5)
     try:
-        emb_exchange(output, input, 1)
+        dgnn_collectives.emb_exchange(output, input, 1)
     except RuntimeError:
         print("got RuntimeError as emb_exchange is not implemented.")
