@@ -4,7 +4,7 @@ Utils to play with PyTorch.
 """
 import torch.distributed as dist
 import torch
-import Collectives
+import dgnn_collectives
 
 
 # pylint: disable=broad-except
