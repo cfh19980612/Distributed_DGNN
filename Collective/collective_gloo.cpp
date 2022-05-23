@@ -8,20 +8,22 @@
 #include <gloo.h>
 #endif
 namespace{
-uint32_t nextTag() {
-  return collectiveCounter_++;
-}
+// uint32_t nextTag() {
+//   return collectiveCounter_++;
+// }
 
-std::shared_ptr<::gloo::Context> getContext(uint32_t tag) {
-  return contexts_[tag % contexts_.size()];
-}
+// std::shared_ptr<::gloo::Context> getContext(uint32_t tag) {
+//   return contexts_[tag % contexts_.size()];
+// }
 
 torch::Tensor _emb_gather(
     std::vector<std::vector<at::Tensor>>& outputs,
     std::vector<at::Tensor>& inputs,
     const GatherOptions& opts){
         // throw std::runtime_error("No implementation!");
-
+        static auto invalidArgument = [](const std::string& msg) {
+            TORCH_CHECK(false, "ProcessGroupGloo::broadcast: " + msg);
+        };
         // Step 1: Check the environment
         const auto& device = inputs[0].device();
         switch (device.type()) {
@@ -35,7 +37,7 @@ torch::Tensor _emb_gather(
                 invalidArgument(str("unsupported device type ", device.type()));
         }
         // Step 2: get other default information
-        root_rank = opts.rootRank
+        const auto root_rank = opts.rootRank
         cout<<root_rank<<endl;
 
 
