@@ -4,7 +4,7 @@ Utils to play with PyTorch.
 """
 import torch.distributed as dist
 import torch
-import dgnn_collectives
+import Collectives.dgnn_collectives as co
 
 
 # pylint: disable=broad-except
@@ -56,6 +56,6 @@ def gather():
     output = torch.zeros(5)
     input = torch.zeros(5)
     try:
-        dgnn_collectives.emb_exchange(output, input, 1)
+        co.emb_exchange(output, input, 1)
     except RuntimeError:
         print("got RuntimeError as emb_exchange is not implemented.")
