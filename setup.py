@@ -12,15 +12,15 @@ authors = [
 
 if __name__ == '__main__':
     setuptools.setup(
-        name='dgnn_collectives',
+        name='Collectives',
         version='1.0.0',
         description='Customized collective backend for dgnn.',
         author=', '.join(authors),
         author_email='chenfh612@gmail.com',
         ext_modules=[
             CUDAExtension(
-                name='collective_dgnn',
-                source=['Collective/collective_gloo.cpp'],
+                name='dgnn_collectives',
+                sources=['Collective/collective_gloo.cpp'],
             )
         ],
         cmdclass={'build_ext': BuildExtension}
