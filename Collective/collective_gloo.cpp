@@ -19,7 +19,7 @@ namespace c10d{
 torch::Tensor _emb_gather(
     std::vector<std::vector<at::Tensor>>& outputs,
     std::vector<at::Tensor>& inputs,
-    const c10d::GatherOptions& opts){
+    const ::c10d::GatherOptions& opts){
         // throw std::runtime_error("No implementation!");
         static auto invalidArgument = [](const std::string& msg) {
             TORCH_CHECK(false, "ProcessGroupGloo::broadcast: " + msg);
@@ -66,8 +66,8 @@ torch::Tensor _emb_gather(
         // }
         // }
     } // function
-} // namespace
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m){
     m.def("emb_exchange", &_emb_gather, "Dyanmic GNN emb gather (gloo)");
 }
+} // namespace
