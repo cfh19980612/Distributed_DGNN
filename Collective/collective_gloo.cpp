@@ -3,7 +3,7 @@
 #include <torch/csrc/autograd/custom_function.h>
 #include <torch/extension.h>
 
-#include <torch/csrc/distributed/c10d/ProcessGroupGloo.hpp>
+#include <torch/csrc/distributed/c10d/ProcessGroupGloo.h>
 
 namespace{
 uint32_t ProcessGroupGloo::nextTag() {
