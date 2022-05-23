@@ -7,7 +7,7 @@
 #ifdef GLOO
 #include <gloo.h>
 #endif
-namespace{
+namespace c10d{
 // uint32_t nextTag() {
 //   return collectiveCounter_++;
 // }
@@ -19,7 +19,7 @@ namespace{
 torch::Tensor _emb_gather(
     std::vector<std::vector<at::Tensor>>& outputs,
     std::vector<at::Tensor>& inputs,
-    const GatherOptions& opts){
+    const c10d::GatherOptions& opts){
         // throw std::runtime_error("No implementation!");
         static auto invalidArgument = [](const std::string& msg) {
             TORCH_CHECK(false, "ProcessGroupGloo::broadcast: " + msg);
