@@ -10,7 +10,7 @@
 #ifdef GLOO
 #include <gloo.h>
 #endif
-namespace c10d{
+namespace {
 // uint32_t nextTag() {
 //   return collectiveCounter_++;
 // }
