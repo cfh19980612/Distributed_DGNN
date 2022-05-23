@@ -21,8 +21,7 @@ namespace c10d{
 
 torch::Tensor _emb_gather(
     std::vector<std::vector<at::Tensor>>& outputs,
-    std::vector<at::Tensor>& inputs,
-    const GatherOptions& opts){
+    std::vector<at::Tensor>& inputs) {
         // throw std::runtime_error("No implementation!");
         static auto invalidArgument = [](const std::string& msg) {
             TORCH_CHECK(false, "ProcessGroupGloo::broadcast: " + msg);
@@ -40,7 +39,7 @@ torch::Tensor _emb_gather(
                 invalidArgument(str("unsupported device type ", device.type()));
         }
         // Step 2: get other default information
-        const int root_rank = opts.rootRank
+        const int root_rank = getRank()
         cout<<root_rank<<endl;
 
 
