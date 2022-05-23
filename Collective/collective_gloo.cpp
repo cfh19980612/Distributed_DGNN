@@ -22,7 +22,7 @@ namespace c10d{
 torch::Tensor _emb_gather(
     std::vector<std::vector<at::Tensor>>& outputs,
     std::vector<at::Tensor>& inputs,
-    const gloo::GatherOptions& opts){
+    const GatherOptions& opts){
         // throw std::runtime_error("No implementation!");
         static auto invalidArgument = [](const std::string& msg) {
             TORCH_CHECK(false, "ProcessGroupGloo::broadcast: " + msg);
