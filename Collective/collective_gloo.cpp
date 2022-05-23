@@ -3,14 +3,14 @@
 #include <torch/csrc/autograd/custom_function.h>
 #include <torch/extension.h>
 
-#include <torch/csrc/distributed/c10d/ProcessGroupGloo.h>
+#include <c10d/ProcessGroupGloo.hpp>
 
 namespace{
-uint32_t ProcessGroupGloo::nextTag() {
+uint32_t nextTag() {
   return collectiveCounter_++;
 }
 
-std::shared_ptr<::gloo::Context> ProcessGroupGloo::getContext(uint32_t tag) {
+std::shared_ptr<::gloo::Context> getContext(uint32_t tag) {
   return contexts_[tag % contexts_.size()];
 }
 
