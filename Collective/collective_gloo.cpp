@@ -1,7 +1,10 @@
 #include <iostream>
 #include <vector>
+
 #include <torch/csrc/autograd/custom_function.h>
 #include <torch/extension.h>
+
+#include <gloo/context.h>
 
 #include <c10d/ProcessGroupGloo.hpp>
 #ifdef GLOO
