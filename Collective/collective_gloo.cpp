@@ -6,11 +6,11 @@
 
 // #include <gloo/context.h>
 
-#include <c10d/ProcessGroupGloo.hpp>
 #ifdef GLOO
 #include <gloo.h>
 #endif
 namespace {
+#include <c10d/ProcessGroupGloo.hpp>
 // uint32_t nextTag() {
 //   return collectiveCounter_++;
 // }
