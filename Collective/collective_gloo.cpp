@@ -4,12 +4,13 @@
 #include <torch/extension.h>
 
 #include <c10d/ProcessGroupGloo.hpp>
-namespace {
-uint32_t ProcessGroupGloo::nextTag() {
+
+namespace{
+uint32_t c10d::ProcessGroupGloo::nextTag() {
   return collectiveCounter_++;
 }
 
-std::shared_ptr<::gloo::Context> ProcessGroupGloo::getContext(uint32_t tag) {
+std::shared_ptr<::gloo::Context> c10d::ProcessGroupGloo::getContext(uint32_t tag) {
   return contexts_[tag % contexts_.size()];
 }
 
