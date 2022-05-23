@@ -10,7 +10,7 @@ torch::Tensor _emb_gather(
     std::vector<at::Tensor>& inputs,
     int root){
         // std::stringstream ss;
-        cout << "hello world!"<<endl;
+        throw std::runtime_error("No implementation!");
     }
 }
 
