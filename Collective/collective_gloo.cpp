@@ -4,7 +4,7 @@
 #include <torch/extension.h>
 
 #include <c10d/ProcessGroupGloo.hpp>
-
+#include <gloo.h>
 namespace{
 uint32_t nextTag() {
   return collectiveCounter_++;
