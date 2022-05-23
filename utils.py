@@ -4,6 +4,7 @@ Utils to play with PyTorch.
 """
 import torch.distributed as dist
 import torch
+import dgnn_collectives
 
 
 # pylint: disable=broad-except
@@ -50,3 +51,11 @@ def make_sparse_tensor(adj, tensor_type, torch_size):
                                       tensor_size)
     else:
         raise NotImplementedError('only make floats or long sparse tensors')
+
+def gather():
+    output = torch.zeros(5)
+    input = torch.zeros(5)
+    try:
+        emb_exchange(output, input, 1)
+    except RuntimeError:
+        print("got RuntimeError as emb_exchange is not implemented.")

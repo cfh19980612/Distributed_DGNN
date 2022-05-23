@@ -11,57 +11,60 @@ from torch.nn.modules.loss import BCEWithLogitsLoss
 from Model.layers import StructuralAttentionLayer
 from Model.layers import TemporalAttentionLayer
 
+from utils import *
+
 
 def _gated_emb_comm(args, x, gate):
-    mp_group = args['gated_group']
-    world_size = args['world_size']
-    global_time_steps = args['time_steps']
-    rank = args['rank']
-    device = args['device']
-    num_graph_per_worker = int(global_time_steps/world_size)
-    output = []
-    # print(x.size())
+    gather()
+    # mp_group = args['gated_group']
+    # world_size = args['world_size']
+    # global_time_steps = args['time_steps']
+    # rank = args['rank']
+    # device = args['device']
+    # num_graph_per_worker = int(global_time_steps/world_size)
+    # output = []
+    # # print(x.size())
 
-    for worker in range(world_size):
-        if worker == 0:
-            continue
-        current_process_worker = gate[worker, :]
-        # print(current_process_worker)
-        local_temp = current_process_worker[rank*num_graph_per_worker: (rank+1)*num_graph_per_worker]
-        # print(local_temp)
-        # comm_emb = x.clone().detach()[:,local_temp,:]
-        # print(worker, rank, comm_emb.size(), comm_emb.dtype)
-        # print(args['gated_group_member'][worker])
-        if rank in args['gated_group_member'][worker]:
-            if worker == rank:
-                output = [torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device) for _ in range(len(args['gated_group_member'][worker]))]
-                comm_emb = torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device)
-                # print('worker {} will receive embeedings at current {} communication round!'.format(rank, worker))
-                comm_start = time.time()
-                torch.distributed.gather(comm_emb, gather_list=output, dst=worker, group=mp_group[worker])
-                args['comm_cost'] += time.time() - comm_start
-            else:
-                comm_emb = x.clone().detach()[:,local_temp,:]
-                # print(worker, rank, comm_emb.size(), comm_emb.dtype)
-                # print('worker {} will send embeedings at current {} communication round!'.format(rank, worker))
-                comm_start = time.time()
-                torch.distributed.gather(comm_emb, gather_list=None, dst=worker, group=mp_group[worker])
-                args['comm_cost'] += time.time() - comm_start
-    #     print('worker, ', worker, 'complete!')
-    # print('communication complete!')
+    # for worker in range(world_size):
+    #     if worker == 0:
+    #         continue
+    #     current_process_worker = gate[worker, :]
+    #     # print(current_process_worker)
+    #     local_temp = current_process_worker[rank*num_graph_per_worker: (rank+1)*num_graph_per_worker]
+    #     # print(local_temp)
+    #     # comm_emb = x.clone().detach()[:,local_temp,:]
+    #     # print(worker, rank, comm_emb.size(), comm_emb.dtype)
+    #     # print(args['gated_group_member'][worker])
+    #     if rank in args['gated_group_member'][worker]:
+    #         if worker == rank:
+    #             output = [torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device) for _ in range(len(args['gated_group_member'][worker]))]
+    #             comm_emb = torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device)
+    #             # print('worker {} will receive embeedings at current {} communication round!'.format(rank, worker))
+    #             comm_start = time.time()
+    #             torch.distributed.gather(comm_emb, gather_list=output, dst=worker, group=mp_group[worker])
+    #             args['comm_cost'] += time.time() - comm_start
+    #         else:
+    #             comm_emb = x.clone().detach()[:,local_temp,:]
+    #             # print(worker, rank, comm_emb.size(), comm_emb.dtype)
+    #             # print('worker {} will send embeedings at current {} communication round!'.format(rank, worker))
+    #             comm_start = time.time()
+    #             torch.distributed.gather(comm_emb, gather_list=None, dst=worker, group=mp_group[worker])
+    #             args['comm_cost'] += time.time() - comm_start
+    # #     print('worker, ', worker, 'complete!')
+    # # print('communication complete!')
 
-    if len(output) > 0:
-        output.pop()
-        # print(output)
-        for i in range(len(output)):
-            zero_pad = torch.zeros(x.shape[0] - output[i].size(0), output[i].size(1), x.shape[2]).to(device)
-            output[i] = torch.cat((output[i], zero_pad), dim=0).to(device)
-        output.append(x)
-        final = torch.cat(output, 1)
-    else:
-        final = x.clone()
+    # if len(output) > 0:
+    #     output.pop()
+    #     # print(output)
+    #     for i in range(len(output)):
+    #         zero_pad = torch.zeros(x.shape[0] - output[i].size(0), output[i].size(1), x.shape[2]).to(device)
+    #         output[i] = torch.cat((output[i], zero_pad), dim=0).to(device)
+    #     output.append(x)
+    #     final = torch.cat(output, 1)
+    # else:
+    #     final = x.clone()
     
-    return final
+    # return final
 
 
 # TODO: realize the masked communication

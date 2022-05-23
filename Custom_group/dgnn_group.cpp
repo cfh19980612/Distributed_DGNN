@@ -103,6 +103,147 @@ c10::intrusive_ptr<ProcessGroup::Work> ProcessGroupDGNN::broadcast(
 //     const GatherOptions& /* unused */) {
 //   throw std::runtime_error("not supported");
 // }
+/*
+key part for customized gather function with objectives:
+1. each group member can send different size of tensor for gather
+2. not all members need to send tensor
+3. cuda support
+*/
+
+namespace {
+
+class AsyncGatherWork : public ProcessGroupGloo::AsyncWork {
+ public:
+  AsyncGatherWork(
+      const std::shared_ptr<gloo::Context>& context,
+      std::vector<std::vector<at::Tensor>>& outputs,
+      std::vector<at::Tensor>& inputs,
+      int root,
+      uint32_t tag)
+      : ProcessGroupGloo::AsyncWork(outputs, "gloo:gather", inputs),
+        context(context),
+        outputs(outputs),
+        inputs(inputs),
+        root(root),
+        tag(tag) {}
+
+  std::shared_ptr<gloo::Context> context;
+  std::vector<std::vector<at::Tensor>> outputs;
+  std::vector<at::Tensor> inputs;
+  const int root;
+  const uint32_t tag;
+
+  void gather(
+      std::vector<std::vector<at::Tensor>>& outputs,
+      std::vector<at::Tensor>& inputs) {
+    const auto scalarType = inputs[0].scalar_type();
+    // 实例化GatherOptions类，传入参数为process的context
+    gloo::GatherOptions opts(context);
+    opts.setRoot(root);
+    opts.setTag(tag);
+
+    // Set single temporary tensor on root process.
+    // This is later scattered to the separate output tensors.
+    at::Tensor flatOutputTensor;
+    if (context->rank == root) {
+      flatOutputTensor = newLikeFlat(outputs[0]);
+      GENERATE_ALL_TYPES(scalarType, setOutput, opts, flatOutputTensor);
+    }
+
+    // TODO: set single input tensor only on the required processes?
+    // Set single input tensor on all processes.
+    GENERATE_ALL_TYPES(scalarType, setInput, opts, inputs[0]);
+    gloo::gather(opts);
+
+    // Unflatten into output tensors on root process.
+    if (context->rank == root) {
+      for(const auto i : c10::irange(outputs[0].size())) {
+        outputs[0][i].copy_(flatOutputTensor[i]);
+      }
+    }
+  }
+
+  void run() override {
+    gather(outputs, inputs);
+  }
+};
+
+// Note: current CUDA implementation holds the assumptions:
+//     - inputs.size() is 1
+//     - outputs.size() is 1
+//     - the size of the nested output tensors is world size, i.e.,
+//       outputs[0].size, is world size
+class AsyncGatherCUDAWork : public AsyncGatherWork {
+ public:
+  AsyncGatherCUDAWork(
+      const std::shared_ptr<gloo::Context>& context,
+      std::vector<std::vector<at::Tensor>>& outputs,
+      std::vector<at::Tensor>& inputs,
+      int root,
+      uint32_t tag)
+      : AsyncGatherWork(context, outputs, inputs, root, tag) {
+    initializeStreamsEvents(inputs, inputStreams, inputEvents);
+    initializeStreamsEvents(outputs, outputStreams, outputEvents);
+
+    // Kick off copy from CUDA tensors to pinned CPU tensors.
+    tmpInputs.reserve(inputs.size());
+    c10::OptionalStreamGuard guard;
+    for(const auto i : c10::irange(inputs.size())) {
+      guard.reset_stream(inputStreams[i]);
+      tmpInputs.push_back(pinnedLike(inputs[i]).copy_(inputs[i], true));
+    }
+
+    tmpOutputs.resize(outputs.size());
+    for(const auto i : c10::irange(outputs.size())) {
+      tmpOutputs[i].reserve(outputs[i].size());
+      for(const auto j : c10::irange(outputs[i].size())) {
+        tmpOutputs[i].push_back(pinnedLike(outputs[i][j]));
+      }
+    }
+  }
+
+  void run() override {
+    // Synchronize with copy operations.
+    for(const auto i : c10::irange(inputs.size())) {
+      inputStreams[i].synchronize();
+    }
+
+    for(const auto i : c10::irange(outputs.size())) {
+      outputStreams[i].synchronize();
+    }
+
+    // Run gather on host side tensors.
+    gather(tmpOutputs, tmpInputs);
+
+    // Kick off copy back to the CUDA tensors.
+    c10::OptionalStreamGuard guard;
+    for(const auto i : c10::irange(outputs.size())) {
+      guard.reset_stream(outputStreams[i]);
+      for(const auto j : c10::irange(outputs[i].size())) {
+        outputs[i][j].copy_(tmpOutputs[i][j], /* non_blocking */ true);
+      }
+      outputEvents[i].record(outputStreams[i]);
+    }
+  }
+
+  void synchronize() override {
+    // Synchronize with the copy back to CUDA tensors.
+    for(const auto i : c10::irange(outputs.size())) {
+      c10::Device device = outputs[i][0].device();
+      outputEvents[i].block(c10::impl::VirtualGuardImpl(device.type()).getStream(device));
+    }
+  }
+
+  std::vector<at::Tensor> tmpInputs;
+  std::vector<c10::Stream> inputStreams;
+  std::vector<c10::Event> inputEvents;
+
+  std::vector<std::vector<at::Tensor>> tmpOutputs;
+  std::vector<c10::Stream> outputStreams;
+  std::vector<c10::Event> outputEvents;
+};
+
+} // namespace
 
 c10::intrusive_ptr<ProcessGroup::Work> ProcessGroupGloo::gather(
     std::vector<std::vector<at::Tensor>>& outputs,
@@ -166,7 +307,7 @@ c10::intrusive_ptr<ProcessGroup::Work> ProcessGroupGloo::gather(
   enqueue(work);
   return work;
 }
-
+///
 
 c10::intrusive_ptr<ProcessGroup::Work> ProcessGroupDGNN::reduce(
     std::vector<at::Tensor>& /* unused */,
