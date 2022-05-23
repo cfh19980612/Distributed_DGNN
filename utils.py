@@ -53,8 +53,8 @@ def make_sparse_tensor(adj, tensor_type, torch_size):
         raise NotImplementedError('only make floats or long sparse tensors')
 
 def gather():
-    output = [torch.zeros(5) for i in range(5)]
-    input = torch.zeros(5)
+    output = [[torch.zeros(5) for i in range(5)]]
+    input = [torch.zeros(5)]
     try:
         dgnn_collectives.emb_exchange(output, input, 1)
     except RuntimeError:
