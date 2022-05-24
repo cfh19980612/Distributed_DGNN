@@ -6,24 +6,22 @@
 
 #include <nccl.h>
 
-// #include <gloo/context.h>
-
-#ifdef GLOO
-#include <gloo.h>
-#endif
 namespace {
 #include <c10d/ProcessGroupGloo.hpp>
-// uint32_t nextTag() {
-//   return collectiveCounter_++;
-// }
 
-// std::shared_ptr<::gloo::Context> getContext(uint32_t tag) {
-//   return contexts_[tag % contexts_.size()];
-// }
+uint32_t nextTag() {
+  return collectiveCounter_++;
+}
+
+std::shared_ptr<::gloo::Context> getContext(uint32_t tag) {
+  return contexts_[tag % contexts_.size()];
+}
 
 torch::Tensor _emb_gather(
     std::vector<std::vector<at::Tensor>>& outputs,
-    std::vector<at::Tensor>& inputs) {
+    std::vector<at::Tensor>& inputs,
+    std::vector<std::vector<int>>& target_members,
+    const GatherOptions& opts) {
         // throw std::runtime_error("No implementation!");
         static auto invalidArgument = [](const std::string& msg) {
             TORCH_CHECK(false, "ProcessGroupGloo::broadcast: " + msg);
@@ -40,62 +38,33 @@ torch::Tensor _emb_gather(
             default:
                 invalidArgument(str("unsupported device type ", device.type()));
         }
-        // Step 2: get other default information
-        // const int root_rank = getRank()
-        // cout<<root_rank<<endl;
-
-
-        // const auto scalarType = inputs[0].scalar_type();
-        // // 实例化GatherOptions类，传入参数为process的context
-        // opts.setRoot(root);
-        // opts.setTag(tag);
-
-        // // Set single temporary tensor on root process.
-        // // This is later scattered to the separate output tensors.
-        // at::Tensor flatOutputTensor;
-        // if (context->rank == root) {
-        // flatOutputTensor = newLikeFlat(outputs[0]);
-        // GENERATE_ALL_TYPES(scalarType, setOutput, opts, flatOutputTensor);
-        // }
-
-        // // TODO: set single input tensor only on the required processes?
-        // // Set single input tensor on all processes.
-        // GENERATE_ALL_TYPES(scalarType, setInput, opts, inputs[0]);
-        // gloo::gather(opts);
-
-        // // Unflatten into output tensors on root process.
-        // if (context->rank == root) {
-        // for(const auto i : c10::irange(outputs[0].size())) {
-        //     outputs[0][i].copy_(flatOutputTensor[i]);
-        // }
-        // }
-    } // function
-
-#include <c10d/ProcessGroupNCCL.hpp>
-
-class HackNCCLGroup: public c10d::ProcessGroupNCCL {
-public:
-    ncclComm_t getcomm(at::Device dev) {
-        ncclUniqueId ncclID;
-        int rank = getRank();
-        if (rank == 0) {
-            ncclGetUniqueId(&ncclID);
+        // Step 2: get the process rank
+        const int rank = getRank()
+        const int root = opts.rootRank
+        
+        // Step 3: create receive tensor list
+        const auto scalarType = inputs[0].scalar_type();
+        at::Tensor flatOutputTensor;
+        if (rank == root) {
+            flatOutputTensor = newLikeFlat(outputs[0]);  // create a tensor list to receive tensors
+            GENERATE_ALL_TYPES(scalarType, setOutput, opts, flatOutputTensor);
         }
-#if defined(TORCH_VERSION_MAJOR) && (TORCH_VERSION_MAJOR > 1 || \
-        (TORCH_VERSION_MAJOR == 1 && TORCH_VERSION_MINOR >= 8))
-        broadcastUniqueNCCLID(&ncclID,
-                c10d::OpType::SEND,
-                "fastmoe_nccl_comm",
-                rank);
-#else
-        broadcastUniqueNCCLID(&ncclID);
-#endif
-        ncclComm_t comm;
-        NCCL_SAFE_CALL(ncclCommInitRank(&comm, getSize(), ncclID, rank));
-        return comm;
-    }
-};
+        // 'GENERATE_ALL_TYPES' see https://github.com/pytorch/pytorch/blob/master/torch/csrc/distributed/c10d/ProcessGroupGloo.cpp
 
+        // TODO: set single input tensor only on the required processes?
+        // Step 4: Set single input tensor on all processes.
+        if (rank in target_members) {
+            GENERATE_ALL_TYPES(scalarType, setInput, opts, inputs[0]);
+            gloo::gather(opts);
+        }
+        // Unflatten into output tensors on root process.
+        if (rank == root) {
+            for(const auto i : c10::irange(outputs[0].size())) {
+                outputs[0][i].copy_(flatOutputTensor[i]);
+            }
+        }
+    } // function
+} // namespace
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m){
     m.def("emb_exchange", &_emb_gather, "Dyanmic GNN emb gather (gloo)");
