@@ -4,8 +4,7 @@
 #include <torch/csrc/autograd/custom_function.h>
 #include <torch/extension.h>
 
-
-#include <torch/gloo/gather.h>
+#include <gloo>
 #include <c10d/ProcessGroupGloo.hpp>
 
 // uint32_t nextTag() {
@@ -15,7 +14,6 @@
 // std::shared_ptr<::gloo::Context> getContext(uint32_t tag) {
 //   return contexts_[tag % contexts_.size()];
 // }
-
 // 
 #define GENERATE_ALL_TYPES(type, func, args...)        \
   switch (type) {                                      \
