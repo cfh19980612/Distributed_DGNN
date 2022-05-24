@@ -17,6 +17,86 @@ std::shared_ptr<::gloo::Context> getContext(uint32_t tag) {
   return contexts_[tag % contexts_.size()];
 }
 
+#define GENERATE_ALL_TYPES(type, func, args...)        \
+  switch (type) {                                      \
+    case ::at::ScalarType::Float:                      \
+      func<float>(args);                               \
+      break;                                           \
+    case ::at::ScalarType::Double:                     \
+      func<double>(args);                              \
+      break;                                           \
+    case ::at::ScalarType::Half:                       \
+      func<gloo::float16>(args);                       \
+      break;                                           \
+    case ::at::ScalarType::Char:                       \
+      func<int8_t>(args);                              \
+      break;                                           \
+    case ::at::ScalarType::Byte:                       \
+      func<uint8_t>(args);                             \
+      break;                                           \
+    case ::at::ScalarType::Int:                        \
+      func<int32_t>(args);                             \
+      break;                                           \
+    case ::at::ScalarType::Long:                       \
+      func<int64_t>(args);                             \
+      break;                                           \
+    default:                                           \
+      TORCH_CHECK(false, "Invalid scalar type"); \
+  }
+#endif
+
+template <typename T, typename O>
+void setInputs(O& opts, std::vector<at::Tensor>& tensors) {
+  opts.setInputs(getDataPointers<T>(tensors), tensors[0].numel());
+}
+
+template <typename T, typename O>
+void setInput(O& opts, at::Tensor& tensor) {
+  opts.setInput(getDataPointer<T>(tensor), tensor.numel());
+}
+
+template <typename T, typename O>
+void setInput(O& opts, at::Tensor& tensor, std::vector<size_t>& counts) {
+  opts.setInput(getDataPointer<T>(tensor), counts);
+}
+
+template <typename T, typename O>
+void setInput(O& opts, at::Tensor& tensor, std::vector<int64_t>& counts) {
+  opts.setInput(getDataPointer<T>(tensor), counts);
+}
+
+template <typename T, typename O>
+void setOutputs(O& opts, std::vector<at::Tensor>& tensors) {
+  opts.setOutputs(getDataPointers<T>(tensors), tensors[0].numel());
+}
+
+template <typename T, typename O>
+void setOutput(O& opts, at::Tensor& tensor) {
+  opts.setOutput(getDataPointer<T>(tensor), tensor.numel());
+}
+
+template <typename T, typename O>
+void setOutput(O& opts, at::Tensor& tensor, std::vector<size_t>& counts) {
+  opts.setOutput(getDataPointer<T>(tensor), counts);
+}
+
+template <typename T, typename O>
+void setOutput(O& opts, at::Tensor& tensor, std::vector<int64_t>& counts) {
+  opts.setOutput(getDataPointer<T>(tensor), counts);
+}
+
+at::Tensor pinnedLike(at::Tensor& tensor) {
+  auto* allocator = at::detail::getCUDAHooks().getPinnedMemoryAllocator();
+  auto storage = c10::Storage(
+      c10::Storage::use_byte_size_t(),
+      at::detail::computeStorageNbytes(
+          tensor.sizes(), tensor.strides(), tensor.dtype().itemsize()),
+      allocator,
+      /*resizable=*/false);
+  return at::empty({0}, tensor.options().device(at::kCPU))
+      .set_(storage, 0, tensor.sizes(), tensor.strides());
+}
+
 torch::Tensor _emb_gather(
     std::vector<std::vector<at::Tensor>>& outputs,
     std::vector<at::Tensor>& inputs,
