@@ -4,7 +4,8 @@
 #include <torch/csrc/autograd/custom_function.h>
 #include <torch/extension.h>
 
-#include <gloo>
+#include <c10d/GlooDeviceFactory.hpp>
+#include <gloo/gather.h>
 #include <c10d/ProcessGroupGloo.hpp>
 
 // uint32_t nextTag() {
