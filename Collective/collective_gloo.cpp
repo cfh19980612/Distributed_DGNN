@@ -9,14 +9,15 @@
 namespace {
 #include <c10d/ProcessGroupGloo.hpp>
 
-uint32_t nextTag() {
-  return collectiveCounter_++;
-}
+// uint32_t nextTag() {
+//   return collectiveCounter_++;
+// }
 
-std::shared_ptr<::gloo::Context> getContext(uint32_t tag) {
-  return contexts_[tag % contexts_.size()];
-}
+// std::shared_ptr<::gloo::Context> getContext(uint32_t tag) {
+//   return contexts_[tag % contexts_.size()];
+// }
 
+// 
 #define GENERATE_ALL_TYPES(type, func, args...)        \
   switch (type) {                                      \
     case ::at::ScalarType::Float:                      \
@@ -118,7 +119,7 @@ torch::Tensor _emb_gather(
             default:
                 invalidArgument(str("unsupported device type ", device.type()));
         }
-        // Step 2: get the process rank
+        // Step 2: get the process rank and root rank
         const int rank = getRank()
         const int root = opts.rootRank
         
