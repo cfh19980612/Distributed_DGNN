@@ -4,9 +4,8 @@
 #include <torch/csrc/autograd/custom_function.h>
 #include <torch/extension.h>
 
-#include <nccl.h>
 
-namespace {
+#include <gloo/gather.h>
 #include <c10d/ProcessGroupGloo.hpp>
 
 // uint32_t nextTag() {
@@ -44,7 +43,6 @@ namespace {
     default:                                           \
       TORCH_CHECK(false, "Invalid scalar type"); \
   }
-#endif
 
 template <typename T, typename O>
 void setInputs(O& opts, std::vector<at::Tensor>& tensors) {
@@ -145,9 +143,7 @@ torch::Tensor _emb_gather(
             }
         }
     } // function
-} // namespace
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m){
     m.def("emb_exchange", &_emb_gather, "Dyanmic GNN emb gather (gloo)");
 }
-} // namespace
