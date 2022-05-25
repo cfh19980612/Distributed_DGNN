@@ -3,8 +3,6 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 # load("@//third_party:substitution.bzl", "template_rule")
 # load("@//tools/config:defs.bzl", "if_cuda")
 
-exports_files(["gloo"])
-
 template_rule(
     name = "gloo_config_cmake_macros",
     src = "gloo/config.h.in",
