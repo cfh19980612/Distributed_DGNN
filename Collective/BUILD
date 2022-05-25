@@ -1,7 +1,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
-# load("@//tools/rules:cu.bzl", "cu_library")
+load("@//tools/rules:cu.bzl", "cu_library")
 load("@//third_party:substitution.bzl", "template_rule")
-# load("@//tools/config:defs.bzl", "if_cuda")
+load("@//tools/config:defs.bzl", "if_cuda")
 
 template_rule(
     name = "gloo_config_cmake_macros",
@@ -45,18 +45,18 @@ cc_library(
     ],
 )
 
-cu_library(
-    name = "gloo_cuda",
-    srcs = [
-        "gloo/cuda.cu",
-        "gloo/cuda_private.cu",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":gloo_headers",
-    ],
-    alwayslink = True,
-)
+# cu_library(
+#     name = "gloo_cuda",
+#     srcs = [
+#         "gloo/cuda.cu",
+#         "gloo/cuda_private.cu",
+#     ],
+#     visibility = ["//visibility:public"],
+#     deps = [
+#         ":gloo_headers",
+#     ],
+#     alwayslink = True,
+# )
 
 cc_library(
     name = "gloo",
