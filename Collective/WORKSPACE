@@ -1,0 +1,8 @@
+workspace(name = "DGNN")
+
+
+new_local_repository(
+    name = "gloo",
+    build_file = "gloo.BUILD",
+    path = "gloo",
+)
