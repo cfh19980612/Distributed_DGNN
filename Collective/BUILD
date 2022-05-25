@@ -1,30 +1,30 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
-# load("@//tools/rules:cu.bzl", "cu_library")
-# load("@//third_party:substitution.bzl", "template_rule")
-# load("@//tools/config:defs.bzl", "if_cuda")
+# load("@rules_cc//cc:defs.bzl", "cc_library")
+# # load("@//tools/rules:cu.bzl", "cu_library")
+# # load("@//third_party:substitution.bzl", "template_rule")
+# # load("@//tools/config:defs.bzl", "if_cuda")
 
-template_rule(
-    name = "gloo_config_cmake_macros",
-    src = "gloo/config.h.in",
-    out = "gloo/config.h",
-    substitutions = {
-        "@GLOO_VERSION_MAJOR@": "0",
-        "@GLOO_VERSION_MINOR@": "5",
-        "@GLOO_VERSION_PATCH@": "0",
-        "cmakedefine01 GLOO_USE_CUDA": "define GLOO_USE_CUDA 1",
-        "cmakedefine01 GLOO_USE_NCCL": "define GLOO_USE_NCCL 0",
-        "cmakedefine01 GLOO_USE_ROCM": "define GLOO_USE_ROCM 0",
-        "cmakedefine01 GLOO_USE_RCCL": "define GLOO_USE_RCCL 0",
-        "cmakedefine01 GLOO_USE_REDIS": "define GLOO_USE_REDIS 0",
-        "cmakedefine01 GLOO_USE_IBVERBS": "define GLOO_USE_IBVERBS 0",
-        "cmakedefine01 GLOO_USE_MPI": "define GLOO_USE_MPI 0",
-        "cmakedefine01 GLOO_USE_AVX": "define GLOO_USE_AVX 0",
-        "cmakedefine01 GLOO_USE_LIBUV": "define GLOO_USE_LIBUV 0",
-        "cmakedefine01 GLOO_HAVE_TRANSPORT_TCP": "define GLOO_HAVE_TRANSPORT_TCP 1",
-        "cmakedefine01 GLOO_HAVE_TRANSPORT_IBVERBS": "define GLOO_HAVE_TRANSPORT_IBVERBS 0",
-        "cmakedefine01 GLOO_HAVE_TRANSPORT_UV": "define GLOO_HAVE_TRANSPORT_UV 0",
-    },
-)
+# template_rule(
+#     name = "gloo_config_cmake_macros",
+#     src = "gloo/config.h.in",
+#     out = "gloo/config.h",
+#     substitutions = {
+#         "@GLOO_VERSION_MAJOR@": "0",
+#         "@GLOO_VERSION_MINOR@": "5",
+#         "@GLOO_VERSION_PATCH@": "0",
+#         "cmakedefine01 GLOO_USE_CUDA": "define GLOO_USE_CUDA 1",
+#         "cmakedefine01 GLOO_USE_NCCL": "define GLOO_USE_NCCL 0",
+#         "cmakedefine01 GLOO_USE_ROCM": "define GLOO_USE_ROCM 0",
+#         "cmakedefine01 GLOO_USE_RCCL": "define GLOO_USE_RCCL 0",
+#         "cmakedefine01 GLOO_USE_REDIS": "define GLOO_USE_REDIS 0",
+#         "cmakedefine01 GLOO_USE_IBVERBS": "define GLOO_USE_IBVERBS 0",
+#         "cmakedefine01 GLOO_USE_MPI": "define GLOO_USE_MPI 0",
+#         "cmakedefine01 GLOO_USE_AVX": "define GLOO_USE_AVX 0",
+#         "cmakedefine01 GLOO_USE_LIBUV": "define GLOO_USE_LIBUV 0",
+#         "cmakedefine01 GLOO_HAVE_TRANSPORT_TCP": "define GLOO_HAVE_TRANSPORT_TCP 1",
+#         "cmakedefine01 GLOO_HAVE_TRANSPORT_IBVERBS": "define GLOO_HAVE_TRANSPORT_IBVERBS 0",
+#         "cmakedefine01 GLOO_HAVE_TRANSPORT_UV": "define GLOO_HAVE_TRANSPORT_UV 0",
+#     },
+# )
 
 cc_library(
     name = "gloo",
