@@ -1,5 +1,5 @@
 import setuptools
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension
+from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CppExtension
 import os
 import torch
 
@@ -18,7 +18,7 @@ if __name__ == '__main__':
         author=', '.join(authors),
         author_email='chenfh612@gmail.com',
         ext_modules=[
-            CUDAExtension(
+            CppExtension(
                 name='dgnn_collectives',
                 sources=['Collective/collective_gloo.cpp'],
             )
