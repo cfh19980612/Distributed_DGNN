@@ -5,7 +5,7 @@
 #include <torch/extension.h>
 
 #include <c10d/GlooDeviceFactory.hpp>
-#include <nccl.h>
+#include <gloo/gather.h>
 #include <c10d/ProcessGroupGloo.hpp>
 
 // uint32_t nextTag() {
