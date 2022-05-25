@@ -27,6 +27,30 @@ template_rule(
 )
 
 cc_library(
+    name = "gloo",
+    srcs = glob(
+        [
+            "gloo/*.cc",
+            "gloo/common/*.cc",
+            "gloo/rendezvous/*.cc",
+            "gloo/transport/*.cc",
+            "gloo/transport/tcp/*.cc",
+        ],
+        exclude = [
+            "gloo/cuda*.cc",
+            "gloo/common/win.cc",
+            "gloo/rendezvous/redis_store.cc",
+        ]
+    ),
+    copts = [
+        "-std=gnu++11",
+        "-std=c++11",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [":gloo_headers"],
+)
+
+cc_library(
     name = "gloo_headers",
     hdrs = glob(
         [
@@ -84,27 +108,3 @@ cc_library(
 #         [],
 #     ),
 # )
-
-cc_library(
-    name = "gloo",
-    srcs = glob(
-        [
-            "gloo/*.cc",
-            "gloo/common/*.cc",
-            "gloo/rendezvous/*.cc",
-            "gloo/transport/*.cc",
-            "gloo/transport/tcp/*.cc",
-        ],
-        exclude = [
-            "gloo/cuda*.cc",
-            "gloo/common/win.cc",
-            "gloo/rendezvous/redis_store.cc",
-        ]
-    ),
-    copts = [
-        "-std=gnu++11",
-        "-std=c++11",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [":gloo_headers"],
-)
