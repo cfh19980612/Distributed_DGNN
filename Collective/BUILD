@@ -1,7 +1,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 # load("@//tools/rules:cu.bzl", "cu_library")
-load("@//third_party:substitution.bzl", "template_rule")
-load("@//tools/config:defs.bzl", "if_cuda")
+# load("@//third_party:substitution.bzl", "template_rule")
+# load("@//tools/config:defs.bzl", "if_cuda")
 
 template_rule(
     name = "gloo_config_cmake_macros",
@@ -58,6 +58,33 @@ cc_library(
 #     alwayslink = True,
 # )
 
+# cc_library(
+#     name = "gloo",
+#     srcs = glob(
+#         [
+#             "gloo/*.cc",
+#             "gloo/common/*.cc",
+#             "gloo/rendezvous/*.cc",
+#             "gloo/transport/*.cc",
+#             "gloo/transport/tcp/*.cc",
+#         ],
+#         exclude = [
+#             "gloo/cuda*.cc",
+#             "gloo/common/win.cc",
+#             "gloo/rendezvous/redis_store.cc",
+#         ]
+#     ) + if_cuda(glob(["gloo/cuda*.cc"])),
+#     copts = [
+#         "-std=gnu++11",
+#         "-std=c++11",
+#     ],
+#     visibility = ["//visibility:public"],
+#     deps = [":gloo_headers"] + if_cuda(
+#         [":gloo_cuda"],
+#         [],
+#     ),
+# )
+
 cc_library(
     name = "gloo",
     srcs = glob(
@@ -73,14 +100,11 @@ cc_library(
             "gloo/common/win.cc",
             "gloo/rendezvous/redis_store.cc",
         ]
-    ) + if_cuda(glob(["gloo/cuda*.cc"])),
+    ),
     copts = [
         "-std=gnu++11",
         "-std=c++11",
     ],
     visibility = ["//visibility:public"],
-    deps = [":gloo_headers"] + if_cuda(
-        [":gloo_cuda"],
-        [],
-    ),
+    deps = [":gloo_headers"],
 )
