@@ -166,7 +166,7 @@ def run_dgnn_distributed(args):
         dataset['train_labels'] = dataset['train_labels'][rank*Num_nodes_per_worker:end,:]
         dataset['test_data'] = dataset['test_data'][rank*Num_nodes_per_worker:end,:]
         dataset['test_labels'] = dataset['test_labels'][rank*Num_nodes_per_worker:end]
-        print('Training data: ', dataset['train_data'])
+        print('Training data: ', dataset['train_data'].size())
 
     train_dataset = Data.TensorDataset(
                 torch.tensor(dataset['train_data']), 
