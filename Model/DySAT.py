@@ -14,8 +14,33 @@ from Model.layers import TemporalAttentionLayer
 from utils import *
 
 
+def _node_partition_comm(args, x, gate):
+    device = args['device']
+    Total_nodes = args['nodes_info'][-1]
+    world_size = args['world_size']
+    rank = args['rank']
+    Num_nodes_per_worker = int(Total_nodes//world_size)
+    mp_group = args['dist_group']
+
+    zero_pad = torch.zeros(Total_nodes - x.shape[0], x.size(1), x.shape[2]).to(device)
+    x_comm = torch.cat((x, zero_pad), dim=0).to(device)
+    
+    for i in range (world_size):
+        x_send = x_comm[:,:,:]
+        if i != world_size - 1:
+            x_send = x_comm[i*Num_nodes_per_worker:(i+1)*Num_nodes_per_worker,:,:]
+        else:
+            x_send = x_comm[i*Num_nodes_per_worker:,:,:]
+        if rank == i:
+            gather_list = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
+            torch.distributed.gather(x_comm, gather_list=gather_list, dst=i, group=mp_group[i])
+
+    final = torch.cat(gather_list, 1)
+    return gather_list
+
+
 def _gated_emb_comm(args, x, gate):
-    gather()
+    # gather()
     # mp_group = args['gated_group']
     # world_size = args['world_size']
     # global_time_steps = args['time_steps']
@@ -65,6 +90,7 @@ def _gated_emb_comm(args, x, gate):
     #     final = x.clone()
     
     # return final
+    return 0
 
 
 # TODO: realize the masked communication

@@ -222,7 +222,7 @@ def get_data_example(graphs, args, local_time_steps):
     eval_graph = graphs[eval_idx]
     next_graph = graphs[eval_idx+1]
 
-    if args['method'] == 'dist':
+    if args['method'] == 'dist' and args['partition'] == 'Time':
         eval_path = current_path + "/Data/{}/data/eval_{}_{}_{}_worker{}.npz".format(dataset, str(args['time_steps']), method, args['world_size'], rank)
     else:
         eval_path = current_path + "/Data/{}/data/eval_{}_{}.npz".format(dataset, str(args['time_steps']), method)
@@ -284,4 +284,4 @@ def slice_graph(args, graphs, adj, feats):
     sliced_adj = adj[rank*num_parts: (rank+1)*num_parts]
     sliced_feats = feats[rank*num_parts: (rank+1)*num_parts]
 
-    return sliced_graphs, sliced_adj, sliced_feats
+    return graphs, sliced_graphs, sliced_adj, sliced_feats

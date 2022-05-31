@@ -64,7 +64,25 @@ def _gate(args):
     
     return gate
 
-def _pre_comm_group(num_workers, time_steps, gate):
+def _pre_comm_group(partition, num_workers):
+    group = []
+    comm_method = 'gloo'
+    if partition == 'Time':
+        group = [torch.distributed.new_group(
+            ranks = [worker for worker in range(i)],
+            backend = comm_method,
+        ) for i in range(num_workers)
+        ]
+    elif partition == 'Time_Node':
+        group = [torch.distributed.new_group(
+            ranks = [worker for worker in range(num_workers)],
+            backend = comm_method,
+            ) for i in range(num_workers)
+            ]
+    return group
+
+
+def _pre_comm_group_gate(num_workers, time_steps, gate):
     comm_method = 'gloo'
     temporal_list = torch.tensor(range(time_steps))
     num_graph_per_worker = int(time_steps/num_workers)
@@ -107,11 +125,16 @@ def run_dgnn_distributed(args):
 
     # TODO: Unevenly slice graphs
     # load graphs
-    load_g, load_adj, load_feats = slice_graph(*load_graphs(args))
+    total_graph, load_g, load_adj, load_feats = slice_graph(*load_graphs(args))
     num_graph = len(load_g)
     gate = _gate(args)
-    if args['gate']:
-        args['gated_group_member'], args['gated_group'] = _pre_comm_group(args['world_size'], args['time_steps'], gate)
+
+    if args['partition'] == 'Time':
+        if args['gate']:
+            args['gated_group_member'], args['gated_group'] = _pre_comm_group_gate(args['world_size'], args['time_steps'], gate)
+    elif args['partition'] == 'Time_Node':
+        args['dist_group'] = _pre_comm_group(args['partition'], world_size)
+
 
     # generate the num of graphs for each module in DGNN
     args['structural_time_steps'] = num_graph
@@ -128,12 +151,26 @@ def run_dgnn_distributed(args):
         num_graph, args['temporal_time_steps'] - num_graph))
 
     # generate dataset
-    dataset = load_dataset(*get_data_example(load_g, args, num_graph))
+    if args['partition'] == 'Time':
+        dataset = load_dataset(*get_data_example(load_g, args, num_graph))
+    else:
+        Total_nodes = args['nodes_info'][-1]
+        Num_nodes_per_worker = int(Total_nodes//world_size)
+        if rank != world_size - 1:
+            end = (rank+1)*Num_nodes_per_worker
+        else:
+            end = Total_nodes
+        dataset = load_dataset(*get_data_example(total_graph, args, len(total_graph)))
+        dataset['train_data'] = dataset['train_data'][rank*Num_nodes_per_worker:end,:]
+        dataset['train_labels'] = dataset['train_labels'][rank*Num_nodes_per_worker:end,:]
+        dataset['test_data'] = dataset['test_data'][rank*Num_nodes_per_worker:end,:]
+        dataset['test_labels'] = dataset['test_labels'][rank*Num_nodes_per_worker:end]
 
     train_dataset = Data.TensorDataset(
                 torch.tensor(dataset['train_data']), 
                 torch.FloatTensor(dataset['train_labels'])
             )
+
     loader = Data.DataLoader(
         dataset = train_dataset,
         batch_size = 1000,
@@ -276,8 +313,6 @@ def run_dgnn(args):
     r"""
     run dgnn with one process
     """
-    gather()
-    return 0
 
     args['method'] = 'local'
     args['connection'] = False
