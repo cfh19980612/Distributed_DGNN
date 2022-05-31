@@ -164,7 +164,7 @@ def run_dgnn_distributed(args):
         else:
             end = Total_edges  
         print('start:{}, end:{}'.format(rank*Num_edges_per_worker, end))
-        print('total training nodes:', dataset['train_data'].size())
+        # print('total training nodes:', dataset['train_data'])
         dataset['train_data'] = dataset['train_data'][rank*Num_edges_per_worker:end,:]
         dataset['train_labels'] = dataset['train_labels'][rank*Num_edges_per_worker:end,:]
         dataset['test_data'] = dataset['test_data'][rank*Num_edges_per_worker:end,:]
