@@ -113,6 +113,7 @@ def _create_data_splits(graph, next_graph, val_mask_fraction=0.2, test_mask_frac
     """
     edges_next = np.array(list(nx.Graph(next_graph).edges()))
     print("total data:", len(edges_next))
+    
     edges_positive = []   # Constraint to restrict new links to existing nodes.
     Num_of_edges = 1000
     for idx, e in enumerate(edges_next):
