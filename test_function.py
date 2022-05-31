@@ -162,6 +162,7 @@ def run_dgnn_distributed(args):
             end = Total_nodes   
         print('start:{}, end:{}'.format(rank*Num_nodes_per_worker, end))
         dataset = load_dataset(*get_data_example(total_graph, args, len(total_graph)))
+        print('total training nodes:', dataset['train_data'].size())
         dataset['train_data'] = dataset['train_data'][rank*Num_nodes_per_worker:end,:]
         dataset['train_labels'] = dataset['train_labels'][rank*Num_nodes_per_worker:end,:]
         dataset['test_data'] = dataset['test_data'][rank*Num_nodes_per_worker:end,:]
