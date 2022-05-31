@@ -159,7 +159,8 @@ def run_dgnn_distributed(args):
         if rank != world_size - 1:
             end = (rank+1)*Num_nodes_per_worker
         else:
-            end = Total_nodes
+            end = Total_nodes   
+        print('start:{}, end:{}'.format(rank*Num_nodes_per_worker, end))
         dataset = load_dataset(*get_data_example(total_graph, args, len(total_graph)))
         dataset['train_data'] = dataset['train_data'][rank*Num_nodes_per_worker:end,:]
         dataset['train_labels'] = dataset['train_labels'][rank*Num_nodes_per_worker:end,:]
