@@ -153,16 +153,17 @@ def run_dgnn_distributed(args):
     # generate dataset
     if args['partition'] == 'Time':
         dataset = load_dataset(*get_data_example(load_g, args, num_graph))
-    else:
-        Total_edges = len(np.array(list(total_graph[-1].edges())))
+    else: 
+        dataset = load_dataset(*get_data_example(total_graph, args, len(total_graph)))
+
+        Total_edges = len(dataset['train_data'])
         # Total_nodes = args['nodes_info'][-1]
         Num_edges_per_worker = int(Total_edges//world_size)
         if rank != world_size - 1:
             end = (rank+1)*Num_edges_per_worker
         else:
-            end = Total_edges   
+            end = Total_edges  
         print('start:{}, end:{}'.format(rank*Num_edges_per_worker, end))
-        dataset = load_dataset(*get_data_example(total_graph, args, len(total_graph)))
         print('total training nodes:', dataset['train_data'].size())
         dataset['train_data'] = dataset['train_data'][rank*Num_edges_per_worker:end,:]
         dataset['train_labels'] = dataset['train_labels'][rank*Num_edges_per_worker:end,:]
