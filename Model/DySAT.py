@@ -33,7 +33,7 @@ def _node_partition_comm(args, x):
             x_send = x_comm[i*Num_nodes_per_worker:,:,:]
         if rank == i:
             gather_list = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
-            torch.distributed.gather(x_comm, gather_list=gather_list, dst=i, group=mp_group[i])
+            torch.distributed.gather(x_send, gather_list=gather_list, dst=i, group=mp_group[i])
 
     final = torch.cat(gather_list, 1)
     return gather_list
