@@ -42,8 +42,6 @@ parser.add_argument('--weight_decay', type=float, nargs='?', default=0.0005,
 
 parser.add_argument('--save_log', type=bool, nargs='?', default=True,
                     help='Save the loss and accuracy outputs')
-parser.add_argument('--partition', type=string, nargs='?', default="Time",
-                    help='How to partition the graph data')
 
 args = vars(parser.parse_args())
 
