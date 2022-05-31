@@ -14,7 +14,7 @@ from Model.layers import TemporalAttentionLayer
 from utils import *
 
 
-def _node_partition_comm(args, x, gate):
+def _node_partition_comm(args, x):
     device = args['device']
     Total_nodes = args['nodes_info'][-1]
     world_size = args['world_size']
@@ -265,10 +265,12 @@ class DySAT(nn.Module):
         # Temporal Attention forward
         if self.args['connection']:
             # comm_start = time.time()
-            # exchange node embeddings
-            if self.args['gate']:
-                # fuse_structural_output = _customized_embedding_comm(self.args, structural_outputs_padded, gate)
-                fuse_structural_output = _gated_emb_comm(self.args, structural_outputs_padded, gate)
+            # # exchange node embeddings
+            # if self.args['gate']:
+            #     # fuse_structural_output = _customized_embedding_comm(self.args, structural_outputs_padded, gate)
+            #     fuse_structural_output = _gated_emb_comm(self.args, structural_outputs_padded, gate)
+            if self.args['partition'] == 'Time_Node':
+                fuse_structural_output = _node_partition_comm(self.args, structural_outputs_padded)
             else:
                 fuse_structural_output = _embedding_comm(self.args, structural_outputs_padded)
             # self.args['comm_cost'] += time.time() - comm_start
