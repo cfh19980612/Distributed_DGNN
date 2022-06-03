@@ -53,9 +53,9 @@ def _node_partition_comm_after(args, x):
 
     for i in range (world_size):
         if i != world_size - 1 and i != rank: # receiver
-            comm_tensor = torch.zeros_like(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+            comm_tensor = torch.zeros(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
         elif i == world_size - 1 and i != rank:
-            comm_tensor = torch.zeros_like(Total_nodes - (world_size -1)*Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+            comm_tensor = torch.zeros(Total_nodes - (world_size -1)*Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
         else:
             comm_tensor = x.clone().detach()
             final_list.append(x)
