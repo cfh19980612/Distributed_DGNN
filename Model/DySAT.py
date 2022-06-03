@@ -270,12 +270,12 @@ class DySAT(nn.Module):
             # if self.args['gate']:
             #     # fuse_structural_output = _customized_embedding_comm(self.args, structural_outputs_padded, gate)
             #     fuse_structural_output = _gated_emb_comm(self.args, structural_outputs_padded, gate)
-            print('start partition!')
+            # print('start partition!')
             if self.args['partition'] == 'Time_Node':
                 fuse_structural_output = _node_partition_comm(self.args, structural_outputs_padded)
             else:
                 fuse_structural_output = _embedding_comm(self.args, structural_outputs_padded)
-            print('end partition!')
+            # print('end partition!')
             # self.args['comm_cost'] += time.time() - comm_start
             # print('comm_cost in worker {} with time {}'.format(self.args['rank'], self.args['comm_cost']))
             # print('rank: {} with fused tensor size{}'.format(self.args['rank'], fuse_structural_output.size()))
