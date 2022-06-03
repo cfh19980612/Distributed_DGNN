@@ -163,13 +163,13 @@ def run_dgnn_distributed(args):
             end = (rank+1)*Num_edges_per_worker
         else:
             end = Total_edges  
-        print('start:{}, end:{}'.format(rank*Num_edges_per_worker, end))
+        # print('start:{}, end:{}'.format(rank*Num_edges_per_worker, end))
         # print('total training nodes:', dataset['train_data'])
         dataset['train_data'] = dataset['train_data'][rank*Num_edges_per_worker:end,:]
         dataset['train_labels'] = dataset['train_labels'][rank*Num_edges_per_worker:end,:]
         dataset['test_data'] = dataset['test_data'][rank*Num_edges_per_worker:end,:]
         dataset['test_labels'] = dataset['test_labels'][rank*Num_edges_per_worker:end]
-        print('Training data: ', dataset['train_data'])
+        # print('Training data: ', dataset['train_data'])
 
     train_dataset = Data.TensorDataset(
                 torch.tensor(dataset['train_data']), 
