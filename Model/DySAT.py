@@ -64,7 +64,7 @@ def _node_partition_comm_after(args, x):
 
         comm_start = time.time()
         torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
-        args['comm_cost'] += time.time() - comm_start
+        # args['comm_cost'] += time.time() - comm_start
         if i != rank:
             final_list.append(comm_tensor)
         
