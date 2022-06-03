@@ -83,7 +83,6 @@ def _pre_comm_group(partition, num_workers):
             ]
     return group
 
-
 def _pre_comm_group_gate(num_workers, time_steps, gate):
     comm_method = Comm_backend
     temporal_list = torch.tensor(range(time_steps))
