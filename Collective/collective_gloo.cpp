@@ -98,8 +98,8 @@
 torch::Tensor _emb_gather(
     std::vector<std::vector<at::Tensor>>& outputs,
     std::vector<at::Tensor>& inputs,
-    std::vector<std::vector<int>>& target_members,
-    const GatherOptions& opts) {
+    std::vector<std::vector<int>>& target_members,) {
+    // const GatherOptions& opts) {
         // throw std::runtime_error("No implementation!");
         static auto invalidArgument = [](const std::string& msg) {
             TORCH_CHECK(false, "ProcessGroupGloo::broadcast: " + msg);
