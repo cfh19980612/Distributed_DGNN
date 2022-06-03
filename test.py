@@ -14,6 +14,7 @@ os.environ[
     "TORCH_DISTRIBUTED_DEBUG"
 ] = "DETAIL"
 
+Comm_backend = 'nccl'
 # comm_method = 'gloo' # currently use 'gloo' for CPU process communication
 
 # TODO: implement the test with pytest framework
@@ -23,9 +24,9 @@ def _test_distributed(rank, args, real_dist):
     args['rank'] = rank
 
     if real_dist:
-        comm_method = 'gloo'
+        comm_method = Comm_backend
     else:  
-        comm_method = 'gloo'
+        comm_method = Comm_backend
 
     # init the communication group
     dist_init_method = 'tcp://{master_ip}:{master_port}'.format(

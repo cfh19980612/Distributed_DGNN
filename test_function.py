@@ -49,6 +49,8 @@ class _My_DGNN(torch.nn.Module):
         # print(input_emb)
         return self.classificer(input_emb)
 
+Comm_backend='nccl'
+
 def _gate(args):
     global_time_steps = args['time_steps']
     world_size = args['world_size']
@@ -66,7 +68,7 @@ def _gate(args):
 
 def _pre_comm_group(partition, num_workers):
     group = []
-    comm_method = 'gloo'
+    comm_method = Comm_backend
     if partition == 'Time':
         group = [torch.distributed.new_group(
             ranks = [worker for worker in range(i)],
@@ -83,7 +85,7 @@ def _pre_comm_group(partition, num_workers):
 
 
 def _pre_comm_group_gate(num_workers, time_steps, gate):
-    comm_method = 'gloo'
+    comm_method = Comm_backend
     temporal_list = torch.tensor(range(time_steps))
     num_graph_per_worker = int(time_steps/num_workers)
     custom_group = []
@@ -170,7 +172,7 @@ def run_dgnn_distributed(args):
     #     dataset['test_data'] = dataset['test_data'][rank*Num_edges_per_worker:end,:]
     #     dataset['test_labels'] = dataset['test_labels'][rank*Num_edges_per_worker:end]
     #     # print('Training data: ', dataset['train_data'])
-    
+
     dataset = load_dataset(*get_data_example(load_g, args, num_graph))
 
     train_dataset = Data.TensorDataset(
