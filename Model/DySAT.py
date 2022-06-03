@@ -26,17 +26,18 @@ def _node_partition_comm(args, x):
     x_comm = torch.cat((x, zero_pad), dim=0).to(device)
     
     for i in range (world_size):
-        x_send = x_comm[:,:,:]
         if i != world_size - 1:
             x_send = x_comm[i*Num_nodes_per_worker:(i+1)*Num_nodes_per_worker,:,:]
         else:
             x_send = x_comm[i*Num_nodes_per_worker:,:,:]
         if rank == i:
-            gather_list = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
-            torch.distributed.gather(x_send, gather_list=gather_list, dst=i, group=mp_group[i])
+            gather_lists = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
+            torch.distributed.gather(x_send, gather_list=gather_lists, dst=i, group=mp_group[i])
+        else:
+            torch.distributed.gather(x_send, gather_list=None, dst=i, group=mp_group[i])
 
-    final = torch.cat(gather_list, 1)
-    return gather_list
+    final = torch.cat(gather_lists, 1)
+    return final
 
 
 def _gated_emb_comm(args, x, gate):
