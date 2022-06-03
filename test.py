@@ -118,6 +118,8 @@ def _get_args():
                         help='method for DGNN training')
     
     # for experimental configurations
+    parser.add_argument('--time_steps', type=int, nargs='?', default=8,
+                    help="total time steps used for train, eval and test")
     parser.add_argument('--world_size', type=int, default=1,
                         help='method for DGNN training')
     parser.add_argument('--gate', type=bool, default=False,
