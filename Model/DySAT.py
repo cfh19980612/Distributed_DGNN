@@ -14,7 +14,7 @@ from Model.layers import TemporalAttentionLayer
 from utils import *
 
 
-def _node_partition_comm(args, x):
+def _node_partition_comm_before(args, x):
     device = args['device']
     Total_nodes = args['nodes_info'][-1]
     world_size = args['world_size']
@@ -22,7 +22,7 @@ def _node_partition_comm(args, x):
     Num_nodes_per_worker = int(Total_nodes//world_size)
     mp_group = args['dist_group']
 
-    zero_pad = torch.zeros(Total_nodes - x.shape[0], x.size(1), x.shape[2]).to(device)
+    zero_pad = torch.zeros(Total_nodes - x.shape[0], x.size(1), x.size(2)).to(device)
     x_comm = torch.cat((x, zero_pad), dim=0).to(device)
     
     for i in range (world_size):
@@ -39,6 +39,37 @@ def _node_partition_comm(args, x):
     final = torch.cat(gather_lists, 1)
     return final
 
+def _node_partition_comm_after(args, x):
+    device = args['device']
+    Total_nodes = args['nodes_info'][-1]
+    world_size = args['world_size']
+    rank = args['rank']
+    mp_group = args['dist_group']
+    time_steps = args["time_steps"]
+    Num_nodes_per_worker = int(Total_nodes//world_size)
+    Num_times_per_worker = int(time_steps//world_size)
+
+    final_list = []
+
+    for i in range (world_size):
+        if i != world_size - 1 and i != rank: # receiver
+            comm_tensor = torch.zeros_like(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+        elif i == world_size - 1 and i != rank:
+            comm_tensor = torch.zeros_like(Total_nodes - (world_size -1)*Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+        else:
+            comm_tensor = x.clone().detach()
+            final_list.append(x)
+
+        torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
+        if i != rank:
+            final_list.append(comm_tensor)
+        
+    
+    new_final_list = [emb[:,rank*Num_times_per_worker:(rank+1)*Num_times_per_worker,:] for emb in final_list]
+    final = torch.cat(new_final_list, 0)
+        
+
+    return 0
 
 def _gated_emb_comm(args, x, gate):
     # gather()
@@ -272,7 +303,7 @@ class DySAT(nn.Module):
             #     fuse_structural_output = _gated_emb_comm(self.args, structural_outputs_padded, gate)
             # print('start partition!')
             if self.args['partition'] == 'Time_Node':
-                fuse_structural_output = _node_partition_comm(self.args, structural_outputs_padded)
+                fuse_structural_output = _node_partition_comm_before(self.args, structural_outputs_padded)
             else:
                 fuse_structural_output = _embedding_comm(self.args, structural_outputs_padded)
             # print('end partition!')
@@ -283,6 +314,9 @@ class DySAT(nn.Module):
             temporal_time_start = time.time()
             temporal_out = self.temporal_attn(fuse_structural_output)
             self.args['att_time'] += time.time() - temporal_time_start
+            if self.args['partition'] == 'Time_Node':
+                temporal_out = _node_partition_comm_after(self.args, temporal_out)
+
         else: 
             temporal_time_start = time.time()
             # print('rank: {} with fused tensor size{}'.format(self.args['rank'], structural_outputs_padded.size()))
