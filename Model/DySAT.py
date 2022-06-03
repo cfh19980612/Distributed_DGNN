@@ -69,7 +69,7 @@ def _node_partition_comm_after(args, x):
     final = torch.cat(new_final_list, 0)
         
 
-    return 0
+    return final
 
 def _gated_emb_comm(args, x, gate):
     # gather()
