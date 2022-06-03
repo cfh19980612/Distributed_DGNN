@@ -131,7 +131,7 @@ class TemporalAttentionLayer(nn.Module):
 
         # reduced time interval information
         # sample_masks =  self.sample_masks[:self.num_time_steps]
-        time_interval = [i for i in range(self.num_time_steps)]
+        time_interval = [i for i in range(outputs.size[1])]
         Time_interval = torch.ones_like(outputs[0])
         Time_numpy = Time_interval.cpu().numpy()
         for i in range (Time_numpy.shape[0]):
