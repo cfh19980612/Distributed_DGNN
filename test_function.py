@@ -151,25 +151,27 @@ def run_dgnn_distributed(args):
         num_graph, args['temporal_time_steps'] - num_graph))
 
     # generate dataset
-    if args['partition'] == 'Time':
-        dataset = load_dataset(*get_data_example(load_g, args, num_graph))
-    else: 
-        dataset = load_dataset(*get_data_example(total_graph, args, len(total_graph)))
+    # if args['partition'] == 'Time':
+    #     dataset = load_dataset(*get_data_example(load_g, args, num_graph))
+    # else: 
+    #     dataset = load_dataset(*get_data_example(total_graph, args, len(total_graph)))
 
-        Total_edges = len(dataset['train_data'])
-        # Total_nodes = args['nodes_info'][-1]
-        Num_edges_per_worker = int(Total_edges//world_size)
-        if rank != world_size - 1:
-            end = (rank+1)*Num_edges_per_worker
-        else:
-            end = Total_edges  
-        # print('start:{}, end:{}'.format(rank*Num_edges_per_worker, end))
-        # print('total training nodes:', dataset['train_data'])
-        dataset['train_data'] = dataset['train_data'][rank*Num_edges_per_worker:end,:]
-        dataset['train_labels'] = dataset['train_labels'][rank*Num_edges_per_worker:end,:]
-        dataset['test_data'] = dataset['test_data'][rank*Num_edges_per_worker:end,:]
-        dataset['test_labels'] = dataset['test_labels'][rank*Num_edges_per_worker:end]
-        # print('Training data: ', dataset['train_data'])
+    #     Total_edges = len(dataset['train_data'])
+    #     # Total_nodes = args['nodes_info'][-1]
+    #     Num_edges_per_worker = int(Total_edges//world_size)
+    #     if rank != world_size - 1:
+    #         end = (rank+1)*Num_edges_per_worker
+    #     else:
+    #         end = Total_edges  
+    #     # print('start:{}, end:{}'.format(rank*Num_edges_per_worker, end))
+    #     # print('total training nodes:', dataset['train_data'])
+    #     dataset['train_data'] = dataset['train_data'][rank*Num_edges_per_worker:end,:]
+    #     dataset['train_labels'] = dataset['train_labels'][rank*Num_edges_per_worker:end,:]
+    #     dataset['test_data'] = dataset['test_data'][rank*Num_edges_per_worker:end,:]
+    #     dataset['test_labels'] = dataset['test_labels'][rank*Num_edges_per_worker:end]
+    #     # print('Training data: ', dataset['train_data'])
+    
+    dataset = load_dataset(*get_data_example(load_g, args, num_graph))
 
     train_dataset = Data.TensorDataset(
                 torch.tensor(dataset['train_data']), 
