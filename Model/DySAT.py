@@ -32,7 +32,9 @@ def _node_partition_comm_before(args, x):
             x_send = x_comm[i*Num_nodes_per_worker:,:,:]
         if rank == i:
             gather_lists = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
+            comm_start = time.time()
             torch.distributed.gather(x_send, gather_list=gather_lists, dst=i, group=mp_group[i])
+            args['comm_cost'] += time.time() - comm_start
         else:
             torch.distributed.gather(x_send, gather_list=None, dst=i, group=mp_group[i])
 
@@ -60,7 +62,9 @@ def _node_partition_comm_after(args, x):
             comm_tensor = x.clone().detach()
             final_list.append(x)
 
+        comm_start = time.time()
         torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
+        args['comm_cost'] += time.time() - comm_start
         if i != rank:
             final_list.append(comm_tensor)
         
