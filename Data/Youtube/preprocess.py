@@ -55,7 +55,7 @@ generate a graph per 'SLICE_DAYS'.
 SLICE_DAYS = 1
 START_DATE = min(ts) + timedelta(1)
 # END_DATE =  max(ts) - timedelta(700)
-END_DATE = min(ts) + timedelta(30)
+END_DATE = min(ts) + timedelta(52)
 
 # END_DATE = timedelta(100)
 
@@ -70,8 +70,8 @@ slice_id = 0
 '''
 links: a list, where each element contains three contents, i.e., (source_node, target_node, timestamp)
 '''
-Create_graph = [True for i in range (35)]
-Graph_nodes = [0 for i in range(35)]
+Create_graph = [True for i in range (55)]
+Graph_nodes = [0 for i in range(55)]
 Now_day = START_DATE
 num_nodes = 0
 # Note: there are redundant nodes in edges
@@ -88,7 +88,7 @@ for (a, b, time) in links:
     Graph_nodes[slice_id] += 1
 
 print('graph edges: ', Graph_nodes)
-scale = 0.1
+scale = 0.05
 temp = 0
 now = 0
 for (a, b, time) in links:
