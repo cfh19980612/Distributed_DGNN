@@ -25,6 +25,7 @@ def _node_partition_comm_before(args, x):
     zero_pad = torch.zeros(Total_nodes - x.shape[0], x.size(1), x.size(2)).to(device)
     x_comm = torch.cat((x, zero_pad), dim=0).to(device)
     
+    comm_time = []
     for i in range (world_size):
         if i != world_size - 1:
             x_send = x_comm[i*Num_nodes_per_worker:(i+1)*Num_nodes_per_worker,:,:]
@@ -34,9 +35,12 @@ def _node_partition_comm_before(args, x):
             gather_lists = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
             comm_start = time.time()
             torch.distributed.gather(x_send, gather_list=gather_lists, dst=i, group=mp_group[i])
-            args['comm_cost'] += time.time() - comm_start
+            comm_time.append(time.time() - comm_start)
+            # args['comm_cost'] += time.time() - comm_start
         else:
             torch.distributed.gather(x_send, gather_list=None, dst=i, group=mp_group[i])
+
+    args['comm_cost'] += max(comm_time)
 
     final = torch.cat(gather_lists, 1)
     return final
@@ -52,7 +56,7 @@ def _node_partition_comm_after(args, x):
     Num_times_per_worker = int(time_steps//world_size)
 
     final_list = []
-
+    comm_time = []
     for i in range (world_size):
         if i != world_size - 1 and i != rank: # receiver
             comm_tensor = torch.zeros(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
@@ -64,10 +68,12 @@ def _node_partition_comm_after(args, x):
 
         comm_start = time.time()
         torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
+        comm_time.append(time.time() - comm_start)
         # args['comm_cost'] += time.time() - comm_start
         if i != rank:
             final_list.append(comm_tensor)
-        
+    
+    args['comm_cost'] += max(comm_time)
     
     new_final_list = [emb[:,rank*Num_times_per_worker:(rank+1)*Num_times_per_worker,:] for emb in final_list]
     final = torch.cat(new_final_list, 0)
