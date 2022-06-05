@@ -74,6 +74,8 @@ Create_graph = [True for i in range (205)]
 Graph_nodes = [0 for i in range(205)]
 Now_day = START_DATE
 num_nodes = 0
+now = 0
+now_temp = 0
 # Note: there are redundant nodes in edges
 for (a, b, time) in links:
     datetime_object = time
@@ -85,7 +87,10 @@ for (a, b, time) in links:
     else:
         days_diff = (datetime_object - START_DATE).days
     slice_id = days_diff // SLICE_DAYS
-    Graph_nodes[slice_id] += 1
+    if slice_id != now_temp:
+        now = now + 1
+        now_temp = slice_id
+    Graph_nodes[now] += 1
 
 print('graph edges: ', Graph_nodes)
 scale = 0.05
