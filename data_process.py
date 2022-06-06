@@ -181,10 +181,11 @@ def load_graphs(args):
     # print("Loaded {} graphs ".format(len(graphs)))
 
     if features:
-        if args['method'] == 'dist':
-            feats_path = current_path + "/Data/{}/data/eval_{}_dist_{}_feats.npy".format(args['dataset'], str(args['time_steps']), args['world_size'])
-        else:
-            feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
+        # if args['method'] == 'dist':
+        #     feats_path = current_path + "/Data/{}/data/eval_{}_dist_{}_feats.npy".format(args['dataset'], str(args['time_steps']), args['world_size'])
+        # else:
+        #     feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
+        feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
         try:
             feats = np.load(feats_path, allow_pickle=True)
             # print('loaded feats, ',feats)
