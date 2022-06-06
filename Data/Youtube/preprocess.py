@@ -55,7 +55,7 @@ generate a graph per 'SLICE_DAYS'.
 SLICE_DAYS = 1
 START_DATE = min(ts) + timedelta(1)
 # END_DATE =  max(ts) - timedelta(700)
-END_DATE = min(ts) + timedelta(200)
+END_DATE = min(ts) + timedelta(50)
 
 # END_DATE = timedelta(100)
 
