@@ -234,8 +234,8 @@ def get_data_example(graphs, args, local_time_steps):
     except IOError:
         print("Worker {} is Generating and saving training samples ....".format(args['rank']))
         train_edges, train_edges_false, val_edges, val_edges_false, test_edges, test_edges_false = \
-            _create_data_splits(eval_graph, next_graph, val_mask_fraction=0.2,
-                            test_mask_fraction=0.4)
+            _create_data_splits(eval_graph, next_graph, val_mask_fraction=0,
+                            test_mask_fraction=0.6)
         np.savez(eval_path, data=np.array([train_edges, train_edges_false, val_edges, val_edges_false,
                                            test_edges, test_edges_false]))
     
