@@ -19,6 +19,11 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from customized_ddp import DistributedGroupedDataParallel as LocalDDP
 from utils import *
 
+torch.autograd.set_detect_anomaly(True)
+torch.manual_seed(0)
+torch.cuda.manual_seed(0)
+np.random.seed(0)
+
 class _My_DGNN(torch.nn.Module):
     def __init__(self, args, in_feats = None):
         super(_My_DGNN, self).__init__()
@@ -121,8 +126,8 @@ def run_dgnn_distributed(args):
     else: mp_group = None
     dp_group = args['dp_group']
 
-    torch.manual_seed(42 + rank)
-    torch.cuda.manual_seed(42 + rank)
+    # torch.manual_seed(42 + rank)
+    # torch.cuda.manual_seed(42 + rank)
 
     # TODO: Unevenly slice graphs
     # load graphs
