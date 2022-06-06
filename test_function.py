@@ -329,7 +329,7 @@ def run_dgnn(args):
 
     # TODO: Unevenly slice graphs
     # load graphs
-    load_g, load_adj, load_feats = slice_graph(*load_graphs(args))
+    _, load_g, load_adj, load_feats = slice_graph(*load_graphs(args))
     # print('features: ',load_feats)
     num_graph = len(load_g)
     print("Loaded {}/{} graphs".format(num_graph, args['time_steps']))
