@@ -100,6 +100,7 @@ def _node_partition_comm_before(args, x):
     # args['comm_cost'] += max(comm_time)
 
     final = torch.cat(gather_lists, 1)
+    print('final size: ',final.size())
     return final
 
 def _node_partition_comm_after(args, x):
