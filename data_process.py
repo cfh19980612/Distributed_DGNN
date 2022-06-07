@@ -191,12 +191,12 @@ def load_graphs(args):
             # print('loaded feats, ',feats)
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
-            # compute the max degree over all graphs
-            # max_deg, _ = _count_max_deg(graphs, adj_matrices)
-            # print('max degree: ', max_deg)
             print("Worker {} is Generating and saving node features ....".format(args['rank']))
-            feats = _generate_feats(adj_matrices, time_steps)
-            # feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
+            # method 1: compute the max degree over all graphs
+            max_deg, _ = _count_max_deg(graphs, adj_matrices)
+            feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
+            # method 2:
+            # feats = _generate_feats(adj_matrices, time_steps)
             # print('saved feats, ',feats)
             np.save(feats_path, feats)
 
