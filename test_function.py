@@ -110,7 +110,7 @@ def _pre_comm_group_gate(num_workers, time_steps, gate):
 def run_dgnn_distributed(args):
     args['method'] = 'dist'
     args['connection'] = True
-    # args['gate'] = True
+    args['gate'] = False
     device = args['device']
     rank = args['rank']
     world_size = args['world_size']
@@ -127,7 +127,7 @@ def run_dgnn_distributed(args):
     total_graph, load_g, load_adj, load_feats = slice_graph(*load_graphs(args))
     num_graph = len(load_g)
     gate = _gate(args)
-    print(args['gate'])
+    # print(args['gate'])
     if args['gate']:
         args['gated_group_member'], args['gated_group'] = _pre_comm_group_gate(args['world_size'], args['time_steps'], gate)
     args['dist_group'] = _pre_comm_group(world_size)
