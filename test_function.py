@@ -74,14 +74,7 @@ def _gate(args):
 def _pre_comm_group(partition, num_workers):
     group = []
     comm_method = Comm_backend
-    if partition == 'Time':
-        group = [torch.distributed.new_group(
-            ranks = [worker for worker in range(i)],
-            backend = comm_method,
-        ) for i in range(num_workers)
-        ]
-    elif partition == 'Time_Node':
-        group = [torch.distributed.new_group(
+    group = [torch.distributed.new_group(
             ranks = [worker for worker in range(num_workers)],
             backend = comm_method,
             ) for i in range(num_workers)
@@ -137,7 +130,7 @@ def run_dgnn_distributed(args):
 
     if args['gate']:
         args['gated_group_member'], args['gated_group'] = _pre_comm_group_gate(args['world_size'], args['time_steps'], gate)
-    args['dist_group'] = _pre_comm_group(args['partition'], world_size)
+    args['dist_group'] = _pre_comm_group(world_size)
 
 
     # generate the num of graphs for each module in DGNN
