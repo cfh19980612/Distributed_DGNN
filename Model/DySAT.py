@@ -16,20 +16,20 @@ from Model.layers import TemporalAttentionLayer
 from utils import *
 
 def _multi_process_gather(rank, dest, x_comm, mp_group, world_size, Num_nodes_per_worker, gather_dict):
-    # group=mp_group[dest]
+    group=mp_group[dest]
     print('Hello!')
-    # if dest != world_size - 1:
-    #     x_send = x_comm[dest*Num_nodes_per_worker:(dest+1)*Num_nodes_per_worker,:,:]
-    # else:
-    #     x_send = x_comm[dest*Num_nodes_per_worker:,:,:]
-    # if rank == dest:
-    #     # gather_dict = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
-    #     # comm_start = time.time()
-    #     torch.distributed.gather(x_send, gather_list=gather_dict, dst=dest, group=group)
-    #     # comm_time.append(time.time() - comm_start)
-    #     # args['comm_cost'] += time.time() - comm_start
-    # else:
-    #     torch.distributed.gather(x_send, gather_list=None, dst=dest, group=group)
+    if dest != world_size - 1:
+        x_send = x_comm[dest*Num_nodes_per_worker:(dest+1)*Num_nodes_per_worker,:,:]
+    else:
+        x_send = x_comm[dest*Num_nodes_per_worker:,:,:]
+    if rank == dest:
+        # gather_dict = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
+        # comm_start = time.time()
+        torch.distributed.gather(x_send, gather_list=gather_dict, dst=dest, group=group)
+        # comm_time.append(time.time() - comm_start)
+        # args['comm_cost'] += time.time() - comm_start
+    else:
+        torch.distributed.gather(x_send, gather_list=None, dst=dest, group=group)
 
     
 
@@ -56,7 +56,7 @@ def _node_partition_comm_before(args, x):
     workers = []
     for i in range(world_size):
         # p = mp.Process(target=_multi_process_gather, args=(rank, i, x_comm.clone().detach(), mp_group, world_size, Num_nodes_per_worker, gather_lists))
-        p = mp.Process(target=_multi_process_gather, args=(rank, i, rank, rank, rank, rank, rank))
+        p = mp.Process(target=_multi_process_gather, args=(rank, i, rank, rank, world_sirankze, rank, rank))
         p.start()
         workers.append(p)
     for p in workers:
