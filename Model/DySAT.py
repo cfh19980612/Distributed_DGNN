@@ -90,6 +90,7 @@ def _node_partition_comm_before(args, x):
     ######################
 
     gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
+    print('The communication tensor with size ', x_comm.size())
     comm_start = time.time()
     torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
     args['comm_cost'] += time.time() - comm_start
@@ -200,7 +201,6 @@ def _gated_emb_comm(args, x, gate):
     # return final
     return 0
 
-
 # TODO: realize the masked communication
 def _customized_embedding_comm(args, x, gate):
     r"""
@@ -247,7 +247,6 @@ def _customized_embedding_comm(args, x, gate):
     # print('rank: {} with fused tensor size {}'.format(rank, final.size()))
 
     return final
-
 
 def _embedding_comm(args, x):
     # mp_group = args['mp_group']
@@ -303,6 +302,7 @@ def _embedding_comm(args, x):
     comm_tensor = x.clone().detach()
 
     gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
+    print('The communication tensor with size ', x_comm.size())
     comm_start = time.time()
     torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
     args['comm_cost'] += time.time() - comm_start
