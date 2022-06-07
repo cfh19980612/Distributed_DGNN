@@ -100,7 +100,7 @@ def _node_partition_comm_before(args, x):
     # args['comm_cost'] += max(comm_time)
 
     final = torch.cat(gather_lists, 1)
-    print('final size: ',final.size())
+    # print('final size: ',final.size())
     return final
 
 def _node_partition_comm_after(args, x):
@@ -112,14 +112,15 @@ def _node_partition_comm_after(args, x):
     time_steps = args["time_steps"]
     Num_nodes_per_worker = int(Total_nodes//world_size)
     Num_times_per_worker = int(time_steps//world_size)
-    print('input size: ',x.size())
+    # print('input size: ',x.size())
     final_list = []
     comm_time = []
     for i in range (world_size):
-        if i != world_size - 1 and i != rank: # receiver
-            comm_tensor = torch.zeros(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
-        elif i == world_size - 1 and i != rank:
-            comm_tensor = torch.zeros(Total_nodes - (world_size -1)*Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+        if i != rank: # receiver
+            if i != world_size - 1:
+                comm_tensor = torch.zeros(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+            else:
+                comm_tensor = torch.zeros(Total_nodes - (world_size -1)*Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
         else:
             comm_tensor = x.clone().detach()
             final_list.append(x)
