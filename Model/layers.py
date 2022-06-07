@@ -24,7 +24,6 @@ class StructuralAttentionLayer(nn.Module):
         self.att_r = nn.Parameter(torch.Tensor(1, n_heads, self.out_dim))
 
         nn.init.xavier_uniform_(self.lin.weight)
-        # nn.init.constant_(self.lin.bias, 0)
         nn.init.xavier_uniform_(self.att_l)
         nn.init.xavier_uniform_(self.att_r)
         
