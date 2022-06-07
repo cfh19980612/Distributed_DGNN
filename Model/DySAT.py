@@ -54,7 +54,7 @@ def _node_partition_comm_before(args, x):
     # torch.multiprocessing.set_start_method('spawn')
     workers = []
     for i in range(world_size):
-        p = mp.Process(target=_multi_process_gather, args=(rank, i, x_comm, mp_group, world_size, Num_nodes_per_worker, gather_lists))
+        p = mp.Process(target=_multi_process_gather, args=(rank, i, x_comm.clone().detach(), mp_group, world_size, Num_nodes_per_worker, gather_lists))
         p.start()
         workers.append(p)
     for p in workers:
