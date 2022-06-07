@@ -90,7 +90,9 @@ def _node_partition_comm_before(args, x):
     ######################
 
     gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
+    comm_start = time.time()
     torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
+    args['comm_cost'] += time.time() - comm_start
     # print(Total_nodes, Num_nodes_per_worker)
     final_temp = []
     for i in range(world_size):
