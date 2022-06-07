@@ -250,47 +250,70 @@ def _customized_embedding_comm(args, x, gate):
 
 
 def _embedding_comm(args, x):
-    mp_group = args['mp_group']
+    # mp_group = args['mp_group']
     rank = args['rank']
     world_size = args['world_size']
     device = args['device']
 
     num_graph_per_worker = int(args['time_steps'] / world_size)
     result_list = []
-    for i in range (world_size - 1):
-        if i > rank:
-            break
+    # for i in range (world_size - 1):
+    #     if i > rank:
+    #         break
 
-        if i == rank:
-            # Sender: copy the local data for sending
-            comm_tensor = x.clone().detach()
-        else:
-            r'''
-            Receiver: generate a empty tensor for receiving data, note that tensors generated from \
-            different process have different sizes (due to different numbers of nodes)
-            '''
-            comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2]).to(device)
+    #     if i == rank:
+    #         # Sender: copy the local data for sending
+    #         comm_tensor = x.clone().detach()
+    #     else:
+    #         r'''
+    #         Receiver: generate a empty tensor for receiving data, note that tensors generated from \
+    #         different process have different sizes (due to different numbers of nodes)
+    #         '''
+    #         comm_tensor = torch.zeros(args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2]).to(device)
         
-        # start to communciation
-        comm_start = time.time()
-        torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
-        args['comm_cost'] += time.time() - comm_start
-        
+    #     # start to communciation
+    #     comm_start = time.time()
+    #     torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
+    #     args['comm_cost'] += time.time() - comm_start
+    
+        # # gather the received tensors
+        # if i != rank:
+        #     result_list.append(comm_tensor)
 
-        # gather the received tensors
-        if i != rank:
-            result_list.append(comm_tensor)
+    # if len(result_list) > 0:
+    #     # step 1: pad tensor to the same size
+    #     for i in range (len(result_list)):
+    #         zero_pad = torch.zeros(x.shape[0] - args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2]).to(device)
+    #         result_list[i] = torch.cat((result_list[i], zero_pad), dim=0).to(device)
+    #     result_list.append(x)
+    #     # step 2: gather all tensors
+    #     final = torch.cat(result_list, 1)
+    #     # print('rank: {} with fused tensor {}'.format(rank, final))
 
-    if len(result_list) > 0:
-        # step 1: pad tensor to the same size
-        for i in range (len(result_list)):
-            zero_pad = torch.zeros(x.shape[0] - args['nodes_info'][num_graph_per_worker*(i + 1) - 1], num_graph_per_worker, x.shape[2]).to(device)
-            result_list[i] = torch.cat((result_list[i], zero_pad), dim=0).to(device)
-        result_list.append(x)
-        # step 2: gather all tensors
-        final = torch.cat(result_list, 1)
-        # print('rank: {} with fused tensor {}'.format(rank, final))
-    else: final = x.clone()
+    # else: final = x.clone()
+
+    Total_nodes = args['nodes_info'][-1]
+    Num_nodes_per_worker = int(Total_nodes//world_size)
+    mp_group = args['dist_group']
+
+    x_temp = x.clone().detach()
+    zero_pad = torch.zeros(Total_nodes - x_temp.shape[0], x_temp.size(1), x_temp.size(2)).to(device)
+    x_pad_temp = torch.cat((x_temp, zero_pad), dim=0)
+    x_comm = x_pad_temp.detach()
+    comm_tensor = x.clone().detach()
+
+    gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
+    comm_start = time.time()
+    torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
+    args['comm_cost'] += time.time() - comm_start
+
+    final_temp = []
+    for i in range(world_size):
+        if i <= rank:
+            final_temp.append(gather_lists[i])
+    # args['comm_cost'] += max(comm_time)
+
+    final = torch.cat(final_temp, 1)
 
     return final
 
