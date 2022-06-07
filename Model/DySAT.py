@@ -41,7 +41,7 @@ def _node_partition_comm_before(args, x):
     Num_nodes_per_worker = int(Total_nodes//world_size)
     mp_group = args['dist_group']
 
-    x_temp = x.clone.detach()
+    x_temp = x.clone().detach()
     zero_pad = torch.zeros(Total_nodes - x_temp.shape[0], x_temp.size(1), x_temp.size(2))
     x_pad_temp = torch.cat((x_temp, zero_pad), dim=0)
     x_comm = x_pad_temp.detach()
