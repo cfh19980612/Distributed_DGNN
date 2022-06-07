@@ -112,7 +112,7 @@ def _node_partition_comm_after(args, x):
     time_steps = args["time_steps"]
     Num_nodes_per_worker = int(Total_nodes//world_size)
     Num_times_per_worker = int(time_steps//world_size)
-
+    print('input size: ',x.size())
     final_list = []
     comm_time = []
     for i in range (world_size):
