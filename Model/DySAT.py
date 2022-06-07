@@ -6,7 +6,8 @@ import torch
 import time
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.multiprocessing as mp
+# import torch.multiprocessing as mp
+import multiprocessing as mp
 from torch.nn.modules.loss import BCEWithLogitsLoss
 
 from Model.layers import StructuralAttentionLayer
