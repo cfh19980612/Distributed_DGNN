@@ -15,7 +15,8 @@ from Model.layers import TemporalAttentionLayer
 
 from utils import *
 
-def _multi_process_gather(rank, dest, x_comm, mp_group, world_size, Num_nodes_per_worker, gather_dict):
+def _multi_process_gather(rank, dest, x_comm, args, world_size, Num_nodes_per_worker, gather_dict):
+    group = args['dist_group'][dest]
     # group=mp_group[dest]
     print('Hello!')
     # if dest != world_size - 1:
@@ -56,7 +57,7 @@ def _node_partition_comm_before(args, x):
     # torch.multiprocessing.set_start_method('spawn')
     workers = []
     for i in range(world_size):
-        p = mp.Process(target=_multi_process_gather, args=(rank, i, x_comm, rank, world_size, Num_nodes_per_worker, rank))
+        p = mp.Process(target=_multi_process_gather, args=(rank, i, x_comm, args, world_size, Num_nodes_per_worker, gather_lists))
         # p = mp.Process(target=_multi_process_gather, args=(rank, i, rank, rank, world_sirankze, rank, rank))
         p.start()
         workers.append(p)
