@@ -93,7 +93,7 @@ def _node_partition_comm_before(args, x):
     torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
     print(Total_nodes, Num_nodes_per_worker)
     final_temp = []
-    for i in range(len(gather_lists)):
+    for i in range(world_size):
         if rank != world_size - 1:
             final_temp.append(gather_lists[i][rank*Num_nodes_per_worker:(rank+1)*Num_nodes_per_worker,:,:])
         else:
