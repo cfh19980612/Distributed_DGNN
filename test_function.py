@@ -71,7 +71,7 @@ def _gate(args):
     
     return gate
 
-def _pre_comm_group(partition, num_workers):
+def _pre_comm_group(num_workers):
     group = []
     comm_method = Comm_backend
     group = [torch.distributed.new_group(
