@@ -135,11 +135,9 @@ def run_dgnn_distributed(args):
     num_graph = len(load_g)
     gate = _gate(args)
 
-    if args['partition'] == 'Time':
-        if args['gate']:
-            args['gated_group_member'], args['gated_group'] = _pre_comm_group_gate(args['world_size'], args['time_steps'], gate)
-    elif args['partition'] == 'Time_Node':
-        args['dist_group'] = _pre_comm_group(args['partition'], world_size)
+    if args['gate']:
+        args['gated_group_member'], args['gated_group'] = _pre_comm_group_gate(args['world_size'], args['time_steps'], gate)
+    args['dist_group'] = _pre_comm_group(args['partition'], world_size)
 
 
     # generate the num of graphs for each module in DGNN
