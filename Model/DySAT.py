@@ -41,9 +41,10 @@ def _node_partition_comm_before(args, x):
     Num_nodes_per_worker = int(Total_nodes//world_size)
     mp_group = args['dist_group']
 
-    zero_pad = torch.zeros(Total_nodes - x.shape[0], x.size(1), x.size(2)).to(device)
-    x_temp = torch.cat((x, zero_pad), dim=0).to(device)
-    x_comm = x_temp.detach()
+    x_temp = x.clone.detach()
+    zero_pad = torch.zeros(Total_nodes - x_temp.shape[0], x_temp.size(1), x_temp.size(2))
+    x_pad_temp = torch.cat((x_temp, zero_pad), dim=0)
+    x_comm = x_pad_temp.detach()
     comm_time = []
 
     if rank != world_size -1:
@@ -55,7 +56,7 @@ def _node_partition_comm_before(args, x):
     # torch.multiprocessing.set_start_method('spawn')
     workers = []
     for i in range(world_size):
-        p = mp.Process(target=_multi_process_gather, args=(rank, i, rank, mp_group[i], world_size, Num_nodes_per_worker, rank))
+        p = mp.Process(target=_multi_process_gather, args=(rank, i, x_comm, rank, world_size, Num_nodes_per_worker, rank))
         # p = mp.Process(target=_multi_process_gather, args=(rank, i, rank, rank, world_sirankze, rank, rank))
         p.start()
         workers.append(p)
