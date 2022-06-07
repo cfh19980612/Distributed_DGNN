@@ -191,7 +191,7 @@ def run_dgnn_distributed(args):
     model.set_comm()
     # distributed ?
     # model = LocalDDP(copy.deepcopy(model), mp_group, dp_group, world_size)
-    # model = DDP(model, process_group=dp_group)
+    model = DDP(model, process_group=dp_group)
 
     # loss_func = nn.BCELoss()
     loss_func = nn.CrossEntropyLoss()
