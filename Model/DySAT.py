@@ -115,15 +115,19 @@ def _node_partition_comm_after(args, x):
     # print('input size: ',x.size())
     final_list = []
     comm_time = []
+    print(Total_nodes, Num_nodes_per_worker)
     for i in range (world_size):
         if i != rank: # receiver
             if i != world_size - 1:
                 comm_tensor = torch.zeros(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+                print('rank {} is a receiver with tensor size {}'.format(rank, comm_tensor.size()))
             else:
                 comm_tensor = torch.zeros(Total_nodes - (world_size -1)*Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+                print('rank {} is a receiver with tensor size {}'.format(rank, comm_tensor.size()))
         else:
             comm_tensor = x.clone().detach()
             final_list.append(x)
+            print('rank {} is a sender with tensor size {}'.format(rank, comm_tensor.size()))
 
         comm_start = time.time()
         torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
