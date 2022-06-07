@@ -6,6 +6,7 @@ import torch
 import time
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.multiprocessing as mp
 from torch.nn.modules.loss import BCEWithLogitsLoss
 
 from Model.layers import StructuralAttentionLayer
@@ -13,6 +14,23 @@ from Model.layers import TemporalAttentionLayer
 
 from utils import *
 
+def _multi_process_gather(rank, dest, x_comm, mp_group, world_size, Num_nodes_per_worker, gather_dict):
+    group=mp_group[dest]
+
+    if dest != world_size - 1:
+        x_send = x_comm[dest*Num_nodes_per_worker:(dest+1)*Num_nodes_per_worker,:,:]
+    else:
+        x_send = x_comm[dest*Num_nodes_per_worker:,:,:]
+    if rank == dest:
+        # gather_dict = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
+        # comm_start = time.time()
+        torch.distributed.gather(x_send, gather_list=gather_dict, dst=dest, group=group)
+        # comm_time.append(time.time() - comm_start)
+        # args['comm_cost'] += time.time() - comm_start
+    else:
+        torch.distributed.gather(x_send, gather_list=None, dst=dest, group=group)
+
+    
 
 def _node_partition_comm_before(args, x):
     device = args['device']
@@ -26,21 +44,37 @@ def _node_partition_comm_before(args, x):
     x_comm = torch.cat((x, zero_pad), dim=0).to(device)
     
     comm_time = []
-    for i in range (world_size):
-        if i != world_size - 1:
-            x_send = x_comm[i*Num_nodes_per_worker:(i+1)*Num_nodes_per_worker,:,:]
-        else:
-            x_send = x_comm[i*Num_nodes_per_worker:,:,:]
-        if rank == i:
-            gather_lists = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
-            comm_start = time.time()
-            torch.distributed.gather(x_send, gather_list=gather_lists, dst=i, group=mp_group[i])
-            comm_time.append(time.time() - comm_start)
-            # args['comm_cost'] += time.time() - comm_start
-        else:
-            torch.distributed.gather(x_send, gather_list=None, dst=i, group=mp_group[i])
 
-    args['comm_cost'] += max(comm_time)
+    if rank != world_size -1:
+        x_rec = x_comm[rank*Num_nodes_per_worker:(rank+1)*Num_nodes_per_worker,:,:]
+    else:
+        x_rec = x_comm[rank*Num_nodes_per_worker:,:,:]
+    gather_lists = [torch.zeros_like(x_rec).to(device) for j in range(world_size)]
+    # multiple processes to communicate
+    torch.multiprocessing.set_start_method('spawn')
+    workers = []
+    for i in range(world_size):
+        p = mp.Process(target=_multi_process_gather, args=(rank, i, x_comm, mp_group, world_size, Num_nodes_per_worker, gather_lists))
+        p.start()
+        workers.append(p)
+    for p in workers:
+        p.join()
+    print(gather_lists)
+    # for i in range (world_size):
+    #     if i != world_size - 1:
+    #         x_send = x_comm[i*Num_nodes_per_worker:(i+1)*Num_nodes_per_worker,:,:]
+    #     else:
+    #         x_send = x_comm[i*Num_nodes_per_worker:,:,:]
+    #     if rank == i:
+    #         gather_lists = [torch.zeros_like(x_send).to(device) for j in range(world_size)]
+    #         comm_start = time.time()
+    #         torch.distributed.gather(x_send, gather_list=gather_lists, dst=i, group=mp_group[i])
+    #         comm_time.append(time.time() - comm_start)
+    #         # args['comm_cost'] += time.time() - comm_start
+    #     else:
+    #         torch.distributed.gather(x_send, gather_list=None, dst=i, group=mp_group[i])
+
+    # args['comm_cost'] += max(comm_time)
 
     final = torch.cat(gather_lists, 1)
     return final
