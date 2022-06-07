@@ -91,7 +91,7 @@ def _node_partition_comm_before(args, x):
 
     gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
     torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
-    print(Total_nodes, Num_nodes_per_worker)
+    # print(Total_nodes, Num_nodes_per_worker)
     final_temp = []
     for i in range(world_size):
         if rank != world_size - 1:
@@ -100,8 +100,8 @@ def _node_partition_comm_before(args, x):
             final_temp.append(gather_lists[i][rank*Num_nodes_per_worker:,:,:])
     # args['comm_cost'] += max(comm_time)
 
-    final = torch.cat(gather_lists, 1)
-    print('final size: ',x_comm.size(), gather_lists[0][rank*Num_nodes_per_worker:(rank+1)*Num_nodes_per_worker,:,:].size(), gather_lists[1].size(), final.size())
+    final = torch.cat(final_temp, 1)
+    # print('final size: ',x_comm.size(), gather_lists[0][rank*Num_nodes_per_worker:(rank+1)*Num_nodes_per_worker,:,:].size(), gather_lists[1].size(), final.size())
     return final
 
 def _node_partition_comm_after(args, x):
@@ -116,7 +116,7 @@ def _node_partition_comm_after(args, x):
     # print('input size: ',x.size())
     final_list = []
     comm_time = []
-    print(Total_nodes, Num_nodes_per_worker)
+    # print(Total_nodes, Num_nodes_per_worker)
     for i in range (world_size):
         if i != rank: # receiver
             if i != world_size - 1:
