@@ -17,6 +17,7 @@ from utils import *
 
 def _multi_process_gather(rank, dest, x_comm, world_size, Num_nodes_per_worker, gather_dict):
     comm_method = 'nccl'
+    dist.init_process_group(backend="nccl")
     group = torch.distributed.new_group(
             ranks = [worker for worker in range(world_size)],
             backend = comm_method,
