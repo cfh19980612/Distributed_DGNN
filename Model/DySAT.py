@@ -61,18 +61,19 @@ def _node_partition_comm_before(args, x):
         x_rec = x_comm[rank*Num_nodes_per_worker:(rank+1)*Num_nodes_per_worker,:,:]
     else:
         x_rec = x_comm[rank*Num_nodes_per_worker:,:,:]
-    gather_lists = [torch.zeros_like(x_rec).to(device) for j in range(world_size)]
-    # multiple processes to communicate
-    # torch.multiprocessing.set_start_method('spawn')
-    workers = []
-    for i in range(world_size):
-        p = mp.Process(target=_multi_process_gather, args=(rank, i, x_comm, world_size, Num_nodes_per_worker, gather_lists))
-        # p = mp.Process(target=_multi_process_gather, args=(rank, i, rank, rank, world_sirankze, rank, rank))
-        p.start()
-        workers.append(p)
-    for p in workers:
-        p.join()
+    # gather_lists = [torch.zeros_like(x_rec).to(device) for j in range(world_size)]
+    # # do not work!
+    # workers = []
+    # for i in range(world_size):
+    #     p = mp.Process(target=_multi_process_gather, args=(rank, i, x_comm, world_size, Num_nodes_per_worker, gather_lists))
+    #     # p = mp.Process(target=_multi_process_gather, args=(rank, i, rank, rank, world_sirankze, rank, rank))
+    #     p.start()
+    #     workers.append(p)
+    # for p in workers:
+    #     p.join()
     # print(gather_lists)
+    ######################
+
     # for i in range (world_size):
     #     if i != world_size - 1:
     #         x_send = x_comm[i*Num_nodes_per_worker:(i+1)*Num_nodes_per_worker,:,:]
@@ -86,7 +87,16 @@ def _node_partition_comm_before(args, x):
     #         # args['comm_cost'] += time.time() - comm_start
     #     else:
     #         torch.distributed.gather(x_send, gather_list=None, dst=i, group=mp_group[i])
+    ######################
 
+    gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
+    torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
+    final_temp = []
+    for i in len(gather_lists):
+        if rank != world_size - 1:
+            final_temp.append(gather_lists[i][rank*Num_nodes_per_worker:(rank+1)*Num_nodes_per_worker,:,:])
+        else:
+            final_temp.append(gather_lists[i][rank*Num_nodes_per_worker:,:,:])
     # args['comm_cost'] += max(comm_time)
 
     final = torch.cat(gather_lists, 1)
@@ -120,7 +130,7 @@ def _node_partition_comm_after(args, x):
         if i != rank:
             final_list.append(comm_tensor)
     
-    args['comm_cost'] += max(comm_time)
+    # args['comm_cost'] += max(comm_time)
     
     new_final_list = [emb[:,rank*Num_times_per_worker:(rank+1)*Num_times_per_worker,:] for emb in final_list]
     final = torch.cat(new_final_list, 0)
