@@ -92,7 +92,7 @@ def _node_partition_comm_before(args, x):
     gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
     # print('The communication tensor with size ', x_comm.size())
     comm_start = time.time()
-    torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
+    torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0], async_op=True)
     args['comm_cost'] += time.time() - comm_start
     # print(Total_nodes, Num_nodes_per_worker)
     final_temp = []
@@ -304,7 +304,7 @@ def _embedding_comm(args, x):
     gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
     # print('The communication tensor with size ', x_comm.size())
     comm_start = time.time()
-    torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
+    torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0], async_op=True)
     args['comm_cost'] += time.time() - comm_start
 
     final_temp = []
