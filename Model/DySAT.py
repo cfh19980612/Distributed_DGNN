@@ -38,6 +38,8 @@ def _multi_process_gather(rank, dest, x_comm, world_size, Num_nodes_per_worker, 
     else:
         torch.distributed.gather(x_send, gather_list=None, dst=dest, group=group)
     torch.distributed.destroy_process_group()
+    if rank == dest:
+        print(gather_dict)
 
     
 
@@ -70,7 +72,7 @@ def _node_partition_comm_before(args, x):
         workers.append(p)
     for p in workers:
         p.join()
-    print(gather_lists)
+    # print(gather_lists)
     # for i in range (world_size):
     #     if i != world_size - 1:
     #         x_send = x_comm[i*Num_nodes_per_worker:(i+1)*Num_nodes_per_worker,:,:]
