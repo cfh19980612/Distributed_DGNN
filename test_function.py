@@ -302,10 +302,10 @@ def run_dgnn_distributed(args):
         best_acc_epoch = epochs_acc.index(max(epochs_acc))
 
         total_train_time.remove(max(total_train_time))
-        total_gcn_time = remove(max(total_gcn_time))
-        total_att_time = remove(max(total_att_time))
-        total_comm_time = remove(max(total_comm_time))
-        total_comm_time_second = remove(max(total_comm_time_second))
+        total_gcn_time.remove(max(total_gcn_time))
+        total_att_time.remove(max(total_att_time))
+        total_comm_time.remove(max(total_comm_time))
+        total_comm_time_second.remove(max(total_comm_time_second))
 
         print("Best f1 score epoch: {}, Best f1 score: {}".format(best_f1_epoch, max(epochs_f1_score)))
         print("Best auc epoch: {}, Best auc score: {}".format(best_auc_epoch, max(epochs_auc)))
