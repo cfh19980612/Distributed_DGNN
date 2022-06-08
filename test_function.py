@@ -206,6 +206,7 @@ def run_dgnn_distributed(args):
     total_gcn_time = 0
     total_att_time = 0
     total_comm_time = 0
+    total_comm_time_second = 0
 
     log_loss = []
     log_acc = []
@@ -222,6 +223,7 @@ def run_dgnn_distributed(args):
         args['comm_cost'] = 0
         args['gcn_time'] = 0
         args['att_time'] = 0
+        args['comm_cost_second'] = 0
         for step, (batch_x, batch_y) in enumerate(loader):
             model.train()
             batch_x = batch_x.to(device)
@@ -245,6 +247,7 @@ def run_dgnn_distributed(args):
             epoch_comm_time.append(args['comm_cost'])
             if epoch >= 5:
                 total_comm_time += args['comm_cost']
+                total_comm_time_second += args['comm_cost_second']
         else: epoch_comm_time.append(0)
 
         # individual module computation costs
@@ -300,12 +303,13 @@ def run_dgnn_distributed(args):
         print("Best f1 score epoch: {}, Best f1 score: {}".format(best_f1_epoch, max(epochs_f1_score)))
         print("Best auc epoch: {}, Best auc score: {}".format(best_auc_epoch, max(epochs_auc)))
         print("Best acc epoch: {}, Best acc score: {}".format(best_acc_epoch, max(epochs_acc)))
-        print("Total training cost: {:.3f}, total GCN cost: {:.3f}, total ATT cost: {:.3f}, total communication cost: {:.3f}".format(
+        print("Total training cost: {:.3f}, total GCN cost: {:.3f}, total ATT cost: {:.3f}, total communication cost: {:.3f}, total_communication_second cost: {:.3f}".format(
                                                                     total_train_time, 
                                                                     total_gcn_time,
                                                                     total_att_time,
-                                                                    total_comm_time))
-        print('{:.3f},  {:.3f},  {:.3f},  {:.3f}'.format(total_train_time, total_gcn_time, total_att_time, total_comm_time))
+                                                                    total_comm_time,
+                                                                    total_comm_time_second))
+        print('{:.3f},  {:.3f},  {:.3f},  {:.3f}, {:.3f}'.format(total_train_time, total_gcn_time, total_att_time, total_comm_time, total_comm_time_second))
 
         if args['save_log']:
             df_loss=pd.DataFrame(data=log_loss)
