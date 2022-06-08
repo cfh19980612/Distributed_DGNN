@@ -1,3 +1,4 @@
+from os import remove
 import numpy as np
 import torch
 import torch.utils.data as Data
@@ -202,11 +203,11 @@ def run_dgnn_distributed(args):
     epochs_auc = []
     epochs_acc = []
 
-    total_train_time = 0
-    total_gcn_time = 0
-    total_att_time = 0
-    total_comm_time = 0
-    total_comm_time_second = 0
+    total_train_time = []
+    total_gcn_time = []
+    total_att_time = []
+    total_comm_time = []
+    total_comm_time_second = []
 
     log_loss = []
     log_acc = []
@@ -246,8 +247,8 @@ def run_dgnn_distributed(args):
         if args['connection']:
             epoch_comm_time.append(args['comm_cost'])
             if epoch >= 5:
-                total_comm_time += args['comm_cost']
-                total_comm_time_second += args['comm_cost_second']
+                total_comm_time.append(args['comm_cost'])
+                total_comm_time_second.append(args['comm_cost_second'])
         else: epoch_comm_time.append(0)
 
         # individual module computation costs
@@ -255,9 +256,9 @@ def run_dgnn_distributed(args):
         epoch_att_time.append(args['att_time'])
 
         if epoch >= 5:
-            total_train_time += np.sum(epoch_train_time)
-            total_gcn_time += args['gcn_time']
-            total_att_time += args['att_time']
+            total_train_time.append(np.sum(epoch_train_time))
+            total_gcn_time.append(args['gcn_time'])
+            total_att_time.append(args['att_time'])
         # print(out)
         # test
         if epoch % args['test_freq'] == 0 and rank != world_size - 1:
@@ -300,16 +301,22 @@ def run_dgnn_distributed(args):
         best_auc_epoch = epochs_auc.index(max(epochs_auc))
         best_acc_epoch = epochs_acc.index(max(epochs_acc))
 
+        total_train_time.remove(max(total_train_time))
+        total_gcn_time = remove(max(total_gcn_time))
+        total_att_time = remove(max(total_att_time))
+        total_comm_time = remove(max(total_comm_time))
+        total_comm_time_second = remove(max(total_comm_time_second))
+
         print("Best f1 score epoch: {}, Best f1 score: {}".format(best_f1_epoch, max(epochs_f1_score)))
         print("Best auc epoch: {}, Best auc score: {}".format(best_auc_epoch, max(epochs_auc)))
         print("Best acc epoch: {}, Best acc score: {}".format(best_acc_epoch, max(epochs_acc)))
         print("Total training cost: {:.3f}, total GCN cost: {:.3f}, total ATT cost: {:.3f}, total communication cost: {:.3f}, total_communication_second cost: {:.3f}".format(
-                                                                    total_train_time, 
-                                                                    total_gcn_time,
-                                                                    total_att_time,
-                                                                    total_comm_time,
-                                                                    total_comm_time_second))
-        print('{:.3f},  {:.3f},  {:.3f},  {:.3f}, {:.3f}'.format(total_train_time, total_gcn_time, total_att_time, total_comm_time, total_comm_time_second))
+                                                                    sum(total_train_time), 
+                                                                    sum(total_gcn_time),
+                                                                    sum(total_att_time),
+                                                                    sum(total_comm_time),
+                                                                    sum(total_comm_time_second)))
+        print('{:.3f},  {:.3f},  {:.3f},  {:.3f}, {:.3f}'.format(sum(total_train_time), sum(total_gcn_time), sum(total_att_time), sum(total_comm_time), sum(total_comm_time_second)))
 
         if args['save_log']:
             df_loss=pd.DataFrame(data=log_loss)
