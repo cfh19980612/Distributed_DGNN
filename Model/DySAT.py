@@ -350,10 +350,10 @@ class DySAT(nn.Module):
         # self.spatial_drop = args.spatial_drop
         # self.temporal_drop = args.temporal_drop
 
-        self.structural_head_config = [8]
-        self.structural_layer_config = [128]
-        self.temporal_head_config = [8]
-        self.temporal_layer_config = [128]
+        self.structural_head_config = [8,8]
+        self.structural_layer_config = [128,128]
+        self.temporal_head_config = [8,8]
+        self.temporal_layer_config = [128,128]
         self.spatial_drop = 0.1
         self.temporal_drop = 0.9
         self.out_feats = 128
