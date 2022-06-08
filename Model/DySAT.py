@@ -120,31 +120,60 @@ def _node_partition_comm_after(args, x):
     final_list = []
     comm_time = []
     # print(Total_nodes, Num_nodes_per_worker)
-    for i in range (world_size):
-        if i != rank: # receiver
-            if i != world_size - 1:
-                comm_tensor = torch.zeros(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
-                # print('rank {} is a receiver with tensor size {}'.format(rank, comm_tensor.size()))
-            else:
-                comm_tensor = torch.zeros(Total_nodes - (world_size -1)*Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
-                # print('rank {} is a receiver with tensor size {}'.format(rank, comm_tensor.size()))
-        else:
-            comm_tensor = x.clone().detach()
-            final_list.append(x)
-            # print('rank {} is a sender with tensor size {}'.format(rank, comm_tensor.size()))
+    # for i in range (world_size):
+    #     if i != rank: # receiver
+    #         if i != world_size - 1:
+    #             comm_tensor = torch.zeros(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+    #             # print('rank {} is a receiver with tensor size {}'.format(rank, comm_tensor.size()))
+    #         else:
+    #             comm_tensor = torch.zeros(Total_nodes - (world_size -1)*Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
+    #             # print('rank {} is a receiver with tensor size {}'.format(rank, comm_tensor.size()))
+    #     else:
+    #         comm_tensor = x.clone().detach()
+    #         final_list.append(x)
+    #         # print('rank {} is a sender with tensor size {}'.format(rank, comm_tensor.size()))
 
-        comm_start = time.time()
-        torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
-        comm_time.append(time.time() - comm_start)
-        # args['comm_cost'] += time.time() - comm_start
-        if i != rank:
-            final_list.append(comm_tensor)
+    #     comm_start = time.time()
+    #     torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
+    #     comm_time.append(time.time() - comm_start)
+    #     # args['comm_cost'] += time.time() - comm_start
+    #     if i != rank:
+    #         final_list.append(comm_tensor)
     
+    # # args['comm_cost'] += max(comm_time)
+    
+    # new_final_list = [emb[:,rank*Num_times_per_worker:(rank+1)*Num_times_per_worker,:] for emb in final_list]
+    # final = torch.cat(new_final_list, 0)
+
+    Pad_total_node = Total_nodes - (world_size - 1)*Num_nodes_per_worker
+    x_temp = x.clone().detach()
+    zero_pad = torch.zeros(Pad_total_node - x_temp.shape[0], x_temp.size(1), x_temp.size(2)).to(device)
+    x_pad_temp = torch.cat((x_temp, zero_pad), dim=0)
+    x_comm = x_pad_temp.detach()
+    comm_tensor = x.clone().detach()
+
+    gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
+    # print('The communication tensor with size ', x_comm.size())
+    comm_start = time.time()
+    torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0], async_op=True)
+    args['comm_cost'] += time.time() - comm_start
+    
+    final_temp = []
+    for i in range(world_size):
+        if i != world_size - 1:
+            if rank != world_size - 1:
+                final_temp.append(gather_lists[i][:Num_nodes_per_worker, rank*Num_times_per_worker:(rank+1)*Num_times_per_worker,:])
+            else:
+                final_temp.append(gather_lists[i][:Num_nodes_per_worker, rank*Num_times_per_worker:,:])
+        else:
+            if rank != world_size - 1:
+                final_temp.append(gather_lists[i][:, rank*Num_times_per_worker:(rank+1)*Num_times_per_worker,:])
+            else:
+                final_temp.append(gather_lists[i][:, rank*Num_times_per_worker:,:])
     # args['comm_cost'] += max(comm_time)
-    
-    new_final_list = [emb[:,rank*Num_times_per_worker:(rank+1)*Num_times_per_worker,:] for emb in final_list]
-    final = torch.cat(new_final_list, 0)
-        
+
+    final = torch.cat(final_temp, 0)
+
 
     return final
 
@@ -350,10 +379,10 @@ class DySAT(nn.Module):
         # self.spatial_drop = args.spatial_drop
         # self.temporal_drop = args.temporal_drop
 
-        self.structural_head_config = [8,8]
-        self.structural_layer_config = [128,128]
-        self.temporal_head_config = [8,8]
-        self.temporal_layer_config = [128,128]
+        self.structural_head_config = [8]
+        self.structural_layer_config = [128]
+        self.temporal_head_config = [8]
+        self.temporal_layer_config = [128]
         self.spatial_drop = 0.1
         self.temporal_drop = 0.9
         self.out_feats = 128
