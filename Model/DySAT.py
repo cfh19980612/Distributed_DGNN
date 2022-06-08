@@ -440,6 +440,7 @@ class DySAT(nn.Module):
             # print('rank: {} with fused tensor size{}'.format(self.args['rank'], fuse_structural_output.size()))
             # print('worker {} has the attention input size: {}'.format(self.args['rank'], fuse_structural_output.size()))
             # print("attention input size: ", fuse_structural_output.size())
+            print('The attention tensor with size ', fuse_structural_output.size())
             temporal_time_start = time.time()
             temporal_out = self.temporal_attn(fuse_structural_output)
             self.args['att_time'] += time.time() - temporal_time_start
