@@ -90,7 +90,7 @@ def _node_partition_comm_before(args, x):
     ######################
 
     gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
-    # print('The communication tensor with size ', x_comm.size())
+    print('The communication tensor with size ', x_comm.size())
     comm_start = time.time()
     torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
     args['comm_cost'] += time.time() - comm_start
@@ -153,7 +153,7 @@ def _node_partition_comm_after(args, x):
     comm_tensor = x.clone().detach()
 
     gather_lists = [torch.zeros_like(x_comm).to(device) for j in range(world_size)]
-    # print('The communication tensor with size ', x_comm.size())
+    print('The communication tensor with size ', x_comm.size())
     comm_start = time.time()
     torch.distributed.all_gather(gather_lists, x_comm, group=mp_group[0])
     args['comm_cost_second'] += time.time() - comm_start
@@ -448,6 +448,7 @@ class DySAT(nn.Module):
 
         else: 
             temporal_time_start = time.time()
+            print('The attention tensor with size ', structural_outputs_padded.size())
             # print('rank: {} with fused tensor size{}'.format(self.args['rank'], structural_outputs_padded.size()))
             temporal_out = self.temporal_attn(structural_outputs_padded)
             self.args['att_time'] += time.time() - temporal_time_start
