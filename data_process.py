@@ -68,12 +68,16 @@ def _generate_feats(adjs, time_steps):
     feats = [scipy.sparse.identity(adjs[time_steps - 1].shape[0]).tocsr()[range(0, x.shape[0]), :] for x in adjs if
              x.shape[0] <= adjs[time_steps - 1].shape[0]]
     new_features = []
+
+    # nomorlization
     for feat in feats:
         rowsum = np.array(feat.sum(1))
         r_inv = np.power(rowsum, -1).flatten()
         r_inv[np.isinf(r_inv)] = 0.  # inf -> 0
         r_mat_inv = sp.diags(r_inv)
-        new_features.append(r_mat_inv.dot(feat).todense())
+        feat = r_mat_inv.dot(feat).todense()
+        new_features.append(feat)
+        # new_features.append(feat_sp)
     return new_features
 
 def _normalize_graph_gcn(adj):
@@ -190,10 +194,13 @@ def load_graphs(args):
         #     feats_path = current_path + "/Data/{}/data/eval_{}_dist_{}_feats.npy".format(args['dataset'], str(args['time_steps']), args['world_size'])
         # else:
         #     feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
-        feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
+        # feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
+        feats_path = current_path + "/Data/{}/data/eval_{}_feats.npz".format(args['dataset'], str(args['time_steps']))
         try:
-            feats = np.load(feats_path, allow_pickle=True)
-            # print('loaded feats, ',feats)
+            # feats = np.load(feats_path, allow_pickle=True)
+            # # sparse
+            feats_sp = sp.load_npz(feats_path)
+            feats = feats_sp.toarray()
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
             print("Worker {} is Generating and saving node features ....".format(args['rank']))
@@ -203,7 +210,12 @@ def load_graphs(args):
             # method 2:
             feats = _generate_feats(adj_matrices, time_steps)
             # print('saved feats, ',feats)
-            np.save(feats_path, feats)
+            feat_np = []
+            for feat in feats:
+                feat_sp=sp.csr_matrix(feat)
+                feat_np.append(feat_sp)
+            sp.save_npz(feats_path, feat_np)
+            # np.save(feats_path, feats)
 
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
