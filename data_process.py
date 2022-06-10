@@ -211,15 +211,11 @@ def load_graphs(args):
             # method 2:
             feats = _generate_feats(adj_matrices, time_steps)
             # print('saved feats, ',feats)
-            feats_list = []
+            feats_sp = []
             for feat in feats:
-                feats_list.append(feat.tolist())
-            feats_np = np.array(feats_list, dtype=float)
-            # feats_np = feats.numpy()
-            feat_sp=sp.csr_matrix(feats_np)
-            
-            sp.save_npz(feats_path, feat_sp)
-            # np.save(feats_path, feats)
+                feats_sp.append(sp.csr_matrix(feat))
+            # sp.save_npz(feats_path, feats_sp)
+            np.save(feats_path, feats)
 
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
