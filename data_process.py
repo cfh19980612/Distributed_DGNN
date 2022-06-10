@@ -198,7 +198,8 @@ def load_graphs(args):
         # feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
         feats_path = current_path + "/Data/{}/data/eval_{}_feats.npz".format(args['dataset'], str(args['time_steps']))
         try:
-            feats = np.load(feats_path, allow_pickle=True)
+            # feats = np.load(feats_path, allow_pickle=True)
+            feats = sp.load_npz(feats_path)
             # # sparse
             for feat in feats:
                 print(feats[feat].shape)
