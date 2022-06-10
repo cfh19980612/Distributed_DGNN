@@ -76,6 +76,7 @@ def _generate_feats(adjs, time_steps):
         r_inv[np.isinf(r_inv)] = 0.  # inf -> 0
         r_mat_inv = sp.diags(r_inv)
         feat = r_mat_inv.dot(feat).todense()
+        print('feat is a ', type(feat))
         new_features.append(feat)
         # new_features.append(feat_sp)
     return new_features
