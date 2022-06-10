@@ -211,7 +211,8 @@ def load_graphs(args):
             feats = _generate_feats(adj_matrices, time_steps)
             # print('saved feats, ',feats)
             feat_np = []
-            feats_np = feats.numpy()
+            feats_np = np.array(feats)
+            # feats_np = feats.numpy()
             feat_sp=sp.csr_matrix(feats_np)
             
             sp.save_npz(feats_path, feat_np)
