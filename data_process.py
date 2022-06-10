@@ -217,7 +217,7 @@ def load_graphs(args):
             folder_in = os.path.exists(feats_path)
             if not folder_in:
                 os.makedirs(feats_path) 
-            for (id,feat) in enumerate(feats):
+            for id,feat in enumerate(feats):
                 # print('feature shape is ', feat.shape)
                 # feats_sp.append(sp.csr_matrix(feat))
                 feat_sp = sp.csr_matrix(feat)
