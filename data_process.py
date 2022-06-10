@@ -214,6 +214,7 @@ def load_graphs(args):
             feats = _generate_feats(adj_matrices, time_steps)
             # print('saved feats, ',feats)
             feats_sp = []
+            os.makedirs(feats_path) 
             for (id,feat) in zip(feats):
                 # print('feature shape is ', feat.shape)
                 # feats_sp.append(sp.csr_matrix(feat))
