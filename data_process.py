@@ -196,7 +196,7 @@ def load_graphs(args):
         # else:
         #     feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
         # feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
-        feats_path = current_path + "/Data/{}/data/eval_{}_feats.npz".format(args['dataset'], str(args['time_steps']))
+        feats_path = current_path + "/Data/{}/data/eval_{}_feats/".format(args['dataset'], str(args['time_steps']))
         try:
             # feats = np.load(feats_path, allow_pickle=True)
             feats = sp.load_npz(feats_path)
@@ -214,10 +214,12 @@ def load_graphs(args):
             feats = _generate_feats(adj_matrices, time_steps)
             # print('saved feats, ',feats)
             feats_sp = []
-            for feat in feats:
-                print('feature shape is ', feat.shape)
-                feats_sp.append(sp.csr_matrix(feat))
-            # sp.save_npz(feats_path, feats_sp)
+            for (id,feat) in zip(feats):
+                # print('feature shape is ', feat.shape)
+                # feats_sp.append(sp.csr_matrix(feat))
+                feat_sp = sp.csr_matrix(feat)
+                sp.save_npz(feats_path+'no_{}.npz'.format(), feat_sp)
+            sp.save_npz(feats_path, feats_sp)
             np.savez(feats_path, feats_sp)
             # np.save(feats_path, feats)
 
