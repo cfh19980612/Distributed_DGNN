@@ -214,8 +214,9 @@ def load_graphs(args):
             feats_sp = []
             for feat in feats:
                 feats_sp.append(sp.csr_matrix(feat))
-            # sp.save_npz(feats_path, feats_sp)
-            np.save(feats_path, feats)
+            sp.save_npz(feats_path, feats_sp)
+            # np.save(feats_path, feats_sp)
+            # np.save(feats_path, feats)
 
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
