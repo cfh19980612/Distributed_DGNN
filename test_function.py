@@ -126,6 +126,7 @@ def run_dgnn_distributed(args):
     # TODO: Unevenly slice graphs
     # load graphs
     total_graph, load_g, load_adj, load_feats = slice_graph(*load_graphs(args))
+    print('feats: ',load_feats[0][0])
     num_graph = len(load_g)
     gate = _gate(args)
     # print(args['gate'])
