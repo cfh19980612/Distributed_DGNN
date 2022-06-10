@@ -64,6 +64,7 @@ def _generate_one_hot_feats(graphs, adjs, max_degree):
 
 
 def _generate_feats(adjs, time_steps):
+    assert time_steps <= len(adjs), "Time steps is illegal"
     feats = [scipy.sparse.identity(adjs[time_steps - 1].shape[0]).tocsr()[range(0, x.shape[0]), :] for x in adjs if
              x.shape[0] <= adjs[time_steps - 1].shape[0]]
     new_features = []
@@ -73,7 +74,6 @@ def _generate_feats(adjs, time_steps):
         r_inv[np.isinf(r_inv)] = 0.  # inf -> 0
         r_mat_inv = sp.diags(r_inv)
         new_features.append(r_mat_inv.dot(feat).todense())
-    assert time_steps <= len(adjs), "Time steps is illegal"
     return new_features
 
 def _normalize_graph_gcn(adj):
