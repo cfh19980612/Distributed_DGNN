@@ -1,4 +1,5 @@
 import copy
+from ctypes import pointer
 import os
 import sys
 import copy
@@ -440,10 +441,27 @@ class DySAT(nn.Module):
             # print('rank: {} with fused tensor size{}'.format(self.args['rank'], fuse_structural_output.size()))
             # print('worker {} has the attention input size: {}'.format(self.args['rank'], fuse_structural_output.size()))
             # print("attention input size: ", fuse_structural_output.size())
-            print('The attention tensor with size ', fuse_structural_output.size())
+
+            # print('The attention tensor with size ', fuse_structural_output.size())
+            pointer_temp = 0
+            node_scale = 1000
+            attention_output = []
             temporal_time_start = time.time()
-            temporal_out = self.temporal_attn(fuse_structural_output)
+            while(True):
+                if pointer_temp + node_scale < fuse_structural_output.size(0):
+                    attention_input = fuse_structural_output[pointer_temp:pointer_temp+node_scale,:,:]
+                    attention_output.append(self.temporal_attn(attention_input))
+                else:
+                    attention_input = fuse_structural_output[pointer_temp:,:,:]
+                    attention_output.append(self.temporal_attn(attention_input))
+                    break
+                pointer_temp += node_scale
             self.args['att_time'] += time.time() - temporal_time_start
+            temporal_out = torch.cat(attention_output, 0)
+
+            # temporal_out = self.temporal_attn(fuse_structural_output)
+            # self.args['att_time'] += time.time() - temporal_time_start
+
             if self.args['partition'] == 'Time_Node':
                 temporal_out = _node_partition_comm_after(self.args, temporal_out)
 
