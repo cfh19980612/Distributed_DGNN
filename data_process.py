@@ -219,8 +219,8 @@ def load_graphs(args):
                 # feats_sp.append(sp.csr_matrix(feat))
                 feat_sp = sp.csr_matrix(feat)
                 sp.save_npz(feats_path+'no_{}.npz'.format(), feat_sp)
-            sp.save_npz(feats_path, feats_sp)
-            np.savez(feats_path, feats_sp)
+            # sp.save_npz(feats_path, feats_sp)
+            # np.savez(feats_path, feats_sp)
             # np.save(feats_path, feats)
 
     #normlized adj
