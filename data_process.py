@@ -214,7 +214,7 @@ def load_graphs(args):
             feats_list = []
             for feat in feats:
                 feats_list.append(feat.tolist())
-            feats_np = np.array(feats_list)
+            feats_np = np.array(feats_list, dtype=float)
             # feats_np = feats.numpy()
             feat_sp=sp.csr_matrix(feats_np)
             
