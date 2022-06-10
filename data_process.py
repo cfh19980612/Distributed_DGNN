@@ -215,7 +215,7 @@ def load_graphs(args):
             # print('saved feats, ',feats)
             feats_sp = []
             os.makedirs(feats_path) 
-            for (id,feat) in zip(feats):
+            for (id,feat) in enumerate(feats):
                 # print('feature shape is ', feat.shape)
                 # feats_sp.append(sp.csr_matrix(feat))
                 feat_sp = sp.csr_matrix(feat)
