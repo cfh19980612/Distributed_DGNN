@@ -202,7 +202,7 @@ def load_graphs(args):
             # # sparse
             for feat in feats:
                 print(feat)
-                feat = feat.toarray()
+                feat = feats[feat].toarray()
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
             print("Worker {} is Generating and saving node features ....".format(args['rank']))
