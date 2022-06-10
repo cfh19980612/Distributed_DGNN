@@ -201,7 +201,7 @@ def load_graphs(args):
             feats = np.load(feats_path, allow_pickle=True)
             # # sparse
             for feat in feats:
-                print(feat)
+                print(feats[feat].shape)
                 feat = feats[feat].toarray()
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
@@ -214,6 +214,7 @@ def load_graphs(args):
             # print('saved feats, ',feats)
             feats_sp = []
             for feat in feats:
+                print(feat.shape)
                 feats_sp.append(sp.csr_matrix(feat))
             # sp.save_npz(feats_path, feats_sp)
             np.savez(feats_path, feats_sp)
