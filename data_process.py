@@ -195,13 +195,12 @@ def load_graphs(args):
         #     feats_path = current_path + "/Data/{}/data/eval_{}_dist_{}_feats.npy".format(args['dataset'], str(args['time_steps']), args['world_size'])
         # else:
         #     feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
-        # feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
-        feats_path = current_path + "/Data/{}/data/eval_{}_feats.npz".format(args['dataset'], str(args['time_steps']))
+        feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
         try:
-            # feats = np.load(feats_path, allow_pickle=True)
+            feats = np.load(feats_path, allow_pickle=True)
             # # sparse
-            feats_sp = sp.load_npz(feats_path)
-            feats = feats_sp.toarray()
+            for feat in feats:
+                feat = feat.toarray()
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
             print("Worker {} is Generating and saving node features ....".format(args['rank']))
