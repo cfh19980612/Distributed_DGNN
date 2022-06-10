@@ -214,7 +214,7 @@ def load_graphs(args):
             # print('saved feats, ',feats)
             feats_sp = []
             for feat in feats:
-                print(feat.shape)
+                print('feature shape is ', feat.shape)
                 feats_sp.append(sp.csr_matrix(feat))
             # sp.save_npz(feats_path, feats_sp)
             np.savez(feats_path, feats_sp)
