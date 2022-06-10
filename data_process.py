@@ -195,15 +195,19 @@ def load_graphs(args):
         #     feats_path = current_path + "/Data/{}/data/eval_{}_dist_{}_feats.npy".format(args['dataset'], str(args['time_steps']), args['world_size'])
         # else:
         #     feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
-        feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
-        # feats_path = current_path + "/Data/{}/data/eval_{}_feats/".format(args['dataset'], str(args['time_steps']))
+        # feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
+
+        # save as sparse matrix
+        feats_path = current_path + "/Data/{}/data/eval_{}_feats/".format(args['dataset'], str(args['time_steps']))
         try:
             # feats = np.load(feats_path, allow_pickle=True)
-            feats = sp.load_npz(feats_path)
-            # # sparse
-            for feat in feats:
-                print(feats[feat].shape)
-                feat = feats[feat].toarray()
+
+            feats = []
+            for time in range(time_steps):
+                path = feats_path+'no_{}.npz'.format(time)
+                feat = sp.load_npz(path)
+                feats.append(feat.toarray())
+
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
             print("Worker {} is Generating and saving node features ....".format(args['rank']))
@@ -214,17 +218,17 @@ def load_graphs(args):
             feats = _generate_feats(adj_matrices, time_steps)
             # print('saved feats, ',feats)
 
-            # folder_in = os.path.exists(feats_path)
-            # if not folder_in:
-            #     os.makedirs(feats_path) 
-            # for id,feat in enumerate(feats):
-            #     # print('feature shape is ', feat.shape)
-            #     # feats_sp.append(sp.csr_matrix(feat))
-            #     feat_sp = sp.csr_matrix(feat)
-            #     path = feats_path+'no_{}.npz'.format(id)
-            #     sp.save_npz(path, feat_sp)
+            folder_in = os.path.exists(feats_path)
+            if not folder_in:
+                os.makedirs(feats_path) 
+            for id,feat in enumerate(feats):
+                # print('feature shape is ', feat.shape)
+                # feats_sp.append(sp.csr_matrix(feat))
+                feat_sp = sp.csr_matrix(feat)
+                path = feats_path+'no_{}.npz'.format(id)
+                sp.save_npz(path, feat_sp)
 
-            np.save(feats_path, feats)
+            # np.save(feats_path, feats)
 
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
