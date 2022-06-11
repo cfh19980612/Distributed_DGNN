@@ -73,12 +73,12 @@ class StructuralAttentionLayer(nn.Module):
             out = out + self.lin_residual(graph.x.to(self.args['device']))
 
         graph.x = out.cpu()
-        # graph.to('cpu')
-        edge_index.cpu()
-        edge_weight.cpu()
-        x.cpu()
-        del edge_index, edge_weight, x
-        torch.cuda.empty_cache()
+        # # graph.to('cpu')
+        # edge_index.cpu()
+        # edge_weight.cpu()
+        # x.cpu()
+        # del edge_index, edge_weight, x
+        # torch.cuda.empty_cache()
         return graph
 
 
