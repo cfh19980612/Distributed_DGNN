@@ -70,7 +70,7 @@ class StructuralAttentionLayer(nn.Module):
         out = self.act(scatter(x_j * coefficients[:, :, None], edge_index[1], dim=0, reduce="sum"))
         out = out.reshape(-1, self.n_heads*self.out_dim) #[num_nodes, output_dim]
         if self.residual:
-            out = out + self.lin_residual(graph.x)
+            out = out + self.lin_residual(graph.x.to(self.args['device']))
 
         graph.x = out
         # graph.to('cpu')
