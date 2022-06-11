@@ -48,7 +48,7 @@ class StructuralAttentionLayer(nn.Module):
         edge_index = graph.edge_index.to(self.args['device'])
         edge_weight = graph.edge_weight.reshape(-1, 1).to(self.args['device'])
         H, C = self.n_heads, self.out_dim
-        x = self.lin(graph.xto(self.args['device'])).view(-1, H, C) # [N, heads, out_dim]
+        x = self.lin(graph.x.to(self.args['device'])).view(-1, H, C) # [N, heads, out_dim]
 
         # attention
         alpha_l = (x * self.att_l).sum(dim=-1).squeeze() # [N, heads]
