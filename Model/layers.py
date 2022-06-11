@@ -43,11 +43,13 @@ class StructuralAttentionLayer(nn.Module):
         graph = copy.deepcopy(raw_graph)
         gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
         print('GPU memory uses {} before loaded graph!'.format(gpu_mem_alloc))
-        graph.to(self.args['device'])
-        edge_index = graph.edge_index
-        edge_weight = graph.edge_weight.reshape(-1, 1)
+        # graph.to(self.args['device'])
+
+        edge_index = graph.edge_index.to(self.args['device'])
+        edge_weight = graph.edge_weight.reshape(-1, 1).to(self.args['device'])
         H, C = self.n_heads, self.out_dim
-        x = self.lin(graph.x).view(-1, H, C) # [N, heads, out_dim]
+        x = self.lin(graph.x).view(-1, H, C).to(self.args['device']) # [N, heads, out_dim]
+
         # attention
         alpha_l = (x * self.att_l).sum(dim=-1).squeeze() # [N, heads]
         alpha_r = (x * self.att_r).sum(dim=-1).squeeze()
@@ -69,9 +71,9 @@ class StructuralAttentionLayer(nn.Module):
         out = out.reshape(-1, self.n_heads*self.out_dim) #[num_nodes, output_dim]
         if self.residual:
             out = out + self.lin_residual(graph.x)
-        graph.x = out
 
-        graph.to('cpu')
+        graph.x = out
+        # graph.to('cpu')
         torch.cuda.empty_cache()
         torch.cuda.empty_cache()
         torch.cuda.empty_cache()
