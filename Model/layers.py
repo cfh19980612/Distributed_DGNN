@@ -45,10 +45,10 @@ class StructuralAttentionLayer(nn.Module):
         print('GPU memory uses {} before loaded graph!'.format(gpu_mem_alloc))
         # graph.to(self.args['device'])
 
-        edge_index = graph.edge_index.to(self.args['device'])
-        edge_weight = graph.edge_weight.reshape(-1, 1).to(self.args['device'])
+        edge_index = graph.edge_index
+        edge_weight = graph.edge_weight.reshape(-1, 1)
         H, C = self.n_heads, self.out_dim
-        x = self.lin(graph.x.to(self.args['device'])).view(-1, H, C) # [N, heads, out_dim]
+        x = self.lin(graph.x).view(-1, H, C) # [N, heads, out_dim]
 
         # attention
         alpha_l = (x * self.att_l).sum(dim=-1).squeeze() # [N, heads]
@@ -70,9 +70,8 @@ class StructuralAttentionLayer(nn.Module):
         out = self.act(scatter(x_j * coefficients[:, :, None], edge_index[1], dim=0, reduce="sum"))
         out = out.reshape(-1, self.n_heads*self.out_dim) #[num_nodes, output_dim]
         if self.residual:
-            out = out + self.lin_residual(graph.x.to(self.args['device']))
+            out = out + self.lin_residual(graph.x)
 
-        graph.x = out.cpu()
         # # graph.to('cpu')
         # edge_index.cpu()
         # edge_weight.cpu()

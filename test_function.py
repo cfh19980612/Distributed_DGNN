@@ -236,7 +236,7 @@ def run_dgnn_distributed(args):
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
             print('GPU memory uses {} after loaded the training data!'.format(gpu_mem_alloc))
 
-            # graphs = [graph.to(device) for graph in graphs]
+            graphs = [graph.to(device) for graph in graphs]
             train_start_time = time.time()
             out = model(graphs, batch_x, gate)
             # print(out)
