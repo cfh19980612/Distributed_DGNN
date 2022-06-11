@@ -41,8 +41,8 @@ class StructuralAttentionLayer(nn.Module):
 
     def forward(self, raw_graph):
         graph = copy.deepcopy(raw_graph)
-        gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
-        print('GPU memory uses {} before loaded graph!'.format(gpu_mem_alloc))
+        # gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
+        # print('GPU memory uses {} before loaded graph!'.format(gpu_mem_alloc))
         # graph.to(self.args['device'])
 
         edge_index = graph.edge_index
