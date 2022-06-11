@@ -96,7 +96,7 @@ def _normalize_graph_gcn(adj):
 def _build_pyg_graphs(features, adjs):
     pyg_graphs = []
     for feat, adj in zip(features, adjs):
-        x = torch.Tensor(feat)
+        x = torch.Tensor(feat).to_sparse()
         edge_index, edge_weight = pyg.utils.from_scipy_sparse_matrix(adj)
         data = Data(x=x, edge_index=edge_index, edge_weight=edge_weight)
         pyg_graphs.append(data)
