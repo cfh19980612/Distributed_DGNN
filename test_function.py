@@ -189,6 +189,9 @@ def run_dgnn_distributed(args):
 
     model = _My_DGNN(args, in_feats=load_feats[0].shape[1]).to(device)
     print('Worker {} has already put the model to device {}'.format(rank, args['device']))
+    gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
+    print('GPU memory uses {} after loaded the model!'.format(gpu_mem_alloc))
+
     model.set_comm()
     # distributed ?
     # model = LocalDDP(copy.deepcopy(model), mp_group, dp_group, world_size)
@@ -229,6 +232,9 @@ def run_dgnn_distributed(args):
             model.train()
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device)
+            gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
+            print('GPU memory uses {} after loaded the training data!'.format(gpu_mem_alloc))
+
             # graphs = [graph.to(device) for graph in graphs]
             train_start_time = time.time()
             out = model(graphs, batch_x, gate)
