@@ -146,8 +146,8 @@ def run_dgnn_distributed(args):
         args['temporal_time_steps'] = num_graph
     print("Worer {} loads {}/{} graphs, where {} local graphs, and {} remote graphs. The dimension of node feature is {}".format(
         rank, num_graph, args['time_steps'],
-        num_graph, args['temporal_time_steps'] - num_graph),
-        load_feats[0].shape[1])
+        num_graph, args['temporal_time_steps'] - num_graph,
+        load_feats[0].shape[1]))
 
     # generate dataset
     # if args['partition'] == 'Time':
