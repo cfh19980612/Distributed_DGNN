@@ -8,6 +8,7 @@ from torch_geometric.utils import softmax
 
 class StructuralAttentionLayer(nn.Module):
     def __init__(self, 
+                args,
                 input_dim, 
                 output_dim, 
                 n_heads, 
@@ -15,6 +16,7 @@ class StructuralAttentionLayer(nn.Module):
                 ffd_drop,
                 residual):
         super(StructuralAttentionLayer, self).__init__()
+        self.args = args
         self.out_dim = output_dim // n_heads
         self.n_heads = n_heads
         self.act = nn.ELU()
@@ -39,6 +41,7 @@ class StructuralAttentionLayer(nn.Module):
 
     def forward(self, graph):
         graph = copy.deepcopy(graph)
+        graph.to(self.args['device'])
         edge_index = graph.edge_index
         edge_weight = graph.edge_weight.reshape(-1, 1)
         H, C = self.n_heads, self.out_dim

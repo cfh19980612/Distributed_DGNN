@@ -405,7 +405,7 @@ class DySAT(nn.Module):
         structural_out = []
         gcn_time_start = time.time()
         for t in range(0, self.structural_time_steps):
-            structural_out.append(self.structural_attn(graphs[t].to(self.args['device'])))
+            structural_out.append(self.structural_attn(graphs[t]))
         structural_outputs = [g.x[:,None,:] for g in structural_out] # list of [Ni, 1, F]
         self.args['gcn_time'] += time.time() - gcn_time_start
 
@@ -484,7 +484,8 @@ class DySAT(nn.Module):
         # 1: Structural Attention Layers
         structural_attention_layers = nn.Sequential()
         for i in range(len(self.structural_layer_config)):
-            layer = StructuralAttentionLayer(input_dim=input_dim,
+            layer = StructuralAttentionLayer(args=self.args,
+                                             input_dim=input_dim,
                                              output_dim=self.structural_layer_config[i],
                                              n_heads=self.structural_head_config[i],
                                              attn_drop=self.spatial_drop,
