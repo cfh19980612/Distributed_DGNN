@@ -409,6 +409,7 @@ class DySAT(nn.Module):
         for t in range(0, self.structural_time_steps):
             structural_out.append(self.structural_attn(graphs[t]))
             torch.cuda.empty_cache()
+            
         structural_outputs = [g.x[:,None,:] for g in structural_out] # list of [Ni, 1, F]
         self.args['gcn_time'] += time.time() - gcn_time_start
 

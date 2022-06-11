@@ -74,10 +74,7 @@ class StructuralAttentionLayer(nn.Module):
 
         graph.x = out
         # graph.to('cpu')
-        torch.cuda.empty_cache()
-        torch.cuda.empty_cache()
-        torch.cuda.empty_cache()
-        torch.cuda.empty_cache()
+        del edge_index, edge_weight, x
         torch.cuda.empty_cache()
         return graph
 
