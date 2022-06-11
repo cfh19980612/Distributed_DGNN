@@ -70,6 +70,7 @@ class StructuralAttentionLayer(nn.Module):
         if self.residual:
             out = out + self.lin_residual(graph.x)
         graph.x = out
+        graph.to('cpu')
         return graph
 
 
