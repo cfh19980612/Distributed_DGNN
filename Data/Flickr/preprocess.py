@@ -76,6 +76,8 @@ Create_graph = [True for i in range (205)]
 Graph_nodes = [0 for i in range(205)]
 Now_day = START_DATE
 num_nodes = 0
+now = 0
+now_temp = 0
 # Note: there are redundant nodes in edges
 for (a, b, time) in links:
     datetime_object = time
