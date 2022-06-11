@@ -39,8 +39,8 @@ class StructuralAttentionLayer(nn.Module):
             self.lin_residual = nn.Linear(input_dim, n_heads * self.out_dim, bias=False)
 
 
-    def forward(self, graph):
-        graph = copy.deepcopy(graph)
+    def forward(self, raw_graph):
+        graph = copy.deepcopy(raw_graph)
         gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
         print('GPU memory uses {} before loaded graph!'.format(gpu_mem_alloc))
         graph.to(self.args['device'])
@@ -70,7 +70,12 @@ class StructuralAttentionLayer(nn.Module):
         if self.residual:
             out = out + self.lin_residual(graph.x)
         graph.x = out
+
         graph.to('cpu')
+        torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
         torch.cuda.empty_cache()
         return graph
 
