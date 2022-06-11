@@ -11,6 +11,7 @@ import torch
 import torch_geometric as pyg
 
 import utils as u
+from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
 from torch_geometric.data import Data
@@ -220,13 +221,15 @@ def load_graphs(args):
 
             folder_in = os.path.exists(feats_path)
             if not folder_in:
-                os.makedirs(feats_path) 
-            for id,feat in enumerate(feats):
+                os.makedirs(feats_path)
+            pbar = tqdm(feats)
+            for id,feat in enumerate(pbar):
                 # print('feature shape is ', feat.shape)
                 # feats_sp.append(sp.csr_matrix(feat))
                 feat_sp = sp.csr_matrix(feat)
                 path = feats_path+'no_{}.npz'.format(id)
                 sp.save_npz(path, feat_sp)
+                pbar.set_description('Compress feature and save:')
 
             # np.save(feats_path, feats)
 

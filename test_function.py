@@ -229,7 +229,7 @@ def run_dgnn_distributed(args):
             model.train()
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device)
-            graphs = [graph.to(device) for graph in graphs]
+            # graphs = [graph.to(device) for graph in graphs]
             train_start_time = time.time()
             out = model(graphs, batch_x, gate)
             # print(out)

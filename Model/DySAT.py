@@ -405,9 +405,13 @@ class DySAT(nn.Module):
         structural_out = []
         gcn_time_start = time.time()
         for t in range(0, self.structural_time_steps):
-            structural_out.append(self.structural_attn(graphs[t]))
+            structural_out.append(self.structural_attn(graphs[t].to(self.args['device'])))
         structural_outputs = [g.x[:,None,:] for g in structural_out] # list of [Ni, 1, F]
         self.args['gcn_time'] += time.time() - gcn_time_start
+
+        # graphs to CPU
+        for graph in graphs:
+            graph.to('cpu')
 
         # padding outputs along with Ni
         maximum_node_num = structural_outputs[-1].shape[0]
