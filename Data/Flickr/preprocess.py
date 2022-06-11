@@ -57,7 +57,7 @@ generate a graph per 'SLICE_DAYS'.
 SLICE_DAYS = 1
 START_DATE = min(ts) + timedelta(1)
 # END_DATE =  max(ts) - timedelta(700)
-END_DATE = min(ts) + timedelta(40)
+END_DATE = min(ts) + timedelta(105)
 
 # END_DATE = timedelta(100)
 
@@ -72,8 +72,8 @@ slice_id = 0
 '''
 links: a list, where each element contains three contents, i.e., (source_node, target_node, timestamp)
 '''
-Create_graph = [True for i in range (45)]
-Graph_nodes = [0 for i in range(45)]
+Create_graph = [True for i in range (205)]
+Graph_nodes = [0 for i in range(205)]
 Now_day = START_DATE
 num_nodes = 0
 # Note: there are redundant nodes in edges
@@ -87,12 +87,16 @@ for (a, b, time) in links:
     else:
         days_diff = (datetime_object - START_DATE).days
     slice_id = days_diff // SLICE_DAYS
-    Graph_nodes[slice_id] += 1
+    if slice_id != now_temp:
+        now = now + 1
+        now_temp = slice_id
+    Graph_nodes[now] += 1
 
 print('graph edges: ', Graph_nodes)
 scale = 0.05
 temp = 0
 now = 0
+now_temp = 0
 for (a, b, time) in links:
 
     prev_slice_id = slice_id
@@ -109,30 +113,31 @@ for (a, b, time) in links:
 
 
     slice_id = days_diff // SLICE_DAYS
-    if slice_id != now:
+    if slice_id != now_temp:
         # reset for the next graph
-        now = slice_id
+        now = now + 1
+        now_temp = slice_id
         temp = 0
     # print('slice_id: ', slice_id)
 
-    if slice_id == 0:
-        if Create_graph[slice_id]:
-            slices_links[slice_id] = nx.MultiGraph()
-            Create_graph[slice_id] = False
+    if now == 0:
+        if Create_graph[now]:
+            slices_links[now] = nx.MultiGraph()
+            Create_graph[now] = False
     else:
-        if Create_graph[slice_id]:
-            slices_links[slice_id] = nx.MultiGraph()
-            slices_links[slice_id].add_nodes_from(slices_links[slice_id-1].nodes(data=True))
-            Create_graph[slice_id] = False
-            assert len(slices_links[slice_id].nodes()) > 0, 'Loaded an empty graph!'
+        if Create_graph[now]:
+            slices_links[now] = nx.MultiGraph()
+            slices_links[now].add_nodes_from(slices_links[now-1].nodes(data=True))
+            Create_graph[now] = False
+            assert len(slices_links[now].nodes()) > 0, 'Loaded an empty graph!'
 
-    if temp < Graph_nodes[slice_id]*scale:
-        if a not in slices_links[slice_id]:
-            slices_links[slice_id].add_node(a)
-        if b not in slices_links[slice_id]:
-            slices_links[slice_id].add_node(b)
+    if temp < Graph_nodes[now]*scale:
+        if a not in slices_links[now]:
+            slices_links[now].add_node(a)
+        if b not in slices_links[now]:
+            slices_links[now].add_node(b)
         temp += 1
-        slices_links[slice_id].add_edge(a,b, date=datetime_object)
+        slices_links[now].add_edge(a,b, date=datetime_object)
 
 for slice_id in slices_links:
     print ("# nodes in slice", slice_id, len(slices_links[slice_id].nodes()))
