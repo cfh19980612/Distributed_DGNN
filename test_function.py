@@ -28,7 +28,11 @@ np.random.seed(0)
 class _My_DGNN(torch.nn.Module):
     def __init__(self, args, in_feats = None):
         super(_My_DGNN, self).__init__()
+        if args['rank'] == 3:
+            print('start to initialize dgnn')
         self.dgnn = DySAT(args, num_features = in_feats)
+        if args['rank'] == 3:
+            print('start to initialize classifier')
         self.classificer = Classifier(in_feature = self.dgnn.out_feats)
 
     # def set_comm(self):
@@ -198,7 +202,7 @@ def run_dgnn_distributed(args):
     # model.set_comm()
     # distributed ?
     # model = LocalDDP(copy.deepcopy(model), mp_group, dp_group, world_size)
-    model = DDP(model, process_group=dp_group, find_unused_parameters=True)
+    # model = DDP(model, process_group=dp_group, find_unused_parameters=True)
 
     # loss_func = nn.BCELoss()
     loss_func = nn.CrossEntropyLoss()

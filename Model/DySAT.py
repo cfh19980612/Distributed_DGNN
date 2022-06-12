@@ -480,6 +480,8 @@ class DySAT(nn.Module):
         input_dim = self.num_features
         # 1: Structural Attention Layers
         structural_attention_layers = nn.Sequential()
+        if self.args['rank'] == 3:
+            print('start to initialize structural attention layer')
         for i in range(len(self.structural_layer_config)):
             layer = StructuralAttentionLayer(args=self.args,
                                              input_dim=input_dim,
@@ -494,6 +496,8 @@ class DySAT(nn.Module):
         # 2: Temporal Attention Layers
         input_dim = self.structural_layer_config[-1]
         temporal_attention_layers = nn.Sequential()
+        if self.args['rank'] == 3:
+            print('start to initialize temporal attention layer')
         for i in range(len(self.temporal_layer_config)):
             layer = TemporalAttentionLayer(method=0,
                                            input_dim=input_dim,
