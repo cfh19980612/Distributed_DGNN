@@ -31,14 +31,14 @@ class _My_DGNN(torch.nn.Module):
         self.dgnn = DySAT(args, num_features = in_feats)
         self.classificer = Classifier(in_feature = self.dgnn.out_feats)
 
-    def set_comm(self):
-        for p in self.dgnn.structural_attn.parameters():
-            setattr(p, 'mp_comm', 'mp')
-            setattr(p, 'dp_comm', 'dp')
-        for p in self.dgnn.temporal_attn.parameters():
-            setattr(p, 'dp_comm', 'dp')
-        for p in self.classificer.parameters():
-            setattr(p, 'dp_comm', 'dp')
+    # def set_comm(self):
+    #     for p in self.dgnn.structural_attn.parameters():
+    #         setattr(p, 'mp_comm', 'mp')
+    #         setattr(p, 'dp_comm', 'dp')
+    #     for p in self.dgnn.temporal_attn.parameters():
+    #         setattr(p, 'dp_comm', 'dp')
+    #     for p in self.classificer.parameters():
+    #         setattr(p, 'dp_comm', 'dp')
 
     def forward(self, graphs, nids, gate = None):
         final_emb = self.dgnn(graphs, gate)
@@ -195,7 +195,7 @@ def run_dgnn_distributed(args):
     # gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
     # print('GPU memory uses {} after loaded the model!'.format(gpu_mem_alloc))
 
-    model.set_comm()
+    # model.set_comm()
     # distributed ?
     # model = LocalDDP(copy.deepcopy(model), mp_group, dp_group, world_size)
     model = DDP(model, process_group=dp_group, find_unused_parameters=True)
