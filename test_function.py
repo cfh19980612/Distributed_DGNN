@@ -188,7 +188,9 @@ def run_dgnn_distributed(args):
     # convert graphs to dgl or pyg graphs
     graphs = convert_graphs(load_g, load_adj, load_feats, args['data_str'])
 
-    model = _My_DGNN(args, in_feats=load_feats[0].shape[1]).to(device)
+    model = _My_DGNN(args, in_feats=load_feats[0].shape[1])
+    print('Worker {} has already initialized DGNN model'.format(rank, args['device']))
+    model = model.to(device)
     print('Worker {} has already put the model to device {}'.format(rank, args['device']))
     # gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
     # print('GPU memory uses {} after loaded the model!'.format(gpu_mem_alloc))
