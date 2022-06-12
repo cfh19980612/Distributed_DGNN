@@ -191,6 +191,7 @@ def run_dgnn_distributed(args):
     # TODO: How to take the global forward?
     # convert graphs to dgl or pyg graphs
     graphs = convert_graphs(load_g, load_adj, load_feats, args['data_str'])
+    print('Worker {} has already converted graphs'.format(rank, args['device']))
 
     model = _My_DGNN(args, in_feats=load_feats[0].shape[1])
     print('Worker {} has already initialized DGNN model'.format(rank, args['device']))
