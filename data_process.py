@@ -96,7 +96,8 @@ def _normalize_graph_gcn(adj):
 def _build_pyg_graphs(features, adjs):
     pyg_graphs = []
     for feat, adj in zip(features, adjs):
-        x = torch.Tensor(feat).to_sparse()
+        # x = torch.Tensor(feat).to_sparse()
+        x = feat
         edge_index, edge_weight = pyg.utils.from_scipy_sparse_matrix(adj)
         data = Data(x=x, edge_index=edge_index, edge_weight=edge_weight)
         pyg_graphs.append(data)
@@ -202,12 +203,19 @@ def load_graphs(args):
         feats_path = current_path + "/Data/{}/data/eval_{}_feats/".format(args['dataset'], str(args['time_steps']))
         try:
             # feats = np.load(feats_path, allow_pickle=True)
-
+            num_feats = 0
             feats = []
             for time in range(time_steps):
                 path = feats_path+'no_{}.npz'.format(time)
                 feat = sp.load_npz(path)
-                feats.append(feat.toarray())
+                if time == 0:
+                    feat_array = feat.to_array()
+                    num_feats = feat_array.shape[1]
+                feat_coo = feat.tocoo()
+                feat_tensor_sp = torch.sparse.LongTensor(torch.LongTensor([feat_coo.row.tolist(), feat_coo.col.tolist()]),
+                                 torch.LongTensor(feat_coo.data.astype(np.int32)))
+
+                feats.append(feat_tensor_sp)
 
             print("Worker {} loads node features!".format(args['rank']))
         except IOError:
@@ -231,6 +239,10 @@ def load_graphs(args):
                 sp.save_npz(path, feat_sp)
                 pbar.set_description('Compress feature and save:')
 
+            num_feats = feats[0].shape[1]
+            # to tensor_sp
+            for feat in feats:
+                feat = torch.Tensor(feat).to_sparse()
             # np.save(feats_path, feats)
 
     #normlized adj
@@ -240,7 +252,7 @@ def load_graphs(args):
     # if features:
     #     feats = _generate_feats(adj_matrices, time_steps)
 
-    return (args, graphs, adj_matrices, feats)
+    return (args, graphs, adj_matrices, feats, num_feats)
 
 def get_data_example(graphs, args, local_time_steps):
     r"""
@@ -311,7 +323,7 @@ def convert_graphs(graphs, adj, feats, framework):
 
     return new_graphs
 
-def slice_graph(args, graphs, adj, feats):
+def slice_graph(args, graphs, adj, feats, num_feats):
     world_size = args['world_size']
     rank = args['rank']
     num_parts = int(len(graphs) // world_size)
@@ -320,4 +332,4 @@ def slice_graph(args, graphs, adj, feats):
     sliced_adj = adj[rank*num_parts: (rank+1)*num_parts]
     sliced_feats = feats[rank*num_parts: (rank+1)*num_parts]
 
-    return graphs, sliced_graphs, sliced_adj, sliced_feats
+    return graphs, sliced_graphs, sliced_adj, sliced_feats, num_feats
