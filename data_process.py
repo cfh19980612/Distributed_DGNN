@@ -209,7 +209,7 @@ def load_graphs(args):
                 path = feats_path+'no_{}.npz'.format(time)
                 feat = sp.load_npz(path)
                 if time == 0:
-                    feat_array = feat.to_array()
+                    feat_array = feat.toarray()
                     num_feats = feat_array.shape[1]
                 feat_coo = feat.tocoo()
                 feat_tensor_sp = torch.sparse.LongTensor(torch.LongTensor([feat_coo.row.tolist(), feat_coo.col.tolist()]),
