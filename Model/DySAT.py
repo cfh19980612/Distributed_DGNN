@@ -457,6 +457,7 @@ class DySAT(nn.Module):
                     attention_output.append(self.temporal_attn(attention_input))
                     break
                 pointer_temp += node_scale
+                torch.cuda.empty_cache()
             self.args['att_time'] += time.time() - temporal_time_start
             temporal_out = torch.cat(attention_output, 0)
 
