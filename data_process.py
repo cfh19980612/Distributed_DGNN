@@ -251,16 +251,13 @@ def load_graphs(args):
 
             num_feats = feats[0].shape[1]
             # to tensor_sp
+            feats_tensor_sp = []
             for feat in feats:
-                feat = torch.Tensor(feat).to_sparse()
+                feats_tensor_sp.append(torch.Tensor(feat).to_sparse())
             # np.save(feats_path, feats)
-
+            feats = feats_tensor_sp
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
-
-    # # generate features
-    # if features:
-    #     feats = _generate_feats(adj_matrices, time_steps)
 
     return (args, graphs, adj_matrices, feats, num_feats)
 
