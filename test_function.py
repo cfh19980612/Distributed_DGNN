@@ -238,7 +238,7 @@ def run_dgnn_distributed(args):
         args['comm_cost_second'] = 0
         for step, (batch_x, batch_y) in enumerate(loader):
             # model.train()
-            model.eval()()
+            model.eval()
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device)
             # gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
