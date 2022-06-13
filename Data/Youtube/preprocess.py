@@ -93,7 +93,7 @@ for (a, b, time) in links:
     Graph_nodes[now] += 1
 
 print('graph edges: ', Graph_nodes)
-scale = 0.05
+scale = 0.02
 temp = 0
 now = 0
 now_temp = 0
