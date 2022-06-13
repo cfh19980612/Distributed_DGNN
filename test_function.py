@@ -193,7 +193,7 @@ def run_dgnn_distributed(args):
     graphs = convert_graphs(load_g, load_adj, load_feats, args['data_str'])
     print('Worker {} has already converted graphs'.format(rank, args['device']))
 
-    model = _My_DGNN(args, in_feats=load_feats[0].shape[1])
+    model = _My_DGNN(args, in_feats=num_feats)
     print('Worker {} has already initialized DGNN model'.format(rank, args['device']))
     model = model.to(device)
     print('Worker {} has already put the model to device {}'.format(rank, args['device']))
