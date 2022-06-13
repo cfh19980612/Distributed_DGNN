@@ -237,8 +237,7 @@ def run_dgnn_distributed(args):
         args['att_time'] = 0
         args['comm_cost_second'] = 0
         for step, (batch_x, batch_y) in enumerate(loader):
-            # model.train()
-            model.eval()
+            model.train()
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device)
             # gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
@@ -247,16 +246,17 @@ def run_dgnn_distributed(args):
             graphs = [graph.to(device) for graph in graphs]
             train_start_time = time.time()
             out = model(graphs, batch_x, gate)
-
+            # print(out)
             loss = loss_func(out.squeeze(dim=-1), batch_y)
             Loss.append(loss.item())
             optimizer.zero_grad()
-            # loss.backward()
-            # optimizer.step()
+            loss.backward()
+            # print('epoch {} worker {} completes gradients computation!'.format(epoch, args['rank']))
+            optimizer.step()
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
             epoch_mem.append(gpu_mem_alloc)
             epoch_train_time.append(time.time() - train_start_time)
-
+            torch.cuda.empty_cache()
         # communication time
         if args['connection']:
             epoch_comm_time.append(args['comm_cost'])
