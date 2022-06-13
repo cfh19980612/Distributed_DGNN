@@ -53,8 +53,8 @@ collect data from 'START_DATE' and ends to 'END_DATE'.
 generate a graph per 'SLICE_DAYS'.
 '''
 SLICE_DAYS = 5
-START_DATE = min(ts) + timedelta(500)
-END_DATE = min(ts) + timedelta(700)
+START_DATE = min(ts) + timedelta(100)
+END_DATE = min(ts) + timedelta(800)
 
 # END_DATE = timedelta(100)
 
