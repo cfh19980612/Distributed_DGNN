@@ -212,8 +212,18 @@ def load_graphs(args):
                     feat_array = feat.toarray()
                     num_feats = feat_array.shape[1]
                 feat_coo = feat.tocoo()
-                feat_tensor_sp = torch.sparse.LongTensor(torch.LongTensor([feat_coo.row.tolist(), feat_coo.col.tolist()]),
-                                 torch.LongTensor(feat_coo.data.astype(np.int32)))
+
+                values = feat_coo.data
+                indices = np.vstack((feat_coo.row, feat_coo.col))
+
+                i = torch.LongTensor(indices)
+                v = torch.FloatTensor(values)
+                shape = feat_coo.shape
+
+                feat_tensor_sp = torch.sparse.FloatTensor(i, v, torch.Size(shape))
+
+                # feat_tensor_sp = torch.sparse.FloatTensor(torch.LongTensor([feat_coo.row.tolist(), feat_coo.col.tolist()]),
+                #                  torch.LongTensor(feat_coo.data.astype(np.int32)))
 
                 feats.append(feat_tensor_sp)
 
