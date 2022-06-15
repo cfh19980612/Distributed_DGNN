@@ -342,12 +342,13 @@ def test_windmilllarge():
     loader = WindmillOutputLargeDatasetLoader()
     dataset = loader.get_dataset()
     print('The Number of snapshots in windmilllarge is ', dataset.snapshot_count)
-    for epoch in range(2):
+    for epoch in range(1):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 101761)
             assert snapshot.edge_attr.shape == (101761,)
             assert snapshot.x.shape == (319, 8)
             assert snapshot.y.shape == (319,)
+            print(snapshot.x)
 
 
 def test_windmillsmall():
