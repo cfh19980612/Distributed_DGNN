@@ -304,7 +304,7 @@ def test_dynamic_hetero_graph_temporal_signal_edges():
 def test_chickenpox():
     loader = ChickenpoxDatasetLoader()
     dataset = loader.get_dataset()
-    print('The Number of snapshots is ', dataset.snapshot_count)
+    print('The Number of snapshots in chickenpox is ', dataset.snapshot_count)
     for snapshot in dataset:
         assert snapshot.edge_index.shape == (2, 102)
         assert snapshot.edge_attr.shape == (102,)
@@ -315,6 +315,7 @@ def test_chickenpox():
 def test_pedalme():
     loader = PedalMeDatasetLoader()
     dataset = loader.get_dataset()
+    print('The Number of snapshots in pedalme is ', dataset.snapshot_count)
     for epoch in range(3):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 225)
@@ -326,6 +327,7 @@ def test_pedalme():
 def test_wiki():
     loader = WikiMathsDatasetLoader()
     dataset = loader.get_dataset()
+    print('The Number of snapshots in wiki is ', dataset.snapshot_count)
     for epoch in range(1):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 27079)
@@ -337,6 +339,7 @@ def test_wiki():
 def test_windmilllarge():
     loader = WindmillOutputLargeDatasetLoader()
     dataset = loader.get_dataset()
+    print('The Number of snapshots in windmilllarge is ', dataset.snapshot_count)
     for epoch in range(2):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 101761)
@@ -348,6 +351,7 @@ def test_windmilllarge():
 def test_windmillsmall():
     loader = WindmillOutputSmallDatasetLoader()
     dataset = loader.get_dataset()
+    print('The Number of snapshots in windmillsmall is ', dataset.snapshot_count)
     for epoch in range(2):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 121)
@@ -359,6 +363,7 @@ def test_windmillsmall():
 def test_windmillmedium():
     loader = WindmillOutputMediumDatasetLoader()
     dataset = loader.get_dataset()
+    print('The Number of snapshots in windmillmedium is ', dataset.snapshot_count)
     for epoch in range(2):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 676)
@@ -370,6 +375,7 @@ def test_windmillmedium():
 def test_covid():
     loader = EnglandCovidDatasetLoader()
     dataset = loader.get_dataset()
+    print('The Number of snapshots in covid is ', dataset.snapshot_count)
     for epoch in range(2):
         for snapshot in dataset:
             assert snapshot.edge_index.shape[0] == 2
@@ -381,6 +387,7 @@ def test_covid():
 def test_montevideobus():
     loader = MontevideoBusDatasetLoader()
     dataset = loader.get_dataset()
+    print('The Number of snapshots in montevideobus is ', dataset.snapshot_count)
     for epoch in range(1):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 690)
@@ -392,6 +399,7 @@ def test_montevideobus():
 def test_metrla():
     loader = METRLADatasetLoader(raw_data_dir="/tmp/")
     dataset = loader.get_dataset()
+    print('The Number of snapshots in metrla is ', dataset.snapshot_count)
     for epoch in range(2):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 1722)
@@ -403,6 +411,7 @@ def test_metrla():
 def test_metrla_task_generator():
     loader = METRLADatasetLoader(raw_data_dir="/tmp/")
     dataset = loader.get_dataset(num_timesteps_in=6, num_timesteps_out=5)
+    print('The Number of snapshots in metrla is ', dataset.snapshot_count)
     for epoch in range(2):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 1722)
@@ -414,6 +423,7 @@ def test_metrla_task_generator():
 def test_pemsbay():
     loader = PemsBayDatasetLoader(raw_data_dir="/tmp/")
     dataset = loader.get_dataset()
+    print('The Number of snapshots in pemsbay is ', dataset.snapshot_count)
     for epoch in range(2):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 2694)
@@ -425,6 +435,7 @@ def test_pemsbay():
 def test_pemsbay_task_generator():
     loader = PemsBayDatasetLoader(raw_data_dir="/tmp/")
     dataset = loader.get_dataset(num_timesteps_in=6, num_timesteps_out=5)
+    print('The Number of snapshots is ', dataset.snapshot_count)
     for epoch in range(2):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 2694)
@@ -436,6 +447,7 @@ def test_pemsbay_task_generator():
 def check_tennis_data(event_id, node_count, mode, edge_cnt):
     loader = TwitterTennisDatasetLoader(event_id, N=node_count, feature_mode=mode)
     dataset = loader.get_dataset()
+    print('The Number of snapshots is ', dataset.snapshot_count)
     for epoch in range(3):
         i = 0
         for snapshot in dataset:
