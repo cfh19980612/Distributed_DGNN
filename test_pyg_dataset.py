@@ -334,6 +334,7 @@ def test_wiki():
             assert snapshot.edge_attr.shape == (27079,)
             assert snapshot.x.shape == (1068, 8)
             assert snapshot.y.shape == (1068,)
+            print(snapshot.x)
 
 
 def test_windmilllarge():
@@ -448,23 +449,26 @@ def check_tennis_data(event_id, node_count, mode, edge_cnt):
     loader = TwitterTennisDatasetLoader(event_id, N=node_count, feature_mode=mode)
     dataset = loader.get_dataset()
     print('The Number of snapshots is ', dataset.snapshot_count)
-    for epoch in range(3):
-        i = 0
-        for snapshot in dataset:
-            if node_count == 1000:
-                assert snapshot.edge_index.shape == (2, edge_cnt[i])
-                assert snapshot.edge_attr.shape == (edge_cnt[i],)
-            else:
-                assert snapshot.edge_index.shape[1] <= edge_cnt[i]
-                assert snapshot.edge_attr.shape[0] <= edge_cnt[i]
-            if mode == "encoded":
-                assert snapshot.x.shape == (node_count, 16)
-            elif mode == "diagonal":
-                assert snapshot.x.shape == (node_count, node_count)
-            else:
-                assert snapshot.x.shape == (node_count, 2)
-            assert snapshot.y.shape == (node_count,)
-            i += 1
+    Num_nodes = []
+    Num_edges = []
+
+    for snapshot in dataset:
+        Num_nodes.append(snapshot.x.shape[0])
+        Num_edges.append(snapshot.edge_index.shape[1])
+        # if node_count == 1000:
+        #     assert snapshot.edge_index.shape == (2, edge_cnt[i])
+        #     assert snapshot.edge_attr.shape == (edge_cnt[i],)
+        # else:
+        #     assert snapshot.edge_index.shape[1] <= edge_cnt[i]
+        #     assert snapshot.edge_attr.shape[0] <= edge_cnt[i]
+        if mode == "encoded":
+            assert snapshot.x.shape == (node_count, 16)
+        elif mode == "diagonal":
+            assert snapshot.x.shape == (node_count, node_count)
+        else:
+            assert snapshot.x.shape == (node_count, 2)
+        assert snapshot.y.shape == (node_count,)
+ 
 
 
 def test_twitter_tennis_rg17():
