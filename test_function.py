@@ -257,6 +257,7 @@ def run_dgnn_distributed(args):
             epoch_mem.append(gpu_mem_alloc)
             epoch_train_time.append(time.time() - train_start_time)
             torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
         # communication time
         if args['connection']:
             epoch_comm_time.append(args['comm_cost'])
@@ -280,7 +281,7 @@ def run_dgnn_distributed(args):
             test_result = model(graphs, torch.tensor(dataset['test_data']).to(device), gate)
 
         elif epoch % args['test_freq'] == 0 and rank == world_size - 1:
-            model.eval()
+            # model.eval()
             graphs = [graph.to(device) for graph in graphs]
             test_result = model(graphs, torch.tensor(dataset['test_data']).to(device), gate)
             prob_f1 = []
