@@ -316,12 +316,13 @@ def test_pedalme():
     loader = PedalMeDatasetLoader()
     dataset = loader.get_dataset()
     print('The Number of snapshots in pedalme is ', dataset.snapshot_count)
-    for epoch in range(3):
+    for epoch in range(1):
         for snapshot in dataset:
             assert snapshot.edge_index.shape == (2, 225)
             assert snapshot.edge_attr.shape == (225,)
             assert snapshot.x.shape == (15, 4)
             assert snapshot.y.shape == (15,)
+            print(snapshot.x)
 
 
 def test_wiki():
