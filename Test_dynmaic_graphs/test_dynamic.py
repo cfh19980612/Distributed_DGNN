@@ -63,12 +63,14 @@ def load_graphs(args):
     else:
         graphs = np.load(graph_path, allow_pickle=True, encoding='latin1')['graph']
     
-    graphs = graphs[1:time_steps+1]
+    time_steps = len(graphs)
+    args['time_steps'] = len(graphs)
+    # graphs = graphs[1:time_steps+1]
 
     # get num of nodes for each snapshot
     Nodes_info = []
     Edge_info = []
-    for i in range(args['time_steps']):
+    for i in range(len(graphs)):
         Nodes_info.append(graphs[i].number_of_nodes())
         Edge_info.append(graphs[i].number_of_edges())
     args['nodes_info'] = Nodes_info
@@ -80,12 +82,12 @@ def load_graphs(args):
 
     if features:
         # save as sparse matrix
-        feats_path = current_path + "/{}/data/eval_{}_feats/".format(args['dataset'], str(args['time_steps']))
+        feats_path = current_path + "/{}/data/eval_feats/".format(args['dataset'])
         try:
             # feats = np.load(feats_path, allow_pickle=True)
             num_feats = 0
             feats = []
-            for time in range(time_steps):
+            for time in range(len(graphs)):
                 path = feats_path+'no_{}.npz'.format(time)
                 feat = sp.load_npz(path)
                 if time == 0:
@@ -114,7 +116,7 @@ def load_graphs(args):
             # max_deg, _ = _count_max_deg(graphs, adj_matrices)
             # feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
             # method 2:
-            feats = _generate_feats(adj_matrices, time_steps)
+            feats = _generate_feats(adj_matrices, len(graphs))
             # print('saved feats, ',feats)
 
             folder_in = os.path.exists(feats_path)
