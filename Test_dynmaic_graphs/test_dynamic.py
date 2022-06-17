@@ -250,8 +250,8 @@ if __name__ == '__main__':
     num_epochs = 100
     GCN_time = [[] for j in range(len(graphs_new))]
     GCN_mem = [[] for j in range(len(graphs_new))]
-    pbar = tqdm(graphs_new)
     for epoch in range(num_epochs):
+        pbar = tqdm(graphs_new)
         for index,graph in enumerate(pbar):
             time_current = time.time()
             out = model(graph.to('cuda:0'), feats[index].to('cuda:0'))
