@@ -64,7 +64,7 @@ def load_graphs(args):
     
     time_steps = len(graphs)
     args['time_steps'] = len(graphs)
-    graphs = graphs[1:]
+    # graphs = graphs[1:]
 
     # get num of nodes for each snapshot
     Nodes_info = []
@@ -157,10 +157,10 @@ def _build_pyg_graphs(features, adjs):
 def _build_dgl_graphs(graphs, features):
     dgl_graphs = []  # graph list
     for graph, feat in zip(graphs, features):
-        x = feat
+        # x = feat
         dgl_graph = dgl.from_networkx(graph)
         dgl_graph = dgl.add_self_loop(dgl_graph)
-        dgl_graph.ndata['feat'] = x
+        # dgl_graph.ndata['feat'] = x
         dgl_graphs.append(dgl_graph)
     return dgl_graphs
 
