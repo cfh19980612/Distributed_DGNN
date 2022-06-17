@@ -213,13 +213,13 @@ import time
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test parameters')
-    parser.add_argument('--json-path', type=str, required=True,
-                        help='the path of hyperparameter json file')
-    parser.add_argument('--test-type', type=str, required=True, choices=['local', 'dp', 'ddp'],
-                        help='method for DGNN training')
+    # parser.add_argument('--json-path', type=str, required=True,
+    #                     help='the path of hyperparameter json file')
+    # parser.add_argument('--test-type', type=str, required=True, choices=['local', 'dp', 'ddp'],
+    #                     help='method for DGNN training')
     
     # for experimental configurations
-    parser.add_argument('--featureless', type=bool, required=True, default= True,
+    parser.add_argument('--featureless', type=bool, default= True,
                         help='generate feature with one-hot encoding')
     parser.add_argument('--time_steps', type=int, nargs='?', default=8,
                     help="total time steps used for train, eval and test")
