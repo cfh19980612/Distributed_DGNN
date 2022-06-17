@@ -309,6 +309,11 @@ if __name__ == '__main__':
             graph = graph.to('cpu')
             feats[index].to_dense().to('cpu')
             torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
+            
     
     Time_summary = [np.around(np.mean(GCN_time[i]), 3) for i in range (len(graphs_new))]
     Mem_summary = [np.around(np.mean(GCN_mem[i]), 3) for i in range (len(graphs_new))]
