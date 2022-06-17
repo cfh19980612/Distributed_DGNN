@@ -21,6 +21,26 @@ from torch_geometric.data import Data
 
 current_path = os.getcwd()
 
+def make_sparse_tensor(adj, tensor_type, torch_size):
+    if len(torch_size) == 2:
+        tensor_size = torch.Size(torch_size)
+    elif len(torch_size) == 1:
+        tensor_size = torch.Size(torch_size*2)
+
+    if tensor_type == 'float':
+        test = torch.sparse.FloatTensor(adj['idx'].t(),
+                                      adj['vals'].type(torch.float),
+                                      tensor_size)
+        return torch.sparse.FloatTensor(adj['idx'].t(),
+                                      adj['vals'].type(torch.float),
+                                      tensor_size)
+    elif tensor_type == 'long':
+        return torch.sparse.LongTensor(adj['idx'].t(),
+                                      adj['vals'].type(torch.long),
+                                      tensor_size)
+    else:
+        raise NotImplementedError('only make floats or long sparse tensors')
+
 def _count_max_deg(graphs, adjs):
     max_deg_out = []
     max_deg_in = []
@@ -40,7 +60,7 @@ def _count_max_deg(graphs, adjs):
 
 def _get_degree_from_adj(adj, num_nodes):
     # print(adj.todense())
-    adj_tensor = torch.tensor(adj.todense()).cuda()
+    adj_tensor = torch.tensor(adj.todense())
     sign_a = torch.sign(adj_tensor).int()
     # count
     degs_out = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)   
@@ -72,7 +92,7 @@ def _generate_one_hot_feats(graphs, adjs, max_degree):
         feats_dict = {'idx': torch.cat([torch.arange(num_nodes).view(-1, 1), degree_vec.view(-1, 1)], dim=1),
                       'vals': torch.ones(num_nodes)
         }
-        feat = u.make_sparse_tensor(feats_dict, 'float', [num_nodes, max_degree])
+        feat = make_sparse_tensor(feats_dict, 'float', [num_nodes, max_degree])
         # print(feat)
         new_feats.append(feat.to_dense().numpy())
     return new_feats
