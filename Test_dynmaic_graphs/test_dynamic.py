@@ -237,7 +237,7 @@ if __name__ == '__main__':
 
     graphs_new = convert_graphs(graphs, adj_matrices, feats, 'dgl')
 
-    model = GCN(in_feats = feats[0].shape[1], n_hidden=16, n_classes=10, n_layers=1, activation=F.relu(), dropout=0.5)
+    model = GCN(in_feats = feats[0].shape[1], n_hidden=16, n_classes=10, n_layers=1, activation=F.relu, dropout=0.5)
 
     GCN_time = [0 for i in range (len(graphs_new))]
     model.cuda()
