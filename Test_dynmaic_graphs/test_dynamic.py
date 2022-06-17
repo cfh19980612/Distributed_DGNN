@@ -311,7 +311,10 @@ class GCN(nn.Module):
         return h
 
 
-# def stat_different(graphs):
+def stat_different(graphs, feats):
+    feat_A = feats[0].to_dense()
+    feat_B = feats[1].to_dense()
+    print(feat_A[:30], feat_B[:30])
 
     
 
@@ -351,6 +354,8 @@ if __name__ == '__main__':
 
     model.cuda()
     print('Starting to training!')
+
+    stat_different(graphs_new, feats)
 
     num_epochs = 100
     GCN_time = [[] for j in range(len(graphs_new))]
