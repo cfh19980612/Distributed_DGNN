@@ -12,7 +12,7 @@ node_cnt = 0
 node_idx = {}
 idx_node = []
 
-file_path = current_path + '/opsahl-ucsocial.edges'
+file_path = current_path + '/soc-epinions-trust-dir.edges'
 save_graph_path = current_path + '/data/graphs.npz'
 save_features_path = current_path + '/data/features.npz'
 
@@ -60,26 +60,34 @@ from datetime import datetime, timedelta
 collect data from 'START_DATE' and ends to 'END_DATE'.
 generate a graph per 'SLICE_DAYS'.
 '''
-SLICE_MONTHS = 2
-START_DATE = min(ts)+ timedelta(200)
-MAX_DATE = max(ts) - timedelta(200)
+SLICE_DAYS = 30*3
+START_DATE = min(ts)
+END_DATE = max(ts) - timedelta(20)
+
+print ("Start date", START_DATE)
+print ("End date", END_DATE)
 
 slices_links = defaultdict(lambda : nx.MultiGraph())
 slices_features = defaultdict(lambda : {})
 
 print ("Start date", START_DATE)
+
 slice_id = -1
 # Split the set of links in order by slices to create the graphs.
 for (a, b, time) in links:
     prev_slice_id = slice_id
 
     datetime_object = time
-    if datetime_object > MAX_DATE:
-        months_diff = (MAX_DATE - START_DATE).days//30
+    if datetime_object < START_DATE:
+        continue
+    if datetime_object > END_DATE:
+        break
+        days_diff = (END_DATE - START_DATE).days
     else:
-        months_diff = (datetime_object - START_DATE).days//30
-    slice_id = months_diff // SLICE_MONTHS
-    slice_id = max(slice_id, 0)
+        days_diff = (datetime_object - START_DATE).days
+
+
+    slice_id = days_diff // SLICE_DAYS
 
     if slice_id == 1+prev_slice_id and slice_id > 0:
         slices_links[slice_id] = nx.MultiGraph()
@@ -87,7 +95,7 @@ for (a, b, time) in links:
         assert (len(slices_links[slice_id].edges()) ==0)
         #assert len(slices_links[slice_id].nodes()) >0
 
-    if slice_id == 1+prev_slice_id and slice_id ==0:
+    if slice_id ==0 and slice_id == prev_slice_id + 1:
         slices_links[slice_id] = nx.MultiGraph()
 
     if a not in slices_links[slice_id]:
