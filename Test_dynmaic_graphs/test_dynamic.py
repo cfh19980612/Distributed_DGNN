@@ -180,8 +180,8 @@ def load_graphs(args):
             # to tensor_sp
             feats_tensor_sp = []
             for feat in feats:
-                # feats_tensor_sp.append(torch.Tensor(feat).to_sparse())
-                feats_tensor_sp.append(torch.Tensor(feat))
+                feats_tensor_sp.append(torch.Tensor(feat).to_sparse())
+                # feats_tensor_sp.append(torch.Tensor(feat))
             # np.save(feats_path, feats)
             feats = feats_tensor_sp
     #normlized adj
