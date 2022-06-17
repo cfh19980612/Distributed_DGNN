@@ -200,7 +200,7 @@ class GCN(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, g, features):
-        h = features
+        h = features.
         for i, layer in enumerate(self.layers):
             if i != 0:
                 h = self.dropout(h)
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     print('Converting graphs to specific framework!')
     graphs_new = convert_graphs(graphs, adj_matrices, feats, 'dgl')
 
-    print('feature demension is ', feats[0].shape[1])
+    print('feature demension is ', feats[0].shape)
     model = GCN(in_feats = feats[0].shape[1], n_hidden=16, n_classes=10, n_layers=1, activation=F.relu, dropout=0.5)
     print('Initializing gcn model!')
 
