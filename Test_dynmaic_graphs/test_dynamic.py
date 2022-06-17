@@ -295,11 +295,11 @@ if __name__ == '__main__':
     GCN_time = [[] for j in range(len(graphs_new))]
     GCN_mem = [[] for j in range(len(graphs_new))]
     for epoch in range(num_epochs):
-        pbar = tqdm(graphs_new[5:])
+        pbar = tqdm(graphs_new[7:])
         model.eval()
         for index,graph in enumerate(pbar):
             time_current = time.time()
-            out = model(graph.to('cuda:0'), feats[index+5].to_dense().to('cuda:0'))
+            out = model(graph.to('cuda:0'), feats[index+7].to_dense().to('cuda:0'))
             time_cost = time.time() - time_current
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
             pbar.set_description('Epoch {} | Graph {} | {:.3f}s | {:.3f}MB'.format(epoch, index, time_cost, gpu_mem_alloc))
