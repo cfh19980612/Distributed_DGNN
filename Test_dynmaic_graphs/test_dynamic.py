@@ -327,8 +327,10 @@ def stat_different(graphs, feats):
         difference.squeeze()
         sign_b = torch.sign(difference).int()
         Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
-        print(Num_of_changed_nodes)
 
+        feat_different[i+1] += Num_of_changed_nodes.item()
+        # print(Num_of_changed_nodes)
+    print(feat_different)
 
 
     # feat_A = feats[0].to_dense()
