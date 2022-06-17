@@ -257,7 +257,7 @@ if __name__ == '__main__':
             out = model(graph.to('cuda:0'), feats[index].to('cuda:0'))
             time_cost = time.time() - time_current
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
-            print('Graph {} completes with {} second and {} MB memory'.format(index, time_cost, gpu_mem_alloc))
+            print('Graph {} | {:.3f}s | {:.3f}MB'.format(index, time_cost, gpu_mem_alloc))
             GCN_time[index].append(time_cost)
             GCN_mem.append(gpu_mem_alloc)
     
