@@ -247,7 +247,7 @@ if __name__ == '__main__':
     model.cuda()
     print('Starting to training!')
 
-    num_epochs = 1
+    num_epochs = 100
     GCN_time = [[] for j in range(len(graphs_new))]
     GCN_mem = [[] for j in range(len(graphs_new))]
     for epoch in range(num_epochs):
