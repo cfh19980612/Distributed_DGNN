@@ -40,7 +40,7 @@ def _count_max_deg(graphs, adjs):
 
 def _get_degree_from_adj(adj, num_nodes):
     # print(adj.todense())
-    adj_tensor = torch.tensor(adj.todense())
+    adj_tensor = torch.tensor(adj.todense()).cuda()
     sign_a = torch.sign(adj_tensor).int()
     # count
     degs_out = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)   
