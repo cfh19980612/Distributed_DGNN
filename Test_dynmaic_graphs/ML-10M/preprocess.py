@@ -12,7 +12,7 @@ node_cnt = 0
 node_idx = {}
 idx_node = []
 
-file_path = current_path + '/soc-epinions-trust-dir.edges'
+file_path = current_path + '/opsahl-ucsocial.edges'
 save_graph_path = current_path + '/data/graphs.npz'
 save_features_path = current_path + '/data/features.npz'
 
@@ -44,6 +44,14 @@ with open(file_path) as f:
 print ("Min ts", min(ts), "max ts", max(ts))
 print ("Total time span: {} days".format((max(ts) - min(ts)).days))
 links.sort(key =lambda x: x[2])
+print ("# temporal links", len(links))
+
+import networkx as nx
+agg_G = nx.Graph()
+for a,b,t in links:
+    agg_G.add_edge(a,b)
+
+print ("Agg graph", len(agg_G.nodes()), len(agg_G.edges()))
 
 import networkx as nx
 import numpy as np
@@ -52,9 +60,9 @@ from datetime import datetime, timedelta
 collect data from 'START_DATE' and ends to 'END_DATE'.
 generate a graph per 'SLICE_DAYS'.
 '''
-SLICE_DAYS = 3
-START_DATE = min(ts) + timedelta(100)
-END_DATE = min(ts) + timedelta(800)
+SLICE_DAYS = 30*3
+START_DATE = min(ts)
+END_DATE = max(ts) + timedelta(20)
 
 # END_DATE = timedelta(100)
 
@@ -88,13 +96,6 @@ for (a, b, time) in links:
 
     if slice_id ==0:
         slices_links[slice_id] = nx.MultiGraph()
-
-    # if days_diff % SLICE_DAYS == 7 or days_diff % SLICE_DAYS == 6 or days_diff % SLICE_DAYS == 5:
-    #     if a not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(a)
-    #     if b not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(b)
-    #     slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
     if a not in slices_links[slice_id]:
         slices_links[slice_id].add_node(a)
