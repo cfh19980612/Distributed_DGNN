@@ -247,7 +247,7 @@ if __name__ == '__main__':
     model.cuda()
     print('Starting to training!')
 
-    num_epochs = 100
+    num_epochs = 1
     GCN_time = [[] for j in range(len(graphs_new))]
     GCN_mem = [[] for j in range(len(graphs_new))]
     for epoch in range(num_epochs):
@@ -257,7 +257,7 @@ if __name__ == '__main__':
             out = model(graph.to('cuda:0'), feats[index].to('cuda:0'))
             time_cost = time.time() - time_current
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
-            pbar.set_description('Graph {} | {:.3f}s | {:.3f}MB'.format(index, time_cost, gpu_mem_alloc))
+            pbar.set_description('Epoch {} | Graph {} | {:.3f}s | {:.3f}MB'.format(epoch, index, time_cost, gpu_mem_alloc))
             GCN_time[index].append(time_cost)
             GCN_mem[index].append(gpu_mem_alloc)
     
@@ -265,4 +265,6 @@ if __name__ == '__main__':
     Mem_summary = [np.mean(GCN_mem[i]) for i in range (len(graphs_new))]
     print('Graph time cost: ', Time_summary)
     print('Graph memory cost: ', Mem_summary)
+    print('Graph nodes information: ',args['nodes_info'])
+    print('Graph edges information: ',args['edges_info'])
 
