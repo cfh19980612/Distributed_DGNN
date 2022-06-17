@@ -86,6 +86,7 @@ def load_graphs(args):
             # feats = np.load(feats_path, allow_pickle=True)
             num_feats = 0
             feats = []
+            print("Loading node features!")
             for time in range(len(graphs)):
                 path = feats_path+'no_{}.npz'.format(time)
                 feat = sp.load_npz(path)
@@ -108,7 +109,6 @@ def load_graphs(args):
 
                 feats.append(feat_tensor_sp)
 
-            print("Worker {} loads node features!".format(args['rank']))
         except IOError:
             print("Generating and saving node features ....")
             # method 1: compute the max degree over all graphs
