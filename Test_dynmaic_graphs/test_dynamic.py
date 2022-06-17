@@ -41,6 +41,13 @@ def _count_max_deg(graphs, adjs):
 def _get_degree_from_adj(adj, num_nodes):
     # print(adj.todense())
     adj_tensor = torch.tensor(adj.todense()).cuda()
+    sign_a = torch.sign(adj_tensor).int()
+ 
+    # count
+    non_zero_a = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)   
+    print(non_zero_a)
+
+
     degs_out = torch.mul(adj_tensor, torch.ones(num_nodes,1,dtype = torch.LongTensor).cuda())
     # degs_out = adj_tensor.matmul(torch.ones(num_nodes,1,dtype = torch.int8).cuda())
     degs_in = adj_tensor.t().matmul(torch.ones(num_nodes,1,dtype = torch.int8).cuda())
@@ -254,6 +261,10 @@ class GCN(nn.Module):
                 h = self.dropout(h)
             h = layer(g, h)
         return h
+
+
+# def stat_different(graphs):
+    
 
 import time
 
