@@ -261,8 +261,8 @@ if __name__ == '__main__':
             GCN_time[index].append(time_cost)
             GCN_mem[index].append(gpu_mem_alloc)
     
-    Time_summary = [np.mean(GCN_time[i]) for i in range (len(graphs_new))]
-    Mem_summary = [np.mean(GCN_mem[i]) for i in range (len(graphs_new))]
+    Time_summary = [np.around(np.mean(GCN_time[i]), 3) for i in range (len(graphs_new))]
+    Mem_summary = [np.around(np.mean(GCN_mem[i]), 3) for i in range (len(graphs_new))]
     print('Graph time cost: ', Time_summary)
     print('Graph memory cost: ', Mem_summary)
     print('Graph nodes information: ',args['nodes_info'])
