@@ -235,13 +235,16 @@ if __name__ == '__main__':
 
     _, graphs, adj_matrices, feats, _ = load_graphs(args)
 
+    print('Converting graphs to specific framework!')
     graphs_new = convert_graphs(graphs, adj_matrices, feats, 'dgl')
 
     model = GCN(in_feats = feats[0].shape[1], n_hidden=16, n_classes=10, n_layers=1, activation=F.relu, dropout=0.5)
+    print('Initializing gcn model!')
 
     GCN_time = [0 for i in range (len(graphs_new))]
     model.cuda()
-
+    print('Starting to training!')
+    
     for epoch in range(200):
         for index, graph in enumerate(graphs_new):
             time_current = time.time()
