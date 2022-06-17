@@ -304,6 +304,10 @@ if __name__ == '__main__':
             pbar.set_description('Epoch {} | Graph {} | {:.3f}s | {:.3f}MB'.format(epoch, index, time_cost, gpu_mem_alloc))
             GCN_time[index].append(time_cost)
             GCN_mem[index].append(gpu_mem_alloc)
+
+            graph = graph.to('cpu')
+            feats[index].to_dense().to('cpu')
+            torch.cuda.empty_cache()
     
     Time_summary = [np.around(np.mean(GCN_time[i]), 3) for i in range (len(graphs_new))]
     Mem_summary = [np.around(np.mean(GCN_mem[i]), 3) for i in range (len(graphs_new))]
