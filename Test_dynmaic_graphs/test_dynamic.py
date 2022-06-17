@@ -296,6 +296,7 @@ if __name__ == '__main__':
     GCN_mem = [[] for j in range(len(graphs_new))]
     for epoch in range(num_epochs):
         pbar = tqdm(graphs_new)
+        model.eval()
         for index,graph in enumerate(pbar):
             time_current = time.time()
             out = model(graph.to('cuda:0'), feats[index].to_dense().to('cuda:0'))
