@@ -311,8 +311,8 @@ class GCN(nn.Module):
         return h
 
 
-def stat_different(graphs):
-    
+# def stat_different(graphs):
+
     
 
 import time
