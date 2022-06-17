@@ -84,6 +84,8 @@ def _generate_one_hot_feats(graphs, adjs, max_degree):
         max_degree: the maximum degree of total graphs
     '''
     new_feats = []
+    feats_sp = []
+    feats_torch_sp = []
 
     for (graph, adj) in zip(graphs, adjs):
         # print(adj)
@@ -93,9 +95,20 @@ def _generate_one_hot_feats(graphs, adjs, max_degree):
                       'vals': torch.ones(num_nodes)
         }
         feat = make_sparse_tensor(feats_dict, 'float', [num_nodes, max_degree])
+        # torch sparse to scipy sparse for saving
+        m_index = feat._indices().numpy()
+        row = m_index[0]
+        col = m_index[1]
+        data = feat._values().numpy()
+
+        feat_sp = sp.coo_matrix((data, (row, col)), shape=(feat.size()[0], feat.size()[1]))
+
         # print(feat)
-        new_feats.append(feat.to_dense().numpy())
-    return new_feats
+        # new_feats.append(feat.to_dense().numpy())
+        feats_sp.append(feat_sp)
+        feats_torch_sp.append(feat)
+
+    return feats_sp, feats_torch_sp
 
 def _generate_feats(adjs, time_steps):
     assert time_steps <= len(adjs), "Time steps is illegal"
@@ -190,7 +203,7 @@ def load_graphs(args):
             print("Generating and saving node features ....")
             # method 1: compute the max degree over all graphs
             max_deg, _ = _count_max_deg(graphs, adj_matrices)
-            feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
+            feats_sp, feats_torch_sp = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
             # method 2:
             # feats = _generate_feats(adj_matrices, len(graphs))
             # print('saved feats, ',feats)
@@ -198,23 +211,35 @@ def load_graphs(args):
             folder_in = os.path.exists(feats_path)
             if not folder_in:
                 os.makedirs(feats_path)
-            pbar = tqdm(feats)
+            pbar = tqdm(feats_sp)
+            
+            # if method 2:
             for id,feat in enumerate(pbar):
-                # print('feature shape is ', feat.shape)
-                # feats_sp.append(sp.csr_matrix(feat))
-                feat_sp = sp.csr_matrix(feat)
                 path = feats_path+'no_{}.npz'.format(id)
-                sp.save_npz(path, feat_sp)
+                sp.save_npz(path, feat)
                 pbar.set_description('Compress feature and save:')
+            feats = feats_torch_sp
 
-            num_feats = feats[0].shape[1]
-            # to tensor_sp
-            feats_tensor_sp = []
-            for feat in feats:
-                feats_tensor_sp.append(torch.Tensor(feat).to_sparse())
-                # feats_tensor_sp.append(torch.Tensor(feat))
-            # np.save(feats_path, feats)
-            feats = feats_tensor_sp
+
+            # if method 1
+            # for id,feat in enumerate(pbar):
+            #     # print('feature shape is ', feat.shape)
+            #     # feats_sp.append(sp.csr_matrix(feat))
+            #     feat_sp = sp.csr_matrix(feat)
+            #     path = feats_path+'no_{}.npz'.format(id)
+            #     sp.save_npz(path, feat_sp)
+            #     pbar.set_description('Compress feature and save:')
+
+            # num_feats = feats[0].shape[1]
+            # # to tensor_sp
+            # feats_tensor_sp = []
+            # for feat in feats:
+            #     feats_tensor_sp.append(torch.Tensor(feat).to_sparse())
+            #     # feats_tensor_sp.append(torch.Tensor(feat))
+            # # np.save(feats_path, feats)
+            # feats = feats_tensor_sp
+
+
     #normlized adj
     # adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
 
@@ -330,11 +355,11 @@ if __name__ == '__main__':
     GCN_time = [[] for j in range(len(graphs_new))]
     GCN_mem = [[] for j in range(len(graphs_new))]
     for epoch in range(num_epochs):
-        pbar = tqdm(graphs_new[7:])
+        pbar = tqdm(graphs_new)
         model.eval()
         for index,graph in enumerate(pbar):
             time_current = time.time()
-            out = model(graph.to('cuda:0'), feats[index+7].to_dense().to('cuda:0'))
+            out = model(graph.to('cuda:0'), feats[index].to_dense().to('cuda:0'))
             time_cost = time.time() - time_current
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
             pbar.set_description('Epoch {} | Graph {} | {:.3f}s | {:.3f}MB'.format(epoch, index, time_cost, gpu_mem_alloc))
