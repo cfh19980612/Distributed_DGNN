@@ -60,18 +60,19 @@ from datetime import datetime, timedelta
 collect data from 'START_DATE' and ends to 'END_DATE'.
 generate a graph per 'SLICE_DAYS'.
 '''
-SLICE_DAYS = 30*3
-START_DATE = min(ts)
-END_DATE = max(ts) + timedelta(20)
+SLICE_DAYS = 10
+START_DATE = min(ts) + timedelta(5)
+END_DATE = max(ts) - timedelta(60)
 
-# END_DATE = timedelta(100)
+print ("Start date", START_DATE)
+print ("End date", END_DATE)
 
 slices_links = defaultdict(lambda : nx.MultiGraph())
 slices_features = defaultdict(lambda : {})
 
 print ("Start date", START_DATE)
 
-slice_id = 0
+slice_id = -1
 # Split the set of links in order by slices to create the graphs.
 for (a, b, time) in links:
     prev_slice_id = slice_id
@@ -94,7 +95,7 @@ for (a, b, time) in links:
         assert (len(slices_links[slice_id].edges()) ==0)
         #assert len(slices_links[slice_id].nodes()) >0
 
-    if slice_id ==0:
+    if slice_id ==0 and slice_id == prev_slice_id + 1:
         slices_links[slice_id] = nx.MultiGraph()
 
     if a not in slices_links[slice_id]:
@@ -102,6 +103,8 @@ for (a, b, time) in links:
     if b not in slices_links[slice_id]:
         slices_links[slice_id].add_node(b)
     slices_links[slice_id].add_edge(a,b, date=datetime_object)
+
+
 
 for slice_id in slices_links:
     print ("# nodes in slice", slice_id, len(slices_links[slice_id].nodes()))
