@@ -72,29 +72,39 @@ slices_features = defaultdict(lambda : {})
 
 print ("Start date", START_DATE)
 
-slice_id = 0
+slice_id = -1
+# Split the set of links in order by slices to create the graphs.
 for (a, b, time) in links:
     prev_slice_id = slice_id
-    datetime_object = time
 
-    days_diff = (datetime_object - START_DATE).days
-        
+    datetime_object = time
+    if datetime_object < START_DATE:
+        continue
+    if datetime_object > END_DATE:
+        break
+        days_diff = (END_DATE - START_DATE).days
+    else:
+        days_diff = (datetime_object - START_DATE).days
+
+
     slice_id = days_diff // SLICE_DAYS
-    
+
     if slice_id == 1+prev_slice_id and slice_id > 0:
         slices_links[slice_id] = nx.MultiGraph()
         slices_links[slice_id].add_nodes_from(slices_links[slice_id-1].nodes(data=True))
         assert (len(slices_links[slice_id].edges()) ==0)
         #assert len(slices_links[slice_id].nodes()) >0
 
-    if slice_id == 1+prev_slice_id and slice_id ==0:
+    if slice_id ==0 and slice_id == prev_slice_id + 1:
         slices_links[slice_id] = nx.MultiGraph()
 
     if a not in slices_links[slice_id]:
         slices_links[slice_id].add_node(a)
     if b not in slices_links[slice_id]:
-        slices_links[slice_id].add_node(b)    
-    slices_links[slice_id].add_edge(a,b, weight= e, date=datetime_object)
+        slices_links[slice_id].add_node(b)
+    slices_links[slice_id].add_edge(a,b, date=datetime_object)
+
+
 
 for slice_id in slices_links:
     print ("# nodes in slice", slice_id, len(slices_links[slice_id].nodes()))
