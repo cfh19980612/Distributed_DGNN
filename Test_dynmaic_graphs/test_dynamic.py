@@ -13,7 +13,6 @@ import dgl
 import torch
 import torch_geometric as pyg
 
-import utils as u
 from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
