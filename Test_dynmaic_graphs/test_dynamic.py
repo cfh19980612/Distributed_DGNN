@@ -40,9 +40,9 @@ def _count_max_deg(graphs, adjs):
 
 def _get_degree_from_adj(adj, num_nodes):
     # print(adj.todense())
-    adj_tensor = torch.tensor(adj.todense())
-    degs_out = adj_tensor.matmul(torch.ones(num_nodes,1,dtype = torch.long))
-    degs_in = adj_tensor.t().matmul(torch.ones(num_nodes,1,dtype = torch.long))
+    adj_tensor = torch.tensor(adj.todense()).cuda()
+    degs_out = adj_tensor.matmul(torch.ones(num_nodes,1,dtype = torch.long).cuda())
+    degs_in = adj_tensor.t().matmul(torch.ones(num_nodes,1,dtype = torch.long).cuda())
     return degs_out, degs_in
 
 def _generate_one_hot_feats(graphs, adjs, max_degree):
