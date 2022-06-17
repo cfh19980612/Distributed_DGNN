@@ -295,7 +295,7 @@ if __name__ == '__main__':
     GCN_time = [[] for j in range(len(graphs_new))]
     GCN_mem = [[] for j in range(len(graphs_new))]
     for epoch in range(num_epochs):
-        pbar = tqdm(graphs_new)
+        pbar = tqdm(graphs_new[5:])
         model.eval()
         for index,graph in enumerate(pbar):
             time_current = time.time()
