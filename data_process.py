@@ -322,11 +322,10 @@ def load_dataset(train_edges_pos, train_edges_neg, val_edges_pos, val_edges_neg,
 
 def convert_graphs(graphs, adj, feats, framework):
     # converse nx-graphs to dgl-graph or pyg-graph
-    for graph in graphs:
-        if framework == 'dgl':
-            new_graphs = _build_dgl_graphs(graphs, feats)
-        elif framework == 'pyg':
-            new_graphs = _build_pyg_graphs(feats, adj)
+    if framework == 'dgl':
+        new_graphs = _build_dgl_graphs(graphs, feats)
+    elif framework == 'pyg':
+        new_graphs = _build_pyg_graphs(feats, adj)
 
     return new_graphs
 

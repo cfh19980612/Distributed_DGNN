@@ -164,11 +164,10 @@ def _build_dgl_graphs(graphs, features):
 
 def convert_graphs(graphs, adj, feats, framework):
     # converse nx-graphs to dgl-graph or pyg-graph
-    for graph in graphs:
-        if framework == 'dgl':
-            new_graphs = _build_dgl_graphs(graphs, feats)
-        elif framework == 'pyg':
-            new_graphs = _build_pyg_graphs(feats, adj)
+    if framework == 'dgl':
+        new_graphs = _build_dgl_graphs(graphs, feats)
+    elif framework == 'pyg':
+        new_graphs = _build_pyg_graphs(feats, adj)
 
     return new_graphs
 
@@ -244,7 +243,7 @@ if __name__ == '__main__':
     GCN_time = [0 for i in range (len(graphs_new))]
     model.cuda()
     print('Starting to training!')
-    
+
     for epoch in range(200):
         for index, graph in enumerate(graphs_new):
             time_current = time.time()
