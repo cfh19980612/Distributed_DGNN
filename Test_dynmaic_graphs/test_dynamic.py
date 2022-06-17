@@ -108,8 +108,8 @@ def load_graphs(args):
                 # feat_tensor_sp = torch.sparse.FloatTensor(torch.LongTensor([feat_coo.row.tolist(), feat_coo.col.tolist()]),
                 #                  torch.LongTensor(feat_coo.data.astype(np.int32)))
 
-                feats.append(torch.Tensor(feat_array))
-                # feats.append(feat_tensor_sp)
+                # feats.append(torch.Tensor(feat_array))
+                feats.append(feat_tensor_sp)
 
         except IOError:
             print("Generating and saving node features ....")
@@ -254,7 +254,7 @@ if __name__ == '__main__':
         pbar = tqdm(graphs_new)
         for index,graph in enumerate(pbar):
             time_current = time.time()
-            out = model(graph.to('cuda:0'), feats[index].to('cuda:0'))
+            out = model(graph.to('cuda:0'), feats[index].to_dense().to('cuda:0'))
             time_cost = time.time() - time_current
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
             pbar.set_description('Epoch {} | Graph {} | {:.3f}s | {:.3f}MB'.format(epoch, index, time_cost, gpu_mem_alloc))
