@@ -1,3 +1,4 @@
+import enum
 from lib2to3.pytree import convert
 import os
 from statistics import mean
@@ -243,15 +244,25 @@ if __name__ == '__main__':
     model = GCN(in_feats = feats[0].shape[1], n_hidden=16, n_classes=10, n_layers=1, activation=F.relu, dropout=0.5)
     print('Initializing gcn model!')
 
-    GCN_time = [0 for i in range (len(graphs_new))]
     model.cuda()
     print('Starting to training!')
 
-    for epoch in range(200):
-        for index, graph in enumerate(graphs_new):
+    num_epochs = 100
+    GCN_time = [[] for j in range(len(graphs_new))]
+    GCN_mem = [[] for j in range(len(graphs_new))]
+    pbar = tqdm(graphs_new)
+    for epoch in range(num_epochs):
+        for index,graph in enumerate(pbar):
             time_current = time.time()
             out = model(graph.to('cuda:0'), feats[index].to('cuda:0'))
-            GCN_time[index] += time.time() - time_current
+            time_cost = time.time() - time_current
+            gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
+            print('Graph {} completes with {} second and {} MB memory'.format(index, time_cost, gpu_mem_alloc))
+            GCN_time[index].append(time_cost)
+            GCN_mem.append(gpu_mem_alloc)
     
-    print(GCN_time)
+    Time_summary = [np.mean(GCN_time[i]) for i in range (len(graphs_new))]
+    Mem_summary = [np.mean(GCN_mem[i]) for i in range (len(graphs_new))]
+    print('Graph time cost: ', Time_summary)
+    print('Graph memory cost: ', Mem_summary)
 
