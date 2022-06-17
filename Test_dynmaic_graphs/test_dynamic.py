@@ -237,6 +237,7 @@ if __name__ == '__main__':
     print('Converting graphs to specific framework!')
     graphs_new = convert_graphs(graphs, adj_matrices, feats, 'dgl')
 
+    print('feature demension is ', feats[0].shape[1])
     model = GCN(in_feats = feats[0].shape[1], n_hidden=16, n_classes=10, n_layers=1, activation=F.relu, dropout=0.5)
     print('Initializing gcn model!')
 
