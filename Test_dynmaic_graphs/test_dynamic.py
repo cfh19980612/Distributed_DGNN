@@ -312,9 +312,28 @@ class GCN(nn.Module):
 
 
 def stat_different(graphs, feats):
-    feat_A = feats[0].to_dense()
-    feat_B = feats[1].to_dense()
-    print(feat_A[:30], feat_B[:30])
+    feat_different = [0 for i in range(len(graphs))]
+
+    for i in range (len(graphs) - 1):
+        feat_A = feats[i].to_dense()
+        feat_B = feats[i+1].to_dense()
+        padding = torch.zeros(feat_B.size(0) - feat_A.size(0), feat_A.size(1))
+        feat_A_pad = torch.cat((feat_A, padding), dim=0)
+        dif_matrix = feat_B - feat_A_pad
+        sign_a = torch.sign(dif_matrix).int()
+        # count
+        difference = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)
+
+        difference.squeeze()
+        sign_b = torch.sign(difference).int()
+        Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
+        print(Num_of_changed_nodes)
+
+
+
+    # feat_A = feats[0].to_dense()
+    # feat_B = feats[1].to_dense()
+    # print(feat_A[:30], feat_B[:30])
 
     
 
