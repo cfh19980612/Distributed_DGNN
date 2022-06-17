@@ -62,9 +62,10 @@ generate a graph per 'SLICE_DAYS'.
 '''
 SLICE_DAYS = 30*3
 START_DATE = min(ts)
-END_DATE = max(ts) + timedelta(20)
+END_DATE = max(ts) - timedelta(20)
 
-# END_DATE = timedelta(100)
+print ("Start date", START_DATE)
+print ("End date", END_DATE)
 
 slices_links = defaultdict(lambda : nx.MultiGraph())
 slices_features = defaultdict(lambda : {})
