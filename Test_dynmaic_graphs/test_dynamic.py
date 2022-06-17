@@ -158,10 +158,10 @@ def load_graphs(args):
         except IOError:
             print("Generating and saving node features ....")
             # method 1: compute the max degree over all graphs
-            max_deg, _ = _count_max_deg(graphs, adj_matrices)
-            feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
+            # max_deg, _ = _count_max_deg(graphs, adj_matrices)
+            # feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
             # method 2:
-            # feats = _generate_feats(adj_matrices, len(graphs))
+            feats = _generate_feats(adj_matrices, len(graphs))
             # print('saved feats, ',feats)
 
             folder_in = os.path.exists(feats_path)
