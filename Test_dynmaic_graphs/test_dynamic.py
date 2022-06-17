@@ -64,7 +64,7 @@ def load_graphs(args):
     
     time_steps = len(graphs)
     args['time_steps'] = len(graphs)
-    # graphs = graphs[1:time_steps+1]
+    graphs = graphs[1:]
 
     # get num of nodes for each snapshot
     Nodes_info = []
@@ -90,8 +90,8 @@ def load_graphs(args):
             for time in range(len(graphs)):
                 path = feats_path+'no_{}.npz'.format(time)
                 feat = sp.load_npz(path)
+                feat_array = feat.toarray()
                 if time == 0:
-                    feat_array = feat.toarray()
                     num_feats = feat_array.shape[1]
                 feat_coo = feat.tocoo()
 
@@ -107,7 +107,8 @@ def load_graphs(args):
                 # feat_tensor_sp = torch.sparse.FloatTensor(torch.LongTensor([feat_coo.row.tolist(), feat_coo.col.tolist()]),
                 #                  torch.LongTensor(feat_coo.data.astype(np.int32)))
 
-                feats.append(feat_tensor_sp)
+                feats.append(torch.Tensor(feat_array))
+                # feats.append(feat_tensor_sp)
 
         except IOError:
             print("Generating and saving node features ....")
@@ -134,7 +135,8 @@ def load_graphs(args):
             # to tensor_sp
             feats_tensor_sp = []
             for feat in feats:
-                feats_tensor_sp.append(torch.Tensor(feat).to_sparse())
+                # feats_tensor_sp.append(torch.Tensor(feat).to_sparse())
+                feats_tensor_sp.append(torch.Tensor(feat))
             # np.save(feats_path, feats)
             feats = feats_tensor_sp
     #normlized adj
