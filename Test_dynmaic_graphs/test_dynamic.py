@@ -312,9 +312,31 @@ class GCN(nn.Module):
 
 
 def stat_different(graphs, feats, adj):
+    struc_different = [0 for i in range(len(graphs))]
     feat_different = [0 for i in range(len(graphs))]
     feat_different_Agg = [0 for i in range(len(graphs))]
 
+    # test the structure difference
+    for i in range (len(graphs) - 1):
+        adj_A = torch.Tensor(adj[i].todense())
+        adj_B = torch.Tensor(adj[i+1].todense())
+        padding_row = torch.zeros(adj_B.size(0) - adj_A.size(0), adj_A.size(1))
+        adj_A_temp = torch.cat((adj_A, padding_row), dim=0)
+        padding_col = torch.zeros(adj_A_temp.size(0), adj_B.size(1) - adj_A.size(1))
+        adj_A_pad = torch.cat((adj_A_temp, padding_col), dime=1)
+
+        dif_matrix = adj_B - adj_A_pad
+        sign_a = torch.sign(dif_matrix).int()
+        # count
+        difference = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)
+
+        difference.squeeze()
+        sign_b = torch.sign(difference).int()
+        Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
+
+        struc_different[i+1] += Num_of_changed_nodes.item()
+
+    # test the original feature difference
     for i in range (len(graphs) - 1):
         feat_A = feats[i].to_dense()
         feat_B = feats[i+1].to_dense()
@@ -332,6 +354,7 @@ def stat_different(graphs, feats, adj):
         feat_different[i+1] += Num_of_changed_nodes.item()
         # print(Num_of_changed_nodes)
 
+    # test the feature difference after one-hop aggregation
     for i in range (len(graphs) - 1):
         feat_A = feats[i].to_dense() 
         adj_A = torch.Tensor(adj[i].todense())
@@ -351,7 +374,7 @@ def stat_different(graphs, feats, adj):
         Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
 
         feat_different_Agg[i+1] += Num_of_changed_nodes.item()
-    return feat_different, feat_different_Agg
+    return struc_different, feat_different, feat_different_Agg
     
 
 import time
@@ -391,7 +414,7 @@ if __name__ == '__main__':
     model.cuda()
     print('Starting to training!')
     # print(adj_matrices[0].todense())
-    feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
+    struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
 
     num_epochs = 100
     GCN_time = [[] for j in range(len(graphs_new))]
@@ -424,6 +447,7 @@ if __name__ == '__main__':
     print('Graph edges information: ',args['edges_info'])
     print('Number of nodes with changed features ', feat_different)
     print('Number of nodes with changed features after neighbor aggregation ', feat_different_Agg)
+    print('Number of nodes with changed structure ', struc_different)
     print('Graph time cost: ', Time_summary)
     print('Graph memory cost: ', Mem_summary)
 
