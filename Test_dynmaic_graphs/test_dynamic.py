@@ -333,7 +333,7 @@ def stat_different(graphs, feats, adj):
 
         adj_A_pad_sp = adj_A_pad.to_sparse()
 
-        dif_matrix =  (adj_B - adj_A_pad).to_dense()
+        dif_matrix =  (adj_A_pad - adj_B).to_dense()
         # dif_matrix = adj_B - adj_A_pad
         # print('4 | ',i)
         sign_a = torch.sign(dif_matrix).int()
