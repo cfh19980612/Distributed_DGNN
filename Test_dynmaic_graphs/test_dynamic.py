@@ -320,6 +320,9 @@ def stat_different(graphs, feats, adj):
     for i in range (len(graphs) - 1):
         adj_A = torch.Tensor(adj[i].todense())
         adj_B = torch.Tensor(adj[i+1].todense())
+        adj_B_sp = adj_B.to_sparse()
+        print(adj_B.size(0), adj_B_sp.size(0))
+
         print('1 | ',i)
         padding_row = torch.zeros(adj_B.size(0) - adj_A.size(0), adj_A.size(1))
         adj_A_temp = torch.cat((adj_A, padding_row), dim=0)
