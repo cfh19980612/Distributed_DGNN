@@ -323,7 +323,7 @@ def stat_different(graphs, feats, adj):
         padding_row = torch.zeros(adj_B.size(0) - adj_A.size(0), adj_A.size(1))
         adj_A_temp = torch.cat((adj_A, padding_row), dim=0)
         padding_col = torch.zeros(adj_A_temp.size(0), adj_B.size(1) - adj_A.size(1))
-        adj_A_pad = torch.cat((adj_A_temp, padding_col), dime=1)
+        adj_A_pad = torch.cat((adj_A_temp, padding_col), dim=1)
 
         dif_matrix = adj_B - adj_A_pad
         sign_a = torch.sign(dif_matrix).int()
