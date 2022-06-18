@@ -339,7 +339,7 @@ def stat_different(graphs, feats, adj):
         sign_a = torch.sign(dif_matrix).int()
         print('4 | ',i)
         # count
-        difference = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)
+        difference = torch.count_nonzero(sign_a.to_dense(), dim=1).reshape(-1, 1)
         print('5 | ',i)
 
         difference.squeeze()
