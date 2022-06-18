@@ -334,9 +334,9 @@ def stat_different(graphs, feats, adj):
 
     for i in range (len(graphs) - 1):
         feat_A = feats[i].to_dense() 
-        adj_A = torch.Tensor(adj[i].to_dense())
+        adj_A = torch.Tensor(adj[i].todense())
         feat_B = feats[i+1].to_dense()
-        adj_B = torch.Tensor(adj[i+1].to_dense())
+        adj_B = torch.Tensor(adj[i+1].todense())
         feat_A_Agg = torch.mul(feat_A, adj_A)
         feat_B_Agg = torch.mul(feat_B, adj_B)
         padding = torch.zeros(feat_B.size(0) - feat_A.size(0), feat_A.size(1))
