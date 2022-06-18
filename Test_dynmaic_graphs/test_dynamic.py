@@ -328,8 +328,9 @@ def stat_different(graphs, feats, adj):
         adj_A_pad = torch.cat((adj_A_temp, padding_col), dim=1)
         print('3 | ',i)
 
-        dif_matrix = adj_B - adj_A_pad
-        sign_a = torch.sign(dif_matrix).int()
+        # dif_matrix = adj_B - adj_A_pad
+        # print('4 | ',i)
+        sign_a = torch.sign(adj_B - adj_A_pad).int()
         print('4 | ',i)
         # count
         difference = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)
