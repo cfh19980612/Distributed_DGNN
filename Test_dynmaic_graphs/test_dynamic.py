@@ -336,10 +336,10 @@ def stat_different(graphs, feats, adj):
         dif_matrix =  (adj_A_pad_sp - adj_B)
         # dif_matrix = adj_B - adj_A_pad
         # print('4 | ',i)
-        sign_a = torch.sign(dif_matrix).int()
+        # sign_a = torch.sign(dif_matrix).int()
         print('4 | ',i)
         # count
-        difference = torch.count_nonzero(sign_a.to_dense(), dim=1).reshape(-1, 1).squeeze()
+        difference = torch.count_nonzero(dif_matrix.to_dense(), dim=1).reshape(-1, 1).squeeze()
         print('5 | ',i)
 
         # difference.squeeze()
