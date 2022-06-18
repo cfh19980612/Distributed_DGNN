@@ -337,8 +337,8 @@ def stat_different(graphs, feats, adj):
         # torch sparse to scipy sparse
         m_index = dif_matrix._indices().numpy()
         row = m_index[0]
-        print(row)
-        change_node = row.unique()
+        # print(row)
+        change_node = np.unique(row)
 
         struc_different[i+1] += change_node.size(0)
 
