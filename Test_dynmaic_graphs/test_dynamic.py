@@ -351,7 +351,7 @@ def stat_different(graphs, feats, adj):
         Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
 
         feat_different_Agg[i+1] += Num_of_changed_nodes.item()
-    print(feat_different, feat_different)
+    return feat_different, feat_different_Agg
     
 
 import time
@@ -391,7 +391,7 @@ if __name__ == '__main__':
     model.cuda()
     print('Starting to training!')
 
-    stat_different(graphs_new, feats, adj_matrices)
+    feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
 
     num_epochs = 100
     GCN_time = [[] for j in range(len(graphs_new))]
@@ -419,8 +419,11 @@ if __name__ == '__main__':
     
     Time_summary = [np.around(np.mean(GCN_time[i]), 3) for i in range (len(graphs_new))]
     Mem_summary = [np.around(np.mean(GCN_mem[i]), 3) for i in range (len(graphs_new))]
-    print('Graph time cost: ', Time_summary)
-    print('Graph memory cost: ', Mem_summary)
+
     print('Graph nodes information: ',args['nodes_info'])
     print('Graph edges information: ',args['edges_info'])
+    print('Number of nodes with changed features ', feat_different)
+    print('Number of nodes with changed features after neighbor aggregation ', feat_different_Agg)
+    print('Graph time cost: ', Time_summary)
+    print('Graph memory cost: ', Mem_summary)
 
