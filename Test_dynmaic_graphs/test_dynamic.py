@@ -334,21 +334,13 @@ def stat_different(graphs, feats, adj):
         adj_A_pad_sp = adj_A_pad.to_sparse()
 
         dif_matrix =  (adj_A_pad_sp - adj_B)
-        # dif_matrix = adj_B - adj_A_pad
-        # print('4 | ',i)
-        # sign_a = torch.sign(dif_matrix).int()
-        print('4 | ',i)
-        # count
-        difference = torch.count_nonzero(dif_matrix.to_dense(), dim=1).reshape(-1, 1).squeeze()
-        print('5 | ',i)
+        # torch sparse to scipy sparse
+        m_index = dif_matrix._indices().numpy()
+        row = m_index[0]
+        print(row)
+        change_node = row.unique()
 
-        # difference.squeeze()
-        sign_b = torch.sign(difference).int()
-        print('6 | ',i)
-        Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
-        print('7 | ',i)
-
-        struc_different[i+1] += Num_of_changed_nodes.item()
+        struc_different[i+1] += change_node.size(0)
 
     # test the original feature difference
     for i in range (len(graphs) - 1):
