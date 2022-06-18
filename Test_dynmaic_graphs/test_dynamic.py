@@ -323,13 +323,13 @@ def stat_different(graphs, feats, adj):
         # adj_B_sp = adj_B.to_sparse()
         # print(adj_B.size(0), adj_B_sp.size(0))
 
-        print('1 | ',i)
+        # print('1 | ',i)
         padding_row = torch.zeros(adj_B.size(0) - adj_A.size(0), adj_A.size(1))
         adj_A_temp = torch.cat((adj_A, padding_row), dim=0)
-        print('2 | ',i)
+        # print('2 | ',i)
         padding_col = torch.zeros(adj_A_temp.size(0), adj_B.size(1) - adj_A.size(1))
         adj_A_pad = torch.cat((adj_A_temp, padding_col), dim=1)
-        print('3 | ',i)
+        # print('3 | ',i)
 
         adj_A_pad_sp = adj_A_pad.to_sparse()
 
