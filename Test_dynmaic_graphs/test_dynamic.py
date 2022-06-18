@@ -319,9 +319,9 @@ def stat_different(graphs, feats, adj):
     # test the structure difference
     for i in range (len(graphs) - 1):
         adj_A = torch.Tensor(adj[i].todense())
-        adj_B = torch.Tensor(adj[i+1].todense())
-        adj_B_sp = adj_B.to_sparse()
-        print(adj_B.size(0), adj_B_sp.size(0))
+        adj_B = torch.Tensor(adj[i+1].todense()).to_sparse()
+        # adj_B_sp = adj_B.to_sparse()
+        # print(adj_B.size(0), adj_B_sp.size(0))
 
         print('1 | ',i)
         padding_row = torch.zeros(adj_B.size(0) - adj_A.size(0), adj_A.size(1))
@@ -331,9 +331,12 @@ def stat_different(graphs, feats, adj):
         adj_A_pad = torch.cat((adj_A_temp, padding_col), dim=1)
         print('3 | ',i)
 
+        adj_A_pad_sp = adj_A_pad.to_sparse()
+
+        dif_matrix =  (adj_B - adj_A_pad).to_dense()
         # dif_matrix = adj_B - adj_A_pad
         # print('4 | ',i)
-        sign_a = torch.sign(adj_B - adj_A_pad).int()
+        sign_a = torch.sign(dif_matrix).int()
         print('4 | ',i)
         # count
         difference = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)
