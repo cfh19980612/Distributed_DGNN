@@ -340,7 +340,7 @@ def stat_different(graphs, feats, adj):
         # print(row)
         change_node = np.unique(row)
 
-        struc_different[i+1] += change_node.size(0)
+        struc_different[i+1] += len(change_node)
 
     # test the original feature difference
     for i in range (len(graphs) - 1):
