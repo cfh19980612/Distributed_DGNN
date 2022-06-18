@@ -339,10 +339,10 @@ def stat_different(graphs, feats, adj):
         sign_a = torch.sign(dif_matrix).int()
         print('4 | ',i)
         # count
-        difference = torch.count_nonzero(sign_a.to_dense(), dim=1).reshape(-1, 1)
+        difference = torch.count_nonzero(sign_a.to_dense(), dim=1).reshape(-1, 1).squeeze()
         print('5 | ',i)
 
-        difference.squeeze()
+        # difference.squeeze()
         sign_b = torch.sign(difference).int()
         print('6 | ',i)
         Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
