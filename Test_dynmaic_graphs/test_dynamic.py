@@ -324,7 +324,7 @@ def stat_age_difference(graphs, feats, adj):
             # adj_temp = adj_sp_tensor[j].to_dense()[current_last_node:current_last_node + num_of_nodes]
             # edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
 
-            edges = torch.tensor(graphs[j].degree())[current_last_node:current_last_node + num_of_nodes]
+            edges = graphs[j].in_degrees()[current_last_node:current_last_node + num_of_nodes]
             mask = torch.gt(edges, max_num_of_edges)
             print(max_num_of_edges, edges)
             max_num_of_edges[mask] = edges[mask]
