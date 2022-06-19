@@ -120,7 +120,7 @@ from scipy.sparse import csr_matrix
 def remap(slices_graph, slices_features):
     all_nodes = []
     for slice_id in slices_graph:
-        assert len(slices_graph[slice_id].nodes()) == len(slices_features[slice_id])
+        # assert len(slices_graph[slice_id].nodes()) == len(slices_features[slice_id])
         all_nodes.extend(slices_graph[slice_id].nodes())
     all_nodes = list(set(all_nodes))
     print ("Total # nodes", len(all_nodes), "max idx", max(all_nodes))
