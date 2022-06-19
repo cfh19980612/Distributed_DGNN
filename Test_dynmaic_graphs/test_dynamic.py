@@ -175,7 +175,7 @@ def load_graphs(args):
     else:
         graphs = np.load(graph_path, allow_pickle=True, encoding='latin1')['graph']
 
-    Num_average_edges = stat_age_difference(graphs_new, feats, adj_matrices)
+    Num_average_edges = stat_age_difference(graphs)
     print('Number of edges per age node', Num_average_edges)
     return 0
 
