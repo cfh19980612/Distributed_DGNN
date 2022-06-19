@@ -62,15 +62,13 @@ generate a graph per 'SLICE_DAYS'.
 '''
 SLICE_DAYS = 5
 START_DATE = min(ts)
-END_DATE = max(ts)
+END_DATE = max(ts) - timedelta(100)
 
 print ("Start date", START_DATE)
 print ("End date", END_DATE)
 
 slices_links = defaultdict(lambda : nx.MultiGraph())
 slices_features = defaultdict(lambda : {})
-
-print ("Start date", START_DATE)
 
 slice_id = -1
 # Split the set of links in order by slices to create the graphs.
