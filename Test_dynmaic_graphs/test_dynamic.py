@@ -326,6 +326,7 @@ def stat_age_difference(graphs, feats, adj):
             edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
             mask = torch.gt(edges, max_num_of_edges)
             max_num_of_edges[mask] = edges[mask]
+            # print(i,j)
 
         Num_average_edges[i] += torch.mean(max_num_of_edges.float()).item()
         current_last_node += num_of_nodes
@@ -445,7 +446,7 @@ if __name__ == '__main__':
     struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
     Num_average_edges = stat_age_difference(graphs_new, feats, adj_matrices)
 
-    num_epochs = 100
+    num_epochs = 1
     GCN_time = [[] for j in range(len(graphs_new))]
     GCN_mem = [[] for j in range(len(graphs_new))]
     for epoch in range(num_epochs):
