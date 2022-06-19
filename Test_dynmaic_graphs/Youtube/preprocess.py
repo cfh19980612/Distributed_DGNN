@@ -46,12 +46,12 @@ print ("Total time span: {} days".format((max(ts) - min(ts)).days))
 links.sort(key =lambda x: x[2])
 print ("# temporal links", len(links))
 
-import networkx as nx
-agg_G = nx.Graph()
-for a,b,t in links:
-    agg_G.add_edge(a,b)
+# import networkx as nx
+# agg_G = nx.Graph()
+# for a,b,t in links:
+#     agg_G.add_edge(a,b)
 
-print ("Agg graph", len(agg_G.nodes()), len(agg_G.edges()))
+# print ("Agg graph", len(agg_G.nodes()), len(agg_G.edges()))
 
 import networkx as nx
 import numpy as np
