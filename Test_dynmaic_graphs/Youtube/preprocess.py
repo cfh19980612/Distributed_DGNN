@@ -108,11 +108,11 @@ for slice_id in slices_links:
     print ("# nodes in slice", slice_id, len(slices_links[slice_id].nodes()))
     print ("# edges in slice", slice_id, len(slices_links[slice_id].edges()))
 
-    temp = np.identity(len(slices_links[max(slices_links.keys())].nodes()))
-    print ("Shape of temp matrix", temp.shape)
+    # temp = np.identity(len(slices_links[max(slices_links.keys())].nodes()))
+    # print ("Shape of temp matrix", temp.shape)
     slices_features[slice_id] = {}
-    for idx, node in enumerate(slices_links[slice_id].nodes()):
-        slices_features[slice_id][node] = temp[idx]
+    # for idx, node in enumerate(slices_links[slice_id].nodes()):
+    #     slices_features[slice_id][node] = temp[idx]
 
 # TODO : remap and output.
 from scipy.sparse import csr_matrix
@@ -207,4 +207,4 @@ print(Links,Nodes)
 
 print('average nodes: {}; average edges: {}'.format(np.mean(Nodes), np.mean(Links)))
 np.savez(save_graph_path, graph=slices_links_remap)  # graph为字典的key
-np.savez(save_features_path, feats=slices_features_remap)
+# np.savez(save_features_path, feats=slices_features_remap)
