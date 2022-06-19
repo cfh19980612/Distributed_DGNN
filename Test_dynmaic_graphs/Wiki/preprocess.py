@@ -12,7 +12,7 @@ node_cnt = 0
 node_idx = {}
 idx_node = []
 
-file_path = current_path + '/soc-epinions-trust-dir.edges'
+file_path = current_path + '/soc-wiki-elec.edges'
 save_graph_path = current_path + '/data/graphs.npz'
 save_features_path = current_path + '/data/features.npz'
 
@@ -60,9 +60,9 @@ from datetime import datetime, timedelta
 collect data from 'START_DATE' and ends to 'END_DATE'.
 generate a graph per 'SLICE_DAYS'.
 '''
-SLICE_DAYS = 30
-START_DATE = min(ts) + timedelta(100)
-END_DATE = min(ts) + timedelta(400)
+SLICE_DAYS = 1
+START_DATE = min(ts)
+END_DATE = max(ts)
 
 print ("Start date", START_DATE)
 print ("End date", END_DATE)

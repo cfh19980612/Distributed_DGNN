@@ -21,29 +21,29 @@ from torch_geometric.data import Data
 
 current_path = os.getcwd()
 
-def stat_age_difference(graphs):
-    Num_average_edges = [0 for i in range(len(graphs))]
-    # adj_sp_tensor =[torch.tensor(adj[i].todense()).to_sparse() for i in range(len(adj))]
-    current_last_node = 0
+# def stat_age_difference(graphs):
+#     Num_average_edges = [0 for i in range(len(graphs))]
+#     # adj_sp_tensor =[torch.tensor(adj[i].todense()).to_sparse() for i in range(len(adj))]
+#     current_last_node = 0
 
-    for i in range(len(graphs)):
-        num_of_nodes = graphs[i].number_of_nodes() - current_last_node
-        max_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])
-        age = len(graphs) - i
-        for j in range(len(graphs))[i:]:
-            # adj_temp = adj_sp_tensor[j].to_dense()[current_last_node:current_last_node + num_of_nodes]
-            # edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
-            # print(graphs[j].degree().values())
-            edges = torch.tensor(list(graphs[j].degree()).values())[current_last_node:current_last_node + num_of_nodes]
-            mask = torch.gt(edges, max_num_of_edges)
-            print(max_num_of_edges, edges)
-            max_num_of_edges[mask] = edges[mask]
-            print(i,j)
+#     for i in range(len(graphs)):
+#         num_of_nodes = graphs[i].number_of_nodes() - current_last_node
+#         max_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])
+#         age = len(graphs) - i
+#         for j in range(len(graphs))[i:]:
+#             # adj_temp = adj_sp_tensor[j].to_dense()[current_last_node:current_last_node + num_of_nodes]
+#             # edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
+#             # print(graphs[j].degree().values())
+#             edges = torch.tensor(graphs[j].degree().values())[current_last_node:current_last_node + num_of_nodes]
+#             mask = torch.gt(edges, max_num_of_edges)
+#             print(max_num_of_edges, edges)
+#             max_num_of_edges[mask] = edges[mask]
+#             print(i,j)
 
-        Num_average_edges[i] += np.around(torch.mean(max_num_of_edges.float()).item(), 3)
-        current_last_node += num_of_nodes
+#         Num_average_edges[i] += np.around(torch.mean(max_num_of_edges.float()).item(), 3)
+#         current_last_node += num_of_nodes
 
-    return Num_average_edges
+#     return Num_average_edges
 
 def make_sparse_tensor(adj, tensor_type, torch_size):
     if len(torch_size) == 2:
@@ -175,9 +175,9 @@ def load_graphs(args):
     else:
         graphs = np.load(graph_path, allow_pickle=True, encoding='latin1')['graph']
 
-    Num_average_edges = stat_age_difference(graphs)
-    print('Number of edges per age node', Num_average_edges)
-    return 0
+    # Num_average_edges = stat_age_difference(graphs)
+    # print('Number of edges per age node', Num_average_edges)
+    # return 0
 
     time_steps = len(graphs)
     args['time_steps'] = len(graphs)
@@ -339,29 +339,29 @@ class GCN(nn.Module):
         return h
 
 
-# def stat_age_difference(graphs):
-#     Num_average_edges = [0 for i in range(len(graphs))]
-#     # adj_sp_tensor =[torch.tensor(adj[i].todense()).to_sparse() for i in range(len(adj))]
-#     current_last_node = 0
+def stat_age_difference(graphs):
+    Num_average_edges = [0 for i in range(len(graphs))]
+    # adj_sp_tensor =[torch.tensor(adj[i].todense()).to_sparse() for i in range(len(adj))]
+    current_last_node = 0
 
-#     for i in range(len(graphs)):
-#         num_of_nodes = graphs[i].number_of_nodes() - current_last_node
-#         max_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])
-#         age = len(graphs) - i
-#         for j in range(len(graphs))[i:]:
-#             # adj_temp = adj_sp_tensor[j].to_dense()[current_last_node:current_last_node + num_of_nodes]
-#             # edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
-#             print(graphs[j].in_degrees())
-#             edges = graphs[j].in_degrees()[current_last_node:current_last_node + num_of_nodes]
-#             mask = torch.gt(edges, max_num_of_edges)
-#             print(max_num_of_edges, edges)
-#             max_num_of_edges[mask] = edges[mask]
-#             print(i,j)
+    for i in range(len(graphs)):
+        num_of_nodes = graphs[i].number_of_nodes() - current_last_node
+        max_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])
+        age = len(graphs) - i
+        for j in range(len(graphs))[i:]:
+            # adj_temp = adj_sp_tensor[j].to_dense()[current_last_node:current_last_node + num_of_nodes]
+            # edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
+            print(graphs[j].in_degrees())
+            edges = graphs[j].in_degrees()[current_last_node:current_last_node + num_of_nodes]
+            mask = torch.gt(edges, max_num_of_edges)
+            print(max_num_of_edges, edges)
+            max_num_of_edges[mask] = edges[mask]
+            print(i,j)
 
-#         Num_average_edges[i] += np.around(torch.mean(max_num_of_edges.float()).item(), 3)
-#         current_last_node += num_of_nodes
+        Num_average_edges[i] += np.around(torch.mean(max_num_of_edges.float()).item(), 3)
+        current_last_node += num_of_nodes
 
-#     return Num_average_edges
+    return Num_average_edges
 
 
 def stat_different(graphs, feats, adj):
@@ -476,8 +476,8 @@ if __name__ == '__main__':
     print('Starting to training!')
     # print(adj_matrices[0].todense())
     struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
-    # Num_average_edges = stat_age_difference(graphs_new, feats, adj_matrices)
-    # print('Number of edges per age node', Num_average_edges)
+    Num_average_edges = stat_age_difference(graphs_new, feats, adj_matrices)
+    print('Number of edges per age node', Num_average_edges)
 
     # num_epochs = 1
     # GCN_time = [[] for j in range(len(graphs_new))]
