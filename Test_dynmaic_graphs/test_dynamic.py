@@ -321,17 +321,19 @@ def stat_age_difference(graphs, feats, adj):
         max_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])
         age = len(graphs) - i
         for j in range(len(graphs))[i:]:
-            adj_temp = adj_sp_tensor[j].to_dense()[current_last_node:current_last_node + num_of_nodes]
-            # count
-            edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
-            mask = torch.gt(edges, max_num_of_edges)
-            max_num_of_edges[mask] = edges[mask]
-            # print(i,j)
+            # adj_temp = adj_sp_tensor[j].to_dense()[current_last_node:current_last_node + num_of_nodes]
+            # edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
 
-        Num_average_edges[i] += torch.mean(max_num_of_edges.float()).item()
+            edges = torch.tensor(graphs[j].degree())[current_last_node:current_last_node + num_of_nodes]
+            mask = torch.gt(edges, max_num_of_edges)
+            print(max_num_of_edges, edges)
+            max_num_of_edges[mask] = edges[mask]
+            print(i,j)
+
+        Num_average_edges[i] += np.around(torch.mean(max_num_of_edges.float()).item(), 3)
         current_last_node += num_of_nodes
 
-    return Num_average_edges
+    return Num_average_edges, 3
 
 
 def stat_different(graphs, feats, adj):
@@ -432,6 +434,8 @@ if __name__ == '__main__':
 
 
     _, graphs, adj_matrices, feats, _ = load_graphs(args)
+    print('Graph nodes information: ',args['nodes_info'])
+    print('Graph edges information: ',args['edges_info'])
 
     print('Converting graphs to specific framework!')
     graphs_new = convert_graphs(graphs, adj_matrices, feats, 'dgl')
@@ -473,8 +477,6 @@ if __name__ == '__main__':
     Time_summary = [np.around(np.mean(GCN_time[i]), 3) for i in range (len(graphs_new))]
     Mem_summary = [np.around(np.mean(GCN_mem[i]), 3) for i in range (len(graphs_new))]
 
-    print('Graph nodes information: ',args['nodes_info'])
-    print('Graph edges information: ',args['edges_info'])
     print('Number of edges per age node', Num_average_edges)
     print('Number of nodes with changed features ', feat_different)
     print('Number of nodes with changed features after neighbor aggregation ', feat_different_Agg)
