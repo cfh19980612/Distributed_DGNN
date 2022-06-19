@@ -311,74 +311,96 @@ class GCN(nn.Module):
         return h
 
 
+def stat_age_difference(graphs, feats, adj):
+    Num_average_edges = [0 for i in range(len(graphs))]
+    adj_dense_tensor =[torch.tensor(adj[i].todense()) for i in range(len(adj))]
+    current_last_node = 0
+
+    for i in range(len(graphs)):
+        num_of_nodes = adj_dense_tensor[i].size(0) - current_last_node
+        max_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])
+        age = len(graphs) - i
+        for j in range(len(graphs))[i:]:
+            adj_temp = adj_dense_tensor[j][current_last_node:]
+            # count
+            edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
+            mask = torch.gt(edges, max_num_of_edges)
+            max_num_of_edges[mask] = edges[mask]
+
+        Num_average_edges[i] += torch.mean(max_num_of_edges).item()
+        current_last_node += num_of_nodes
+
+    return Num_average_edges
+
+
 def stat_different(graphs, feats, adj):
     struc_different = [0 for i in range(len(graphs))]
     feat_different = [0 for i in range(len(graphs))]
     feat_different_Agg = [0 for i in range(len(graphs))]
 
-    # test the structure difference
-    for i in range (len(graphs) - 1):
-        adj_A = torch.Tensor(adj[i].todense())
-        adj_B = torch.Tensor(adj[i+1].todense()).to_sparse()
-        # adj_B_sp = adj_B.to_sparse()
-        # print(adj_B.size(0), adj_B_sp.size(0))
+    # # test the structure difference
+    # for i in range (len(graphs) - 1):
+    #     adj_A = torch.Tensor(adj[i].todense())
+    #     adj_B = torch.Tensor(adj[i+1].todense()).to_sparse()
+    #     # adj_B_sp = adj_B.to_sparse()
+    #     # print(adj_B.size(0), adj_B_sp.size(0))
 
-        # print('1 | ',i)
-        padding_row = torch.zeros(adj_B.size(0) - adj_A.size(0), adj_A.size(1))
-        adj_A_temp = torch.cat((adj_A, padding_row), dim=0)
-        # print('2 | ',i)
-        padding_col = torch.zeros(adj_A_temp.size(0), adj_B.size(1) - adj_A.size(1))
-        adj_A_pad = torch.cat((adj_A_temp, padding_col), dim=1)
-        # print('3 | ',i)
+    #     # print('1 | ',i)
+    #     padding_row = torch.zeros(adj_B.size(0) - adj_A.size(0), adj_A.size(1))
+    #     adj_A_temp = torch.cat((adj_A, padding_row), dim=0)
+    #     # print('2 | ',i)
+    #     padding_col = torch.zeros(adj_A_temp.size(0), adj_B.size(1) - adj_A.size(1))
+    #     adj_A_pad = torch.cat((adj_A_temp, padding_col), dim=1)
+    #     # print('3 | ',i)
 
-        adj_A_pad_sp = adj_A_pad.to_sparse()
+    #     adj_A_pad_sp = adj_A_pad.to_sparse()
 
-        dif_matrix =  (adj_A_pad_sp - adj_B)
-        # torch sparse to scipy sparse
-        m_index = dif_matrix._indices().numpy()
-        row = m_index[0]
-        # print(row)
-        change_node = np.unique(row)
+    #     dif_matrix =  (adj_A_pad_sp - adj_B)
+    #     # torch sparse to scipy sparse
+    #     m_index = dif_matrix._indices().numpy()
+    #     row = m_index[0]
+    #     # print(row)
+    #     change_node = np.unique(row)
 
-        struc_different[i+1] += len(change_node)
+    #     struc_different[i+1] += len(change_node)
 
-    # test the original feature difference
-    for i in range (len(graphs) - 1):
-        feat_A = feats[i].to_dense()
-        feat_B = feats[i+1].to_dense()
-        padding = torch.zeros(feat_B.size(0) - feat_A.size(0), feat_A.size(1))
-        feat_A_pad = torch.cat((feat_A, padding), dim=0)
-        dif_matrix = feat_B - feat_A_pad
-        sign_a = torch.sign(dif_matrix).int()
-        # count
-        difference = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)
+    # # test the original feature difference
+    # for i in range (len(graphs) - 1):
+    #     feat_A = feats[i].to_dense()
+    #     feat_B = feats[i+1].to_dense()
+    #     padding = torch.zeros(feat_B.size(0) - feat_A.size(0), feat_A.size(1))
+    #     feat_A_pad = torch.cat((feat_A, padding), dim=0)
+    #     dif_matrix = feat_B - feat_A_pad
+    #     sign_a = torch.sign(dif_matrix).int()
+    #     # count
+    #     difference = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)
 
-        difference.squeeze()
-        sign_b = torch.sign(difference).int()
-        Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
+    #     difference.squeeze()
+    #     sign_b = torch.sign(difference).int()
+    #     Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
 
-        feat_different[i+1] += Num_of_changed_nodes.item()
-        # print(Num_of_changed_nodes)
+    #     feat_different[i+1] += Num_of_changed_nodes.item()
+    #     # print(Num_of_changed_nodes)
 
-    # test the feature difference after one-hop aggregation
-    for i in range (len(graphs) - 1):
-        feat_A = feats[i].to_dense() 
-        adj_A = torch.Tensor(adj[i].todense())
-        feat_B = feats[i+1].to_dense()
-        adj_B = torch.Tensor(adj[i+1].todense())
-        # print(feat_A.size(), adj_A.size())
-        feat_A_Agg = torch.mm(adj_A, feat_A)
-        feat_B_Agg = torch.mm(adj_B, feat_B)
-        padding = torch.zeros(feat_B.size(0) - feat_A.size(0), feat_A.size(1))
-        feat_A_Agg_pad = torch.cat((feat_A, padding), dim=0)
+    # # test the feature difference after one-hop aggregation
+    # for i in range (len(graphs) - 1):
+    #     feat_A = feats[i].to_dense() 
+    #     adj_A = torch.Tensor(adj[i].todense())
+    #     feat_B = feats[i+1].to_dense()
+    #     adj_B = torch.Tensor(adj[i+1].todense())
+    #     # print(feat_A.size(), adj_A.size())
+    #     feat_A_Agg = torch.mm(adj_A, feat_A)
+    #     feat_B_Agg = torch.mm(adj_B, feat_B)
+    #     padding = torch.zeros(feat_B.size(0) - feat_A.size(0), feat_A.size(1))
+    #     feat_A_Agg_pad = torch.cat((feat_A, padding), dim=0)
         
-        dif_matrix = feat_B_Agg - feat_A_Agg_pad
-        sign_a = torch.sign(dif_matrix).int()
-        difference = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)
-        difference.squeeze()
-        sign_b = torch.sign(difference).int()
-        Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
-        feat_different_Agg[i+1] += Num_of_changed_nodes.item()
+    #     dif_matrix = feat_B_Agg - feat_A_Agg_pad
+    #     sign_a = torch.sign(dif_matrix).int()
+    #     difference = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)
+    #     difference.squeeze()
+    #     sign_b = torch.sign(difference).int()
+    #     Num_of_changed_nodes = torch.count_nonzero(sign_b, dim=0)
+    #     feat_different_Agg[i+1] += Num_of_changed_nodes.item()
 
     return struc_different, feat_different, feat_different_Agg
     
@@ -421,6 +443,7 @@ if __name__ == '__main__':
     print('Starting to training!')
     # print(adj_matrices[0].todense())
     struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
+    Num_average_edges = stat_age_difference(graphs_new, feats, adj_matrices)
 
     num_epochs = 100
     GCN_time = [[] for j in range(len(graphs_new))]
