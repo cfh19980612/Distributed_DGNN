@@ -190,7 +190,7 @@ slices_links_remap, slices_features_remap = remap(slices_links, slices_features)
 
 all_nodes = []
 for slice_id in slices_links:
-    assert len(slices_links[slice_id].nodes()) == len(slices_features[slice_id])
+    # assert len(slices_links[slice_id].nodes()) == len(slices_features[slice_id])
     all_nodes.extend(slices_links[slice_id].nodes())
 all_nodes = list(set(all_nodes))
 Links=[]

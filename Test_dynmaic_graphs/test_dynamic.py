@@ -449,38 +449,38 @@ if __name__ == '__main__':
     # print(adj_matrices[0].todense())
     struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
     Num_average_edges = stat_age_difference(graphs_new, feats, adj_matrices)
+    print('Number of edges per age node', Num_average_edges)
 
-    num_epochs = 1
-    GCN_time = [[] for j in range(len(graphs_new))]
-    GCN_mem = [[] for j in range(len(graphs_new))]
-    for epoch in range(num_epochs):
-        pbar = tqdm(graphs_new)
-        model.eval()
-        for index,graph in enumerate(pbar):
-            time_current = time.time()
-            out = model(graph.to('cuda:0'), feats[index].to_dense().to('cuda:0'))
-            time_cost = time.time() - time_current
-            gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
-            pbar.set_description('Epoch {} | Graph {} | {:.3f}s | {:.3f}MB'.format(epoch, index, time_cost, gpu_mem_alloc))
-            GCN_time[index].append(time_cost)
-            GCN_mem[index].append(gpu_mem_alloc)
+    # num_epochs = 1
+    # GCN_time = [[] for j in range(len(graphs_new))]
+    # GCN_mem = [[] for j in range(len(graphs_new))]
+    # for epoch in range(num_epochs):
+    #     pbar = tqdm(graphs_new)
+    #     model.eval()
+    #     for index,graph in enumerate(pbar):
+    #         time_current = time.time()
+    #         out = model(graph.to('cuda:0'), feats[index].to_dense().to('cuda:0'))
+    #         time_cost = time.time() - time_current
+    #         gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
+    #         pbar.set_description('Epoch {} | Graph {} | {:.3f}s | {:.3f}MB'.format(epoch, index, time_cost, gpu_mem_alloc))
+    #         GCN_time[index].append(time_cost)
+    #         GCN_mem[index].append(gpu_mem_alloc)
 
-            graph = graph.to('cpu')
-            feats[index].to_dense().to('cpu')
-            torch.cuda.empty_cache()
-            torch.cuda.empty_cache()
-            torch.cuda.empty_cache()
-            torch.cuda.empty_cache()
-            torch.cuda.empty_cache()
+    #         graph = graph.to('cpu')
+    #         feats[index].to_dense().to('cpu')
+    #         torch.cuda.empty_cache()
+    #         torch.cuda.empty_cache()
+    #         torch.cuda.empty_cache()
+    #         torch.cuda.empty_cache()
+    #         torch.cuda.empty_cache()
             
     
-    Time_summary = [np.around(np.mean(GCN_time[i]), 3) for i in range (len(graphs_new))]
-    Mem_summary = [np.around(np.mean(GCN_mem[i]), 3) for i in range (len(graphs_new))]
+    # Time_summary = [np.around(np.mean(GCN_time[i]), 3) for i in range (len(graphs_new))]
+    # Mem_summary = [np.around(np.mean(GCN_mem[i]), 3) for i in range (len(graphs_new))]
 
-    print('Number of edges per age node', Num_average_edges)
-    print('Number of nodes with changed features ', feat_different)
-    print('Number of nodes with changed features after neighbor aggregation ', feat_different_Agg)
-    print('Number of nodes with changed structure ', struc_different)
-    print('Graph time cost: ', Time_summary)
-    print('Graph memory cost: ', Mem_summary)
+    # print('Number of nodes with changed features ', feat_different)
+    # print('Number of nodes with changed features after neighbor aggregation ', feat_different_Agg)
+    # print('Number of nodes with changed structure ', struc_different)
+    # print('Graph time cost: ', Time_summary)
+    # print('Graph memory cost: ', Mem_summary)
 
