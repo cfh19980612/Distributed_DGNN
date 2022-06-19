@@ -327,7 +327,7 @@ def stat_age_difference(graphs, feats, adj):
             mask = torch.gt(edges, max_num_of_edges)
             max_num_of_edges[mask] = edges[mask]
 
-        Num_average_edges[i] += torch.mean(max_num_of_edges,dtype=torch.float32).item()
+        Num_average_edges[i] += torch.mean(max_num_of_edges.float()).item()
         current_last_node += num_of_nodes
 
     return Num_average_edges
