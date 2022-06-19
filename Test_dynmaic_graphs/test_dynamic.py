@@ -313,15 +313,15 @@ class GCN(nn.Module):
 
 def stat_age_difference(graphs, feats, adj):
     Num_average_edges = [0 for i in range(len(graphs))]
-    adj_dense_tensor =[torch.tensor(adj[i].todense()) for i in range(len(adj))]
+    adj_sp_tensor =[torch.tensor(adj[i].todense()).to_sparse() for i in range(len(adj))]
     current_last_node = 0
 
     for i in range(len(graphs)):
-        num_of_nodes = adj_dense_tensor[i].size(0) - current_last_node
+        num_of_nodes = adj_sp_tensor[i].size(0) - current_last_node
         max_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])
         age = len(graphs) - i
         for j in range(len(graphs))[i:]:
-            adj_temp = adj_dense_tensor[j][current_last_node:current_last_node + num_of_nodes]
+            adj_temp = adj_sp_tensor[j].to_dense()[current_last_node:current_last_node + num_of_nodes]
             # count
             edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
             mask = torch.gt(edges, max_num_of_edges)
