@@ -476,7 +476,7 @@ if __name__ == '__main__':
     print('Starting to training!')
     # print(adj_matrices[0].todense())
     struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
-    Num_average_edges = stat_age_difference(graphs_new, feats, adj_matrices)
+    Num_average_edges = stat_age_difference(graphs_new)
     print('Number of edges per age node', Num_average_edges)
 
     # num_epochs = 1
