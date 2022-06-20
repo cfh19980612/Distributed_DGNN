@@ -92,7 +92,7 @@ for (a, b, time) in links:
     if slice_id == 1+prev_slice_id and slice_id > 0:
         slices_links[slice_id] = nx.MultiGraph()
         slices_links[slice_id].add_nodes_from(slices_links[slice_id-1].nodes(data=True))
-        assert (len(slices_links[slice_id].edges()) ==0)
+        # assert (len(slices_links[slice_id].edges()) ==0)
         #assert len(slices_links[slice_id].nodes()) >0
 
     if slice_id ==0 and slice_id == prev_slice_id + 1:

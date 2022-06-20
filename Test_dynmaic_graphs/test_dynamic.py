@@ -340,14 +340,18 @@ class GCN(nn.Module):
 
 
 def stat_age_difference(graphs):
+    Num_max_edges = [0 for i in range(len(graphs))]
     Num_average_edges = [0 for i in range(len(graphs))]
     # adj_sp_tensor =[torch.tensor(adj[i].todense()).to_sparse() for i in range(len(adj))]
     current_last_node = 0
 
+    avarage_degree_per_snap = []  # 每个时刻产生的点，在后续时刻中degree的变化
     for i in range(len(graphs)):
         num_of_nodes = graphs[i].number_of_nodes() - current_last_node
-        max_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])
+        max_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])  # i 时刻产生的点在后续时刻中最大的degree
+        avg_num_of_edges = torch.tensor([0 for k in range(num_of_nodes)])  # i 时刻产生的点在后续时刻中平均的degree （一个点在所有时刻的平均值）
         age = len(graphs) - i
+        degree_per_snap = []  # i 时刻产生的点在后续时刻中的平均degree （所有点的平均值）变化
         for j in range(len(graphs))[i:]:
             # adj_temp = adj_sp_tensor[j].to_dense()[current_last_node:current_last_node + num_of_nodes]
             # edges = torch.count_nonzero(adj_temp, dim=1).reshape(-1, 1).squeeze()
@@ -356,12 +360,18 @@ def stat_age_difference(graphs):
             mask = torch.gt(edges, max_num_of_edges)
             print(max_num_of_edges, edges)
             max_num_of_edges[mask] = edges[mask]
+            avg_num_of_edges = avg_num_of_edges + edges
             print(i,j)
+            degree_per_snap.append(np.around(torch.mean(edges.float()).item(), 3))
 
-        Num_average_edges[i] += np.around(torch.mean(max_num_of_edges.float()).item(), 3)
+        avarage_degree_per_snap.append(degree_per_snap)
+        avg_num_of_edges = torch.div(avg_num_of_edges.float(), len(graphs)-i)
+
+        Num_max_edges[i] += np.around(torch.mean(max_num_of_edges.float()).item(), 3)
+        Num_average_edges[i] += np.around(torch.mean(avg_num_of_edges.float()).item(), 3)
         current_last_node += num_of_nodes
 
-    return Num_average_edges
+    return Num_max_edges, Num_average_edges, avarage_degree_per_snap
 
 
 def stat_different(graphs, feats, adj):
@@ -476,8 +486,11 @@ if __name__ == '__main__':
     print('Starting to training!')
     # print(adj_matrices[0].todense())
     struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
-    Num_average_edges = stat_age_difference(graphs_new)
-    print('Number of edges per age node', Num_average_edges)
+
+    Num_max_edges, Num_average_edges, avarage_degree_per_snap = stat_age_difference(graphs_new)
+    print('Number of edges per age node (max degree across snapshots)', Num_max_edges)
+    print('Number of edges per age node (avg degree across snapshots)', Num_average_edges)
+    print('Number of average degree in different snapshots', avarage_degree_per_snap)
 
     # num_epochs = 1
     # GCN_time = [[] for j in range(len(graphs_new))]
