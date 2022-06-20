@@ -495,7 +495,7 @@ if __name__ == '__main__':
     model.cuda()
     print('Starting to training!')
     # print(adj_matrices[0].todense())
-    struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
+    # struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
 
     Num_max_edges, Num_average_edges, avarage_degree_per_snap = stat_age_difference(graphs_new)
     print('Number of edges per age node (max degree across snapshots)', Num_max_edges)
