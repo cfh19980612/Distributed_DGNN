@@ -77,8 +77,10 @@ def _count_max_deg(graphs, adjs):
         max_deg_out.append(max(cur_out))
         max_deg_in.append(max(cur_in))
     # exit()
-    max_deg_out = torch.stack(max_deg_out).max()
-    max_deg_in = torch.stack(max_deg_in).max()
+    # max_deg_out = torch.stack(max_deg_out).max()
+    # max_deg_in = torch.stack(max_deg_in).max()
+    max_deg_out = max(max_deg_out)
+    max_deg_in = max(max_deg_in)
     max_deg_out = int(max_deg_out) + 1
     max_deg_in = int(max_deg_in) + 1
     
