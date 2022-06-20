@@ -499,8 +499,8 @@ if __name__ == '__main__':
     struc_different, feat_different, feat_different_Agg = stat_different(graphs_new, feats, adj_matrices)
 
     Num_max_edges, Num_average_edges, avarage_degree_per_snap = stat_age_difference(graphs_new)
-    print('Number of edges per age node (max degree across snapshots)', np.around(Num_max_edges, 3))
-    print('Number of edges per age node (avg degree across snapshots)', np.around(Num_average_edges, 3))
+    print('Number of edges per age node (max degree across snapshots)', Num_max_edges)
+    print('Number of edges per age node (avg degree across snapshots)', Num_average_edges)
     print('Number of average degree in different snapshots', avarage_degree_per_snap)
 
     # num_epochs = 1
