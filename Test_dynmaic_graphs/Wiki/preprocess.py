@@ -43,8 +43,9 @@ with open(file_path) as f:
 
 print ("Min ts", min(ts), "max ts", max(ts))
 print ("Total time span: {} days".format((max(ts) - min(ts)).days))
-links.sort(key =lambda x: x[2])
+links.sort(key =lambda x: x[3])
 print ("# temporal links", len(links))
+
 
 import networkx as nx
 agg_G = nx.Graph()
