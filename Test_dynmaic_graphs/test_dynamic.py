@@ -72,8 +72,10 @@ def _count_max_deg(graphs, adjs):
     for (graph, adj) in zip(graphs, adjs):
         cur_out, cur_in = _get_degree_from_adj(adj,graph.number_of_nodes(),graph)
         # print(cur_out, cur_in)
-        max_deg_out.append(cur_out.max())
-        max_deg_in.append(cur_in.max())
+        # max_deg_out.append(cur_out.max())
+        # max_deg_in.append(cur_in.max())
+        max_deg_out.append(max(cur_out))
+        max_deg_in.append(max(cur_in))
     # exit()
     max_deg_out = torch.stack(max_deg_out).max()
     max_deg_in = torch.stack(max_deg_in).max()
@@ -85,8 +87,8 @@ def _count_max_deg(graphs, adjs):
 def _get_degree_from_adj(adj, num_nodes, graph):
     # print(adj.todense())
 
-    degs_out = dict(nx.degree(graph)).values()
-    print(degs_out)
+    degs_out = list(dict(nx.degree(graph)).values())
+    # print(degs_out)
     degs_in = degs_out
 
     # adj_tensor = torch.tensor(adj.todense())
