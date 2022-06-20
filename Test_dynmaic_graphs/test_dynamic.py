@@ -82,18 +82,22 @@ def _count_max_deg(graphs, adjs):
     
     return max_deg_out, max_deg_in
 
-def _get_degree_from_adj(adj, num_nodes):
+def _get_degree_from_adj(adj, num_nodes, graph):
     # print(adj.todense())
-    adj_tensor = torch.tensor(adj.todense())
-    sign_a = torch.sign(adj_tensor).int()
-    # count
-    degs_out = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)   
 
-    adj_tensor = adj_tensor.t()
-    sign_b = torch.sign(adj_tensor).int()
-    # count
-    degs_in = torch.count_nonzero(sign_b, dim=1).reshape(-1, 1)   
-    # print(non_zero_a)
+    degs_out = graph.degree().value()
+    degs_in = degs_out
+
+    # adj_tensor = torch.tensor(adj.todense())
+    # sign_a = torch.sign(adj_tensor).int()
+    # # count
+    # degs_out = torch.count_nonzero(sign_a, dim=1).reshape(-1, 1)   
+
+    # adj_tensor = adj_tensor.t()
+    # sign_b = torch.sign(adj_tensor).int()
+    # # count
+    # degs_in = torch.count_nonzero(sign_b, dim=1).reshape(-1, 1)   
+    # # print(non_zero_a)
 
 
     # degs_out = torch.mul(adj_tensor, torch.ones(num_nodes,1,dtype = torch.LongTensor).cuda())
