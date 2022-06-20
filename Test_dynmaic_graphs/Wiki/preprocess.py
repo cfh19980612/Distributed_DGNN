@@ -74,6 +74,9 @@ slices_features = defaultdict(lambda : {})
 print ("Start date", START_DATE)
 
 slice_id = -1
+temp = 0
+now = 0
+now_temp = 0
 # Split the set of links in order by slices to create the graphs.
 for (a, b, time) in links:
     prev_slice_id = slice_id
@@ -89,21 +92,26 @@ for (a, b, time) in links:
 
 
     slice_id = days_diff // SLICE_DAYS
+    if slice_id != now_temp:
+        # reset for the next graph
+        now = now + 1
+        now_temp = slice_id
+        temp = 0
 
     if slice_id == 1+prev_slice_id and slice_id > 0:
-        slices_links[slice_id] = nx.MultiGraph()
-        slices_links[slice_id].add_nodes_from(slices_links[slice_id-1].nodes(data=True))
-        assert (len(slices_links[slice_id].edges()) ==0)
+        slices_links[now] = nx.MultiGraph()
+        slices_links[now].add_nodes_from(slices_links[now-1].nodes(data=True))
+        # assert (len(slices_links[now].edges()) ==0)
         #assert len(slices_links[slice_id].nodes()) >0
 
     if slice_id ==0 and slice_id == prev_slice_id + 1:
-        slices_links[slice_id] = nx.MultiGraph()
+        slices_links[now] = nx.MultiGraph()
 
-    if a not in slices_links[slice_id]:
-        slices_links[slice_id].add_node(a)
-    if b not in slices_links[slice_id]:
-        slices_links[slice_id].add_node(b)
-    slices_links[slice_id].add_edge(a,b, date=datetime_object)
+    if a not in slices_links[now]:
+        slices_links[now].add_node(a)
+    if b not in slices_links[now]:
+        slices_links[now].add_node(b)
+    slices_links[now].add_edge(a,b, date=datetime_object)
 
 
 
