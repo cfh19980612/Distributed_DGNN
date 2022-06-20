@@ -380,6 +380,7 @@ def stat_age_difference(graphs):
 
         Num_max_edges[i] += np.around(np.mean(max_num_of_edges.tolist()), 3)
         Num_average_edges[i] += np.around(np.mean(avg_num_of_edges.tolist()), 3)
+        print('out3: ', Num_max_edges, Num_average_edges)
         current_last_node += num_of_nodes
 
         Num_max_edges.reverse()
