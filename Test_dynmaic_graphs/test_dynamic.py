@@ -85,7 +85,7 @@ def _count_max_deg(graphs, adjs):
 def _get_degree_from_adj(adj, num_nodes, graph):
     # print(adj.todense())
 
-    degs_out = dict(nx.degree(graph)).value()
+    degs_out = dict(nx.degree(graph)).values()
     degs_in = degs_out
 
     # adj_tensor = torch.tensor(adj.todense())
