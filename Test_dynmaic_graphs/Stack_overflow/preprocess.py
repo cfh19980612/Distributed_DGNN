@@ -12,7 +12,7 @@ node_cnt = 0
 node_idx = {}
 idx_node = []
 
-file_path = current_path + '/ia-stackexch-user-marks-post-und.edges'
+file_path = current_path + '/rec-stackoverflow.edges'
 save_graph_path = current_path + '/data/graphs.npz'
 save_features_path = current_path + '/data/features.npz'
 
