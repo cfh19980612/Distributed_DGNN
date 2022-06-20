@@ -123,8 +123,8 @@ def _generate_one_hot_feats(graphs, adjs, max_degree):
     for (graph, adj) in zip(graphs, adjs):
         # print(adj)
         num_nodes = graph.number_of_nodes()
-        degree_vec, _ = _get_degree_from_adj(adj, num_nodes)
-        feats_dict = {'idx': torch.cat([torch.arange(num_nodes).view(-1, 1), degree_vec.view(-1, 1)], dim=1),
+        degree_vec, _ = _get_degree_from_adj(adj, num_nodes, graph)
+        feats_dict = {'idx': torch.cat([torch.arange(num_nodes).view(-1, 1), torch.tensor(degree_vec).view(-1, 1)], dim=1),
                       'vals': torch.ones(num_nodes)
         }
         feat = make_sparse_tensor(feats_dict, 'float', [num_nodes, max_degree])
