@@ -92,23 +92,20 @@ for (a, b, time) in links:
 
 
     slice_id = days_diff // SLICE_DAYS
-    # if slice_id != now_temp:
-        # reset for the next graph
-        # now = now + 1
-        # now_temp = slice_id
+    if slice_id != now_temp:
+        #reset for the next graph
+        now = now + 1
 
     if slice_id != now_temp and now > 0:
         slices_links[now] = nx.MultiGraph()
         slices_links[now].add_nodes_from(slices_links[now-1].nodes(data=True))
         now_temp = slice_id
-        now = now + 1
         # assert (len(slices_links[now].edges()) ==0)
         #assert len(slices_links[slice_id].nodes()) >0
 
     if now == 0 and slice_id != now_temp:
         slices_links[now] = nx.MultiGraph()
         now_temp = slice_id
-        now = now + 1
 
     if a not in slices_links[now]:
         slices_links[now].add_node(a)
