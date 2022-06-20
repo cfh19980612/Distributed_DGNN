@@ -70,7 +70,7 @@ def _count_max_deg(graphs, adjs):
     max_deg_in = []
 
     for (graph, adj) in zip(graphs, adjs):
-        cur_out, cur_in = _get_degree_from_adj(adj,graph.number_of_nodes())
+        cur_out, cur_in = _get_degree_from_adj(adj,graph.number_of_nodes(),graph)
         # print(cur_out, cur_in)
         max_deg_out.append(cur_out.max())
         max_deg_in.append(cur_in.max())
