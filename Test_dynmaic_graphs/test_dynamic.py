@@ -371,16 +371,16 @@ def stat_age_difference(graphs):
             avg_num_of_edges = avg_num_of_edges + edges
             print(i,j)
             degree_per_snap.append(np.around(torch.mean(edges.float()).item(), 3))
-        print('out1: ', max_num_of_edges, avg_num_of_edges)
+        # print('out1: ', max_num_of_edges, avg_num_of_edges)
         # avg_num_of_edges_new = avg_num_of_edges.numpy()/age
         avg_num_of_edges = torch.div(avg_num_of_edges.float(), float(age))
-        print('out2: ', age, max_num_of_edges, avg_num_of_edges)
+        # print('out2: ', age, max_num_of_edges, avg_num_of_edges)
 
         avarage_degree_per_snap.append(degree_per_snap)
 
         Num_max_edges[i] += np.around(np.mean(max_num_of_edges.tolist()), 3)
         Num_average_edges[i] += np.around(np.mean(avg_num_of_edges.tolist()), 3)
-        print('out3: ', Num_max_edges, Num_average_edges)
+        # print('out3: ', Num_max_edges, Num_average_edges)
         current_last_node += num_of_nodes
 
     Num_max_edges.reverse()
