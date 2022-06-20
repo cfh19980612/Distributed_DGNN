@@ -353,7 +353,6 @@ def stat_age_difference(graphs):
     Num_average_edges = [0 for i in range(len(graphs))]
     # adj_sp_tensor =[torch.tensor(adj[i].todense()).to_sparse() for i in range(len(adj))]
     current_last_node = 0
-
     avarage_degree_per_snap = []  # 每个时刻产生的点，在后续时刻中degree的变化
     for i in range(len(graphs)):
         num_of_nodes = graphs[i].number_of_nodes() - current_last_node
@@ -367,14 +366,14 @@ def stat_age_difference(graphs):
             # print(graphs[j].in_degrees())
             edges = graphs[j].in_degrees()[current_last_node:current_last_node + num_of_nodes]
             mask = torch.gt(edges, max_num_of_edges)
-            # print(type(max_num_of_edges), type(edges))
+            print(max_num_of_edges, edges)
             max_num_of_edges[mask] = edges[mask]
             avg_num_of_edges = avg_num_of_edges + edges
-            # print(i,j)
+            print(i,j)
             degree_per_snap.append(np.around(torch.mean(edges.float()).item(), 3))
 
         avarage_degree_per_snap.append(degree_per_snap)
-        avg_num_of_edges = torch.div(avg_num_of_edges.float(), len(graphs)-i)
+        avg_num_of_edges = torch.div(avg_num_of_edges.float(), age)
 
         Num_max_edges[i] += np.around(np.mean(max_num_of_edges.tolist()), 3)
         Num_average_edges[i] += np.around(np.mean(avg_num_of_edges.tolist()), 3)
@@ -485,7 +484,7 @@ if __name__ == '__main__':
     _, graphs, adj_matrices, feats, _ = load_graphs(args)
     print('Graph nodes information: ',args['nodes_info'])
     print('Graph edges information: ',args['edges_info'])
-
+    graphs = graphs[:2]
     print('Converting graphs to specific framework!')
     graphs_new = convert_graphs(graphs, adj_matrices, feats, 'dgl')
 
