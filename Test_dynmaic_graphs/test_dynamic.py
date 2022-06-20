@@ -488,7 +488,7 @@ if __name__ == '__main__':
     _, graphs, adj_matrices, feats, _ = load_graphs(args)
     print('Graph nodes information: ',args['nodes_info'])
     print('Graph edges information: ',args['edges_info'])
-    graphs = graphs[:2]
+    # graphs = graphs[:2]
     print('Converting graphs to specific framework!')
     graphs_new = convert_graphs(graphs, adj_matrices, feats, 'dgl')
 
