@@ -12,7 +12,7 @@ node_cnt = 0
 node_idx = {}
 idx_node = []
 
-file_path = current_path + '/ia-stackexch-user-marks-post-und.edges'
+file_path = current_path + '/ia-online-ads-criteo-attrs.edges'
 save_graph_path = current_path + '/data/graphs.npz'
 save_features_path = current_path + '/data/features.npz'
 
@@ -22,7 +22,7 @@ with open(file_path) as f:
         if l[0] == '%':
             continue
 
-        x, y, e, t = map(int, l.split(' '))
+        x, y, t, _, _ = map(int, l.split(' '))
         # print (x,y,e,t)
         timestamp = datetime.fromtimestamp(t)
         ts.append(timestamp)
