@@ -12,7 +12,7 @@ node_cnt = 0
 node_idx = {}
 idx_node = []
 
-file_path = current_path + '/soc-wiki-elec.edges'
+file_path = current_path + '/tech-as-topology.edges'
 save_graph_path = current_path + '/data/graphs.npz'
 save_features_path = current_path + '/data/features.npz'
 
