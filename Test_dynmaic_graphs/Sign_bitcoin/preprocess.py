@@ -22,7 +22,7 @@ with open(file_path) as f:
         if l[0] == '%':
             continue
 
-        x, y, e, t = map(int, l.split(','))
+        x, y, e, t = map(float, l.split(','))
         # print (x,y,e,t)
         timestamp = datetime.fromtimestamp(t)
         ts.append(timestamp)
