@@ -383,8 +383,8 @@ def stat_age_difference(graphs):
         print('out3: ', Num_max_edges, Num_average_edges)
         current_last_node += num_of_nodes
 
-        Num_max_edges.reverse()
-        Num_average_edges.reverse()
+    Num_max_edges.reverse()
+    Num_average_edges.reverse()
     return Num_max_edges, Num_average_edges, avarage_degree_per_snap
 
 
