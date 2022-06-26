@@ -319,27 +319,30 @@ class hybrid_partition():
             for (time, nodes) in enumerate(self.nodes_list):
                 work = nodes_local_mask[nodes]
                 self.workloads_RNN[device_id].append(work)
-
-        # print(self.workloads_RNN[0])
-        # STEP 2: different partitions
-
-        for device_id in range(self.num_devices):
-            if partition_method[device_id] == 0:
-                if device_id != self.num_devices - 1:
-                    temp = torch.tensor([device_id for i in range(nodes_per_device)])
-                    node_partition_id[device_id*nodes_per_device:(device_id + 1)*nodes_per_device] = temp
-                else:
-                    temp = torch.tensor([device_id for i in range(num_nodes - (self.num_devices - 1)*nodes_per_device)])
-                    node_partition_id[device_id*nodes_per_device:] = temp
-        for device_id in range(self.num_devices):
-            if partition_method[device_id] == 0:
-                where_nodes = torch.nonzero(node_partition_id == device_id, as_tuple=False).squeeze()
-                # print(where_nodes)
-                nodes_local_mask = torch.full_like(self.nodes_list[-1], False, dtype=torch.bool)
-                nodes_local_mask[where_nodes] = torch.ones(where_nodes.size(0), dtype=torch.bool)
-                for (time, nodes) in enumerate(self.nodes_list):
-                    work = nodes_local_mask[nodes]
+                if partition_method[device_id] == 0:
                     self.workloads_GCN[device_id].append(work)
+
+        # # print(self.workloads_RNN[0])
+        # # STEP 2: different partitions
+
+        # for device_id in range(self.num_devices):
+        #     if partition_method[device_id] == 0:
+        #         if device_id != self.num_devices - 1:
+        #             temp = torch.tensor([device_id for i in range(nodes_per_device)])
+        #             node_partition_id[device_id*nodes_per_device:(device_id + 1)*nodes_per_device] = temp
+        #         else:
+        #             temp = torch.tensor([device_id for i in range(num_nodes - (self.num_devices - 1)*nodes_per_device)])
+        #             node_partition_id[device_id*nodes_per_device:] = temp
+        # for device_id in range(self.num_devices):
+        #     if partition_method[device_id] == 0:
+        #         where_nodes = torch.nonzero(node_partition_id == device_id, as_tuple=False).squeeze()
+        #         # print(where_nodes)
+        #         nodes_local_mask = torch.full_like(self.nodes_list[-1], False, dtype=torch.bool)
+        #         nodes_local_mask[where_nodes] = torch.ones(where_nodes.size(0), dtype=torch.bool)
+        #         for (time, nodes) in enumerate(self.nodes_list):
+        #             work = nodes_local_mask[nodes]
+        #             self.workloads_GCN[device_id].append(work)
+
         # print(self.workloads_GCN[0])
         # STEP 3: snapshot partition
         # update graphs: if all nodes in some snapshots are partitioned already, these snapshot should not be partitioned again
