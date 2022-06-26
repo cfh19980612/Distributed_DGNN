@@ -167,7 +167,7 @@ class node_partition():
 
     def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workload)
-
+        print(GCN_receive_list)
         GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
 
         GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
