@@ -458,7 +458,7 @@ if __name__ == '__main__':
         adjs_list.append(adj_tensor_sp)
     
     print('Generate data!')
-    GCN_node_size = feats[0].shape*32
+    GCN_node_size = feats[0].size(0)*32
     RNN_node_size = 128*32
 
     node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=3)
