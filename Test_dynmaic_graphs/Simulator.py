@@ -442,11 +442,11 @@ if __name__ == '__main__':
     # nodes_list, adjs_list = generate_test_graph()
 
     _, graphs, adj_matrices, feats, _ = load_graphs(args)
-    print('Generate graphs!')
+    # print('Generate graphs!')
     Num_nodes = args['nodes_info']
     time_steps = len(Num_nodes)
     nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
-    print('Generate nodes list!')
+    # print('Generate nodes list!')
     adjs_list = []
     for i in range(len(adj_matrices)):
         # print(type(adj_matrices[i]))
@@ -461,7 +461,7 @@ if __name__ == '__main__':
         adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
         adjs_list.append(adj_tensor_sp)
     
-    print('Generate data!')
+    print('Number of graphs: ', len(graphs))
     GCN_node_size = feats[0].size(0)*32
     RNN_node_size = 256*32
 
