@@ -101,14 +101,14 @@ def Comm_time(num_devices, receive_list, send_list, node_size, bandwidth):
         total_nodes = 0
         for receive in receive_list[device_id]:
             if receive != torch.Size([]):
-                total_nodes += receive.size(0)
+                total_nodes += receive.view(-1).size(0)
         receive_comm_time[device_id] += np.around(float(total_nodes*node_size)/bandwidth, 3)
 
         # send
         total_nodes = 0
         for send in send_list[device_id]:
             if send != torch.Size([]):
-                total_nodes += send.size(0)
+                total_nodes += send.view(-1).size(0)
         send_comm_time[device_id] += np.around(float(total_nodes*node_size)/bandwidth, 3)
     
     return receive_comm_time, send_comm_time
@@ -167,7 +167,7 @@ class node_partition():
 
     def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workload)
-        print(GCN_receive_list)
+        # print(GCN_receive_list)
         GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
 
         GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
