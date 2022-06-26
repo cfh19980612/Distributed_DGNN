@@ -7,8 +7,12 @@ import torch
 from load_graph_data import load_graphs
 
 # Simulation setting
-node_size = 10
-bandwidth = float(1000)
+# node_size = 10
+# bandwidth = float(1000)
+bandwidth_1MB = float(1024*1024*8)
+bandwidth_10MB = float(10*1024*1024*8)
+bandwidth_100MB = float(100*1024*1024*8)
+bandwidth_GB = float(1024*1024*1024*8)
 
 
 def generate_test_graph():
@@ -88,7 +92,7 @@ def RNN_comm_nodes(nodes_list, num_devices, workloads_GCN, workloads_RNN):
     
     return receive_list, send_list
 
-def Comm_time(num_devices, receive_list, send_list, size):
+def Comm_time(num_devices, receive_list, send_list, node_size, bandwidth):
     # compute time
     receive_comm_time = [0 for i in range(num_devices)]
     send_comm_time = [0 for i in range(num_devices)]
@@ -159,10 +163,10 @@ class node_partition():
                 work = nodes_local_mask[nodes]
                 self.workload[device_id].append(work)
 
-    def communication_time(self):
+    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workload)
 
-        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, node_size)
+        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
 
         GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
         GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
@@ -245,10 +249,10 @@ class snapshot_partition():
                 work = nodes_local_mask[nodes]
                 self.workloads_RNN[device_id].append(work)
 
-    def communication_time(self):
+    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
         RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
 
-        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, node_size)
+        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
 
         GCN_receive = [0 for i in range(self.num_devices)]
         GCN_send = [0 for i in range(self.num_devices)]
@@ -379,15 +383,15 @@ class hybrid_partition():
                         self.workloads_GCN[device_id].append(work)
         # print(self.workloads_GCN[-1])
 
-    def communication_time(self):
+    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
         '''
         Both GCN communication time and RNN communication time are needed
         '''
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
         RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
 
-        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, node_size)
-        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, node_size)
+        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
+        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
 
         GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
         GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
@@ -405,9 +409,6 @@ class hybrid_partition():
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
         print('Total communication time: {}'.format(max(GPU_total_time)))
-
-        # print('GCN| receive time: {} | send time: {}'.format(GCN_receive_comm_time, GCN_send_comm_time))
-        # print('RNN| receive time: {} | send time: {}'.format(RNN_receive_comm_time, RNN_send_comm_time))
 
 import time
 
@@ -457,14 +458,17 @@ if __name__ == '__main__':
         adjs_list.append(adj_tensor_sp)
     
     print('Generate data!')
+    GCN_node_size = feats[0].shape*32
+    RNN_node_size = 128*32
+
     node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=3)
-    node_partition_obj.communication_time()
+    node_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
     snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=3)
-    snapshot_partition_obj.communication_time()
+    snapshot_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
     hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=3)
-    hybrid_partition_obj.communication_time()
+    hybrid_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
     # print(node_partition_obj.workload[0])
 
     # _, graphs, adj_matrices, feats, _ = load_graphs(args)
