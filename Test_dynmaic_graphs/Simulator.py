@@ -297,7 +297,7 @@ class hybrid_partition():
         '''
         partition_method = [0 for i in range(self.num_devices)] # 0: node partition; 1: snapshot partition
         for i in range(self.num_devices):
-            if i >= (self.num_devices // 2):
+            if i >= (self.num_devices // 2)-2:
                 partition_method[i] = 1 # snapshot partition
         
         # STEP 1: the same RNN workloads
