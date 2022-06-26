@@ -325,7 +325,7 @@ class hybrid_partition():
         # print(self.workloads_RNN[0])
         # STEP 2: different partitions
         num_nodes = self.nodes_list[-1].size(0)
-        nodes_per_device = num_nodes // 7
+        nodes_per_device = num_nodes // 3
         for device_id in range(self.num_devices):
             if partition_method[device_id] == 0:
                 if device_id != self.num_devices - 1:
