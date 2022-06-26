@@ -49,14 +49,14 @@ def GCN_comm_nodes(nodes_list, adjs_list, num_devices, workloads_GCN):
             need_receive_nodes = torch.unique(edge_target[edge_source_local_mask]) # get the target nodes with the source nodes belong to device_id
             receive_node_local = local_node_mask[need_receive_nodes] # check whether the received nodes in local?
             receive = torch.nonzero(receive_node_local == False, as_tuple=False).squeeze() # only the received nodes are not in local
-            receive_list[device_id].append(receive)
+            receive_list[device_id].append(receive.view(-1))
 
             # send
             edge_source_remote_mask = remote_node_mask[edge_source] # check each source node whether it belongs to other devices
             need_send_nodes = torch.unique(edge_target[edge_source_remote_mask]) # get the target nodes with the source nodes belong to other devices
             send_node_local = local_node_mask[need_send_nodes] # check whether the send nodes in local?
             send = torch.nonzero(send_node_local == True, as_tuple=False).squeeze() # only the send nodes are in local
-            send_list[device_id].append(send)
+            send_list[device_id].append(send.view(-1))
     
     return receive_list, send_list
 
@@ -87,8 +87,8 @@ def RNN_comm_nodes(nodes_list, num_devices, workloads_GCN, workloads_RNN):
             # send: RNN false and GCN true
             send = torch.nonzero(RNN_false_GCN_mask == True, as_tuple=False).squeeze()
 
-            receive_list[device_id].append(receive)
-            send_list[device_id].append(send)
+            receive_list[device_id].append(receive.view(-1))
+            send_list[device_id].append(send.view(-1))
     
     return receive_list, send_list
 
@@ -170,8 +170,8 @@ class node_partition():
         # print(GCN_receive_list)
         GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
 
-        GCN_receive = [torch.cat(GCN_receive_list[i].view(-1), 0).size(0) for i in range(self.num_devices)]
-        GCN_send = [torch.cat(GCN_send_list[i].view(-1), 0).size(0) for i in range(self.num_devices)]
+        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
         RNN_receive = [0 for i in range(self.num_devices)]
         RNN_send = [0 for i in range(self.num_devices)]
 
