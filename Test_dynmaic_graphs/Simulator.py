@@ -170,8 +170,8 @@ class node_partition():
         # print(GCN_receive_list)
         GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
 
-        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
-        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+        GCN_receive = [torch.cat(GCN_receive_list[i].view(-1), 0).size(0) for i in range(self.num_devices)]
+        GCN_send = [torch.cat(GCN_send_list[i].view(-1), 0).size(0) for i in range(self.num_devices)]
         RNN_receive = [0 for i in range(self.num_devices)]
         RNN_send = [0 for i in range(self.num_devices)]
 
