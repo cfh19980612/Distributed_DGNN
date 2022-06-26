@@ -408,7 +408,19 @@ if __name__ == '__main__':
     time_steps = len(Num_nodes)
     nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
     print('Generate nodes list!')
-    adjs_list = [torch.tensor(adj.todense()).to_sparse() for adj in adj_matrices]
+    adjs_list = []
+    for i in range(len(adj_matrices)):
+        values = adj_matrices[i].data
+        indices = np.vstack((adj_matrices[i].row, adj_matrices[i].col))
+
+        i = torch.LongTensor(indices)
+        v = torch.FloatTensor(values)
+        shape = adj_matrices[i].shape
+
+        adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
+        adjs_list.append(adj_tensor_sp)
+    
+    [torch.tensor(adj.todense()).to_sparse() for adj in adj_matrices]
     print('Generate data!')
     node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=10)
     node_partition_obj.communication_time()
