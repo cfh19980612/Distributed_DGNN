@@ -297,7 +297,7 @@ class hybrid_partition():
         '''
         partition_method = [0 for i in range(self.num_devices)] # 0: node partition; 1: snapshot partition
         for i in range(self.num_devices):
-            if i >= (self.num_devices // 2)+1:
+            if i >= (self.num_devices // 2)+2:
                 partition_method[i] = 1 # snapshot partition
         
         # STEP 1: the same RNN workloads
@@ -462,7 +462,7 @@ if __name__ == '__main__':
     
     print('Generate data!')
     GCN_node_size = feats[0].size(0)*32
-    RNN_node_size = 128*32
+    RNN_node_size = 1024*32
 
     node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
     node_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
