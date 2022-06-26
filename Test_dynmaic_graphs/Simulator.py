@@ -403,6 +403,7 @@ if __name__ == '__main__':
     # nodes_list, adjs_list = generate_test_graph()
 
     _, graphs, adj_matrices, feats, _ = load_graphs(args)
+    print('Generate graphs!')
     Num_nodes = args['nodes_info']
     time_steps = len(Num_nodes)
     nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
