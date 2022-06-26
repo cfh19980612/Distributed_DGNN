@@ -367,14 +367,14 @@ class hybrid_partition():
         GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
         RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
         GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
-        Total_time = max(GPU_total_time)
+        # Total_time = max(GPU_total_time)
 
         print('----------------------------------------------------------')
         print('Hybrid partition method:')
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
-        print('Total communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time))
+        print('Total communication time: {} ( GCN: {} | RNN: {})'.format(max(GPU_total_time), max(GCN_comm_time), max(RNN_comm_time)))
 
         # print('GCN| receive time: {} | send time: {}'.format(GCN_receive_comm_time, GCN_send_comm_time))
         # print('RNN| receive time: {} | send time: {}'.format(RNN_receive_comm_time, RNN_send_comm_time))
