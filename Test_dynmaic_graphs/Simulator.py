@@ -101,7 +101,7 @@ def Comm_time(num_devices, receive_list, send_list, node_size, bandwidth):
         total_nodes = 0
         for receive in receive_list[device_id]:
             total_nodes += receive.size(0)
-        receive_comm_time[device_id] += float(total_nodes*node_size)/bandwidth
+        receive_comm_time[device_id] += np.around(float(total_nodes*node_size)/bandwidth, 3)
 
         # send
         total_nodes = 0
