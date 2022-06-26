@@ -366,7 +366,7 @@ class hybrid_partition():
 
         GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
         RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
-        GPU_total_time = [GCN_comm_time[i], RNN_comm_time[i] for i in range(len(GCN_comm_time))]
+        GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
         Total_time = max(GPU_total_time)
 
         print('----------------------------------------------------------')
