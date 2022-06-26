@@ -61,7 +61,7 @@ from datetime import datetime, timedelta
 collect data from 'START_DATE' and ends to 'END_DATE'.
 generate a graph per 'SLICE_DAYS'.
 '''
-SLICE_DAYS = 25
+SLICE_DAYS = 10
 START_DATE = min(ts) + timedelta(10)
 END_DATE = min(ts) + timedelta(500)
 # END_DATE = max(ts)
