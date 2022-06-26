@@ -410,6 +410,7 @@ if __name__ == '__main__':
     print('Generate nodes list!')
     adjs_list = []
     for i in range(len(adj_matrices)):
+        print(type(adj_matrices[i]))
         values = adj_matrices[i].data
         indices = np.vstack((adj_matrices[i].row, adj_matrices[i].col))
 
@@ -420,7 +421,6 @@ if __name__ == '__main__':
         adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
         adjs_list.append(adj_tensor_sp)
     
-    [torch.tensor(adj.todense()).to_sparse() for adj in adj_matrices]
     print('Generate data!')
     node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=10)
     node_partition_obj.communication_time()
