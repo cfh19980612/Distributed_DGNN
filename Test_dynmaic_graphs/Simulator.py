@@ -410,13 +410,14 @@ if __name__ == '__main__':
     print('Generate nodes list!')
     adjs_list = []
     for i in range(len(adj_matrices)):
-        print(type(adj_matrices[i]))
-        values = adj_matrices[i].data
-        indices = np.vstack((adj_matrices[i].row, adj_matrices[i].col))
+        # print(type(adj_matrices[i]))
+        adj_coo = adj_matrices[i].tocoo()
+        values = adj_coo.data
+        indices = np.vstack((adj_coo.row, adj_coo.col))
 
         i = torch.LongTensor(indices)
         v = torch.FloatTensor(values)
-        shape = adj_matrices[i].shape
+        shape = adj_coo.shape
 
         adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
         adjs_list.append(adj_tensor_sp)
