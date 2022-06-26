@@ -359,6 +359,19 @@ class hybrid_partition():
         GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, node_size)
         RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, node_size)
 
+        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_receive = [torch.cat(RNN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+
+        # GCN
+        print('----------------------------------------------------------')
+        print('Hybrid partition method:')
+        print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
+        print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
+        print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format())
+        print('Total communication time: {} ( GCN: {} | RNN: {})'.format())
+
         print('GCN| receive time: {} | send time: {}'.format(GCN_receive_comm_time, GCN_send_comm_time))
         print('RNN| receive time: {} | send time: {}'.format(RNN_receive_comm_time, RNN_send_comm_time))
 
@@ -394,13 +407,14 @@ if __name__ == '__main__':
     time_steps = len(Num_nodes)
     nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
     adjs_list = [torch.tensor(adj.todense()).to_sparse() for adj in adj_matrices]
-    node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=3)
+    print('Generate data!')
+    node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=10)
     node_partition_obj.communication_time()
 
-    snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=3)
+    snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=10)
     snapshot_partition_obj.communication_time()
 
-    hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=3)
+    hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=10)
     hybrid_partition_obj.communication_time()
     # print(node_partition_obj.workload[0])
 
