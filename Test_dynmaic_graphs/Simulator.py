@@ -443,12 +443,14 @@ if __name__ == '__main__':
 
     _, graphs, adj_matrices, feats, _ = load_graphs(args)
     # print('Generate graphs!')
+    graphs = graphs[0:80]
+
     Num_nodes = args['nodes_info']
-    time_steps = len(Num_nodes)
+    time_steps = len(graphs)
     nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
     # print('Generate nodes list!')
     adjs_list = []
-    for i in range(len(adj_matrices)):
+    for i in range(time_steps):
         # print(type(adj_matrices[i]))
         adj_coo = adj_matrices[i].tocoo()
         values = adj_coo.data
