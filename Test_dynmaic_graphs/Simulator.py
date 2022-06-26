@@ -407,6 +407,7 @@ if __name__ == '__main__':
     Num_nodes = args['nodes_info']
     time_steps = len(Num_nodes)
     nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
+    print('Generate nodes list!')
     adjs_list = [torch.tensor(adj.todense()).to_sparse() for adj in adj_matrices]
     print('Generate data!')
     node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=10)
