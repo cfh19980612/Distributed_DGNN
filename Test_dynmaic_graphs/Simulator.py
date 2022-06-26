@@ -462,13 +462,13 @@ if __name__ == '__main__':
     RNN_node_size = 128*32
 
     node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=3)
-    node_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+    node_partition_obj.communication_time(RNN_node_size, RNN_node_size, bandwidth_1MB)
 
     snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=3)
-    snapshot_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+    snapshot_partition_obj.communication_time(RNN_node_size, RNN_node_size, bandwidth_1MB)
 
     hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=3)
-    hybrid_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+    hybrid_partition_obj.communication_time(RNN_node_size, RNN_node_size, bandwidth_1MB)
     # print(node_partition_obj.workload[0])
 
     # _, graphs, adj_matrices, feats, _ = load_graphs(args)
