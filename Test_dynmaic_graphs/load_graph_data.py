@@ -129,7 +129,7 @@ def load_graphs(args):
         graph_id: which graphs should be loaded
     """
     dataset_name = args['dataset']
-    time_steps = args['time_steps']
+    # time_steps = args['time_steps']
     features = args['featureless']
 
     new_graphs = []
@@ -146,7 +146,7 @@ def load_graphs(args):
     # return 0
 
     time_steps = len(graphs)
-    args['time_steps'] = len(graphs)
+    # args['time_steps'] = len(graphs)
     # graphs = graphs[1:]
 
     # get num of nodes for each snapshot
