@@ -443,10 +443,10 @@ if __name__ == '__main__':
     # validation
     # nodes_list, adjs_list = generate_test_graph()
 
-    _, graphs, adj_matrices, feats, _ = load_graphs(args)
+    _, graph, adj_matrices, feats, _ = load_graphs(args)
     # print('Generate graphs!')
-    start = len(graphs) - args['time_steps']
-    graphs = graphs[start:]
+    start = len(graph) - args['time_steps']
+    graphs = graph[start:]
 
     Num_nodes = args['nodes_info']
     time_steps = len(graphs)
