@@ -445,7 +445,7 @@ if __name__ == '__main__':
 
     _, graphs, adj_matrices, feats, _ = load_graphs(args)
     # print('Generate graphs!')
-    graphs = graphs[8:]
+    graphs = graphs[78:]
 
     Num_nodes = args['nodes_info']
     time_steps = len(graphs)
