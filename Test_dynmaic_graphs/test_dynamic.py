@@ -504,7 +504,7 @@ if __name__ == '__main__':
     Num_max_edges, Num_average_edges, avarage_degree_per_snap = stat_age_difference(graphs_new)
     print('Number of edges per age node (max degree across snapshots)', Num_max_edges)
     print('Number of edges per age node (avg degree across snapshots)', Num_average_edges)
-    print('Number of average degree in different snapshots', avarage_degree_per_snap)
+    print('Number of average degree in different snapshots', avarage_degree_per_snap[0], avarage_degree_per_snap[19], avarage_degree_per_snap[39], avarage_degree_per_snap[59])
 
     # num_epochs = 1
     # GCN_time = [[] for j in range(len(graphs_new))]
