@@ -198,14 +198,20 @@ all_nodes = list(set(all_nodes))
 Links=[]
 Nodes = []
 Differences = []
+Nodes_add = []
 for i in range (len(slices_links_remap)):
     Nodes.append(len(slices_links[i].nodes()))
     Links.append(len(slices_links[i].edges()))
+    if i ==0:
+        Nodes_add.append(len(slices_links[i].nodes()))
+    else:
+        Nodes_add.append(len(slices_links[i].nodes()) - len(slices_links[i-1].nodes()))
     # temp = []
     # for j in range (len(slices_links_remap)):
     #     temp.append(comparison(slices_links[i], slices_links[j], all_nodes))
     # Differences.append(temp)
 print(Links,Nodes)
+print("Nodes dynamicity: ", Nodes_add)
 
 print('average nodes: {}; average edges: {}'.format(np.mean(Nodes), np.mean(Links)))
 np.savez(save_graph_path, graph=slices_links_remap)  # graph为字典的key
