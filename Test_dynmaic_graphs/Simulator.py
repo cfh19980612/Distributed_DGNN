@@ -486,10 +486,10 @@ class divide_and_conquer():
 
         for idx in range(len(P_id)): # schedule snapshot-level job
             Load = []
-            for m in self.num_devices:
+            for m in range(self.num_devices):
                 Load.append(1 - float((Current_GCN_workload[m]+P_workload[idx])/GCN_avg_workload))
             select_m = Load.index(max(Load))
-            for m in self.num_devices:
+            for m in range(self.num_devices):
                 if m == select_m:
                     Node_start_idx = self.nodes_list[idx].size(0) - P_workload[idx]
                     workload = torch.full_like(self.nodes_list[idx][Node_start_idx:], True, dtype=torch.bool)
@@ -505,10 +505,10 @@ class divide_and_conquer():
 
         for idx in range(len(Q_id)):
             Load = []
-            for m in self.num_devices:
+            for m in range(self.num_devices):
                 Load.append(1 - float((Current_RNN_workload[m] + Q_workload[idx])/RNN_avg_workload))
             select_m = Load.index(max(Load))
-            for m in self.num_devices:
+            for m in range(self.num_devices):
                 if m == select_m:
                     for time in range(self.timesteps)[Q_id[idx]:]:
                         self.workloads_GCN[m][time][Q_node_id[idx]] = True
