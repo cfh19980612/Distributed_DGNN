@@ -499,7 +499,9 @@ class divide_and_conquer():
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
                 #     self.workloads_RNN[select_m].append(workload)
-        
+        print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
+        print('RNN workload after scheduling timeseries-level jobs: ', self.workloads_RNN)
+
         for idx in range(len(Q_id)):
             Load = []
             for m in self.num_devices:
