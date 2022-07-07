@@ -495,7 +495,7 @@ class divide_and_conquer():
                     workload = torch.full_like(self.nodes_list[P_id[idx]][Node_start_idx:], True, dtype=torch.bool)
                     self.workloads_GCN[select_m][P_id[idx]][Node_start_idx:] = workload
                     self.workloads_RNN[select_m][P_id[idx]][Node_start_idx:] = workload
-                    Scheduled_workload[idx][Node_start_idx:] = workload
+                    # Scheduled_workload[idx][Node_start_idx:] = workload
                 # else:
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
@@ -513,7 +513,7 @@ class divide_and_conquer():
                     for time in range(self.timesteps)[Q_id[idx]:]:
                         print(self.workloads_GCN[m][time])
                         self.workloads_GCN[m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
-                        Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                        # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
 
 
 import time
