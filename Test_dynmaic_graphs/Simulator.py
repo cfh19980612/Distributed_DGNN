@@ -489,13 +489,13 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_GCN_workload[m]+P_workload[idx])/GCN_avg_workload))
             select_m = Load.index(max(Load))
-            for m in range(self.num_devices):
-                if m == select_m:
-                    Node_start_idx = self.nodes_list[P_id[idx]].size(0) - P_workload[idx]
-                    workload = torch.full_like(self.nodes_list[P_id[idx]][Node_start_idx:], True, dtype=torch.bool)
-                    self.workloads_GCN[select_m][P_id[idx]][Node_start_idx:] = workload
-                    self.workloads_RNN[select_m][P_id[idx]][Node_start_idx:] = workload
-                    Current_GCN_workload[m] = Current_GCN_workload[m]+P_workload[idx]
+            # for m in range(self.num_devices):
+            #     if m == select_m:
+            Node_start_idx = self.nodes_list[P_id[idx]].size(0) - P_workload[idx]
+            workload = torch.full_like(self.nodes_list[P_id[idx]][Node_start_idx:], True, dtype=torch.bool)
+            self.workloads_GCN[select_m][P_id[idx]][Node_start_idx:] = workload
+            self.workloads_RNN[select_m][P_id[idx]][Node_start_idx:] = workload
+            Current_GCN_workload[select_m] = Current_GCN_workload[select_m]+P_workload[idx]
                     # Scheduled_workload[idx][Node_start_idx:] = workload
                 # else:
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
@@ -509,12 +509,13 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_RNN_workload[m] + Q_workload[idx])/RNN_avg_workload))
             select_m = Load.index(max(Load))
-            for m in range(self.num_devices):
-                if m == select_m:
-                    for time in range(self.timesteps)[Q_id[idx]:]:
-                        # print(self.workloads_GCN[m][time])
-                        self.workloads_GCN[m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
-                        # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+            # for m in range(self.num_devices):
+            #     if m == select_m:
+            for time in range(self.timesteps)[Q_id[idx]:]:
+                # print(self.workloads_GCN[m][time])
+                self.workloads_GCN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+            Current_RNN_workload[m] = Current_RNN_workload[m] + Q_workload[idx]
 
 
 import time
