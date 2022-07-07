@@ -447,6 +447,7 @@ class divide_and_conquer():
         Step 2: divide nodes into different job set according to the degree and time-series length
         '''
         Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        Total_workload_tenp = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
         P_id = [] # save the snapshot id
         Q_id = []
         Q_node_id = []
@@ -469,7 +470,7 @@ class divide_and_conquer():
                     Q_workload.append(self.timesteps - time)
                 # update following snapshots
                 for k in range(self.timesteps)[time:]:
-                    Total_workload[k] = Total_workload[k][Total_workload[time].size(0):]
+                    Total_workload[k] = Total_workload_tenp[k][Total_workload[time].size(0):]
         return P_id, Q_id, Q_node_id, P_workload, Q_workload
     
     def conquer(self, P_id, Q_id, Q_node_id, P_workload, Q_workload):
