@@ -18,7 +18,7 @@ bandwidth_GB = float(1024*1024*1024*8)
 
 
 def generate_test_graph():
-    num_snapshots = 7
+    num_snapshots = 3
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
     adjs_list = [torch.ones(nodes_list[i].size(0), nodes_list[i].size(0)).to_sparse() for i in range(num_snapshots)]
 
@@ -530,7 +530,7 @@ if __name__ == '__main__':
                         help='generate feature with one-hot encoding')
     parser.add_argument('--time_steps', type=int, nargs='?', default=8,
                     help="total time steps used for train, eval and test")
-    parser.add_argument('--world_size', type=int, default=1,
+    parser.add_argument('--world_size', type=int, default=2,
                         help='method for DGNN training')
     parser.add_argument('--gate', type=bool, default=False,
                         help='method for DGNN training')
