@@ -491,7 +491,7 @@ class divide_and_conquer():
             select_m = Load.index(max(Load))
             for m in range(self.num_devices):
                 if m == select_m:
-                    Node_start_idx = self.nodes_list[idx].size(0) - P_workload[idx]
+                    Node_start_idx = self.nodes_list[P_id[idx]].size(0) - P_workload[idx]
                     workload = torch.full_like(self.nodes_list[idx][Node_start_idx:], True, dtype=torch.bool)
                     self.workloads_GCN[select_m][P_id[idx]][Node_start_idx:] = workload
                     self.workloads_RNN[select_m][P_id[idx]][Node_start_idx:] = workload
