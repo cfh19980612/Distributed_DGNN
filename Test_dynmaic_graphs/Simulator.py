@@ -1,8 +1,10 @@
+from select import select
 import scipy
 import numpy as np
 import scipy.sparse as sp
 import argparse
 import torch
+import networkx as nx
 
 from load_graph_data import load_graphs
 
@@ -16,7 +18,7 @@ bandwidth_GB = float(1024*1024*1024*8)
 
 
 def generate_test_graph():
-    num_snapshots = 3
+    num_snapshots = 5
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
     adjs_list = [torch.ones(nodes_list[i].size(0), nodes_list[i].size(0)).to_sparse() for i in range(num_snapshots)]
 
@@ -416,6 +418,97 @@ class hybrid_partition():
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
         print('Total communication time: {}'.format(max(GPU_total_time)))
 
+class divide_and_conquer():
+    def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
+        super(hybrid_partition, self).__init__()
+        self.args = args
+        self.nodes_list = nodes_list
+        self.adjs_list = adjs_list
+        self.num_devices = num_devices
+        self.graphs = graphs
+        self.timesteps = len(nodes_list)
+        self.workloads_GCN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+        self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+
+        # parameters
+        alpha = 1
+
+        # runtime
+        P_id, Q_id, Q_node_id, P_workload, Q_workload = self.divide()
+        print('P_id: ',P_id)
+        print('Q_id: ',Q_id)
+        print('Q_node_id: ',Q_node_id)
+        print('P_workload: ',P_workload)
+        print('Q_workload: ',Q_workload)
+
+    def divide(self):
+        '''
+        Step 1: compute the average degree of each snapshots
+        Step 2: divide nodes into different job set according to the degree and time-series length
+        '''
+        Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        P_id = [] # save the snapshot id
+        Q_id = []
+        Q_node_id = []
+        P_workload = [] # save the workload size
+        Q_workload = []
+        Degree = []
+        for time in range(self.timesteps):
+            # compute average degree of the graphs
+            Degree_list = list(dict(nx.degree(self.graphs[time])).values())
+            avg_deg = np.mean(Degree_list)
+            Degree.append(avg_deg)
+            if avg_deg > self.alpha*(self.timesteps - time): # GCN-sensitive job
+                P_id.append(time)
+                P_workload.append(Total_workload[time].size(0))
+            else:                                            # RNN-sensitive job
+                for node in range(Total_workload[time].size(0)):
+                    Q_id.append(time)
+                    divided_nodes = self.nodes_list[time].size(0) - Total_workload[time].size(0)
+                    Q_node_id.append(node + divided_nodes)
+                    Q_workload.append(self.timesteps - time)
+                # update following snapshots
+                for k in range(self.timesteps)[time:]:
+                    Total_workload[k] = Total_workload[k][Total_workload[time].size(0):]
+        return P_id, Q_id, Q_node_id, P_workload, Q_workload
+    
+    def conquer(self, P_id, Q_id, Q_node_id, P_workload, Q_workload):
+        Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
+        Current_GCN_workload = [0 for i in range(self.num_devices)]
+        Current_RNN_workload = [0 for i in range(self.num_devices)]
+        # compute the average workload
+        GCN_avg_workload = np.sum(P_workload)/self.num_devices
+        RNN_avg_workload = np.sum(Q_workload)/self.num_devices
+
+        for idx in range(len(P_id)): # schedule snapshot-level job
+            Load = []
+            for m in self.num_devices:
+                Load.append(1 - float((Current_GCN_workload[m]+P_workload[idx])/GCN_avg_workload))
+            select_m = Load.index(max(Load))
+            for m in self.num_devices:
+                if m == select_m:
+                    Node_start_idx = self.nodes_list[idx].size(0) - P_workload[idx]
+                    workload = torch.full_like(self.nodes_list[idx][Node_start_idx:], True, dtype=torch.bool)
+                    self.workloads_GCN[select_m][Node_start_idx:] = workload
+                    self.workloads_RNN[select_m][Node_start_idx:] = workload
+                    Scheduled_workload[idx][Node_start_idx:] = workload
+                # else:
+                #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
+                #     self.workloads_GCN[select_m].append(workload)
+                #     self.workloads_RNN[select_m].append(workload)
+        
+        for idx in range(len(Q_id)):
+            Load = []
+            for m in self.num_devices:
+                Load.append(1 - float((Current_RNN_workload[m] + Q_workload[idx])/RNN_avg_workload))
+            select_m = Load.index(max(Load))
+            for m in self.num_devices:
+                if m == select_m:
+                    for time in range(self.timesteps)[Q_id[idx]:]:
+                        self.workloads_GCN[m][time][Q_node_id[idx]] = True
+                        Scheduled_workload[time][Q_node_id[idx]] = True
+
+
 import time
 
 if __name__ == '__main__':
@@ -440,55 +533,50 @@ if __name__ == '__main__':
                     help='How to partition the graph data')
     args = vars(parser.parse_args())
 
-    # validation
-    # nodes_list, adjs_list = generate_test_graph()
+    # # validation
+    nodes_list, adjs_list = generate_test_graph()
+    graphs = [nx.complete_graph(nodes_list[i].size(0)) for i in range(len(nodes_list))]
 
-    _, graph, adj_matrices, feats, _ = load_graphs(args)
-    # print('Generate graphs!')
-    start = len(graph) - args['time_steps']
-    # print(len(graph), args['time_steps'], start)
-    graphs = graph[start:]
+    # _, graph, adj_matrices, feats, _ = load_graphs(args)
+    # # print('Generate graphs!')
+    # start = len(graph) - args['time_steps']
+    # # print(len(graph), args['time_steps'], start)
+    # graphs = graph[start:]
 
-    Num_nodes = args['nodes_info']
-    time_steps = len(graphs)
-    nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
-    # print('Generate nodes list!')
-    adjs_list = []
-    for i in range(time_steps):
-        # print(type(adj_matrices[i]))
-        adj_coo = adj_matrices[i].tocoo()
-        values = adj_coo.data
-        indices = np.vstack((adj_coo.row, adj_coo.col))
+    # Num_nodes = args['nodes_info']
+    # time_steps = len(graphs)
+    # nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
+    # # print('Generate nodes list!')
+    # adjs_list = []
+    # for i in range(time_steps):
+    #     # print(type(adj_matrices[i]))
+    #     adj_coo = adj_matrices[i].tocoo()
+    #     values = adj_coo.data
+    #     indices = np.vstack((adj_coo.row, adj_coo.col))
 
-        i = torch.LongTensor(indices)
-        v = torch.FloatTensor(values)
-        shape = adj_coo.shape
+    #     i = torch.LongTensor(indices)
+    #     v = torch.FloatTensor(values)
+    #     shape = adj_coo.shape
 
-        adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
-        adjs_list.append(adj_tensor_sp)
+    #     adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
+    #     adjs_list.append(adj_tensor_sp)
     
-    print('Number of graphs: ', len(graphs))
-    GCN_node_size = feats[0].size(0)*32
-    RNN_node_size = 256*32
+    # print('Number of graphs: ', len(graphs))
+    # GCN_node_size = feats[0].size(0)*32
+    # RNN_node_size = 256*32
 
-    node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
-    node_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+    # node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    # node_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
-    snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
-    snapshot_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+    # snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    # snapshot_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
-    hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
-    hybrid_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
-    # print(node_partition_obj.workload[0])
+    # hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    # hybrid_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
-    # _, graphs, adj_matrices, feats, _ = load_graphs(args)
-    # print('Graph nodes information: ',args['nodes_info'])
-    # print('Graph edges information: ',args['edges_info'])
-    # print('feature demension is ', feats[0].shape)
+    proposed_partition_obj = divide_and_conquer(args, nodes_list, adjs_list, num_devices=args['world_size'])
 
-    # # graphs = graphs[:2]
-    # print('Converting graphs to specific framework!')
-    # graphs_new = convert_graphs(graphs, adj_matrices, feats, 'dgl')
+
 
 
 
