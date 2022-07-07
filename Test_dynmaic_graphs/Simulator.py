@@ -501,7 +501,7 @@ class divide_and_conquer():
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
                 #     self.workloads_RNN[select_m].append(workload)
-        print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
+        # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
         for idx in range(len(Q_id)):
             Load = []
@@ -516,7 +516,34 @@ class divide_and_conquer():
                 # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
             Current_GCN_workload[select_m] = Current_GCN_workload[select_m] + Q_workload[idx]
 
-        print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
+        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
+
+    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
+        '''
+        Both GCN communication time and RNN communication time are needed
+        '''
+        GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
+        RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+
+        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
+        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
+
+        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_receive = [torch.cat(RNN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+
+        GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
+        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
+        GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
+        # Total_time = max(GPU_total_time)
+
+        print('----------------------------------------------------------')
+        print('Divide-conquer partition method:')
+        print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
+        print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
+        print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
+        print('Total communication time: {}'.format(max(GPU_total_time)))
 
 import time
 
@@ -574,16 +601,19 @@ if __name__ == '__main__':
     # GCN_node_size = feats[0].size(0)*32
     # RNN_node_size = 256*32
 
-    # node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
-    # node_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+    GCN_node_size = 256
+    RNN_node_size = 128
+    node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    node_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
-    # snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
-    # snapshot_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+    snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    snapshot_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
     # hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
     # hybrid_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
     proposed_partition_obj = divide_and_conquer(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+    proposed_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
 
 
