@@ -420,7 +420,7 @@ class hybrid_partition():
 
 class divide_and_conquer():
     def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
-        super(hybrid_partition, self).__init__()
+        super(divide_and_conquer, self).__init__()
         self.args = args
         self.nodes_list = nodes_list
         self.adjs_list = adjs_list
