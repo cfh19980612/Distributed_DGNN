@@ -495,6 +495,7 @@ class divide_and_conquer():
                     workload = torch.full_like(self.nodes_list[P_id[idx]][Node_start_idx:], True, dtype=torch.bool)
                     self.workloads_GCN[select_m][P_id[idx]][Node_start_idx:] = workload
                     self.workloads_RNN[select_m][P_id[idx]][Node_start_idx:] = workload
+                    Current_GCN_workload[m] = Current_GCN_workload[m]+P_workload[idx]
                     # Scheduled_workload[idx][Node_start_idx:] = workload
                 # else:
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
