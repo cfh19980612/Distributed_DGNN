@@ -572,8 +572,8 @@ if __name__ == '__main__':
     # # validation
     nodes_list, adjs_list = generate_test_graph()
     graphs = [nx.complete_graph(nodes_list[i].size(0)) for i in range(len(nodes_list))]
-    GCN_node_size = 256
-    RNN_node_size = 128
+    GCN_node_size = 25600
+    RNN_node_size = 12800
 
     # _, graph, adj_matrices, feats, _ = load_graphs(args)
     # # print('Generate graphs!')
