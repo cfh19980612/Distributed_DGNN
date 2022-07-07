@@ -563,7 +563,7 @@ if __name__ == '__main__':
                         help='method for DGNN training')
     parser.add_argument('--gate', type=bool, default=False,
                         help='method for DGNN training')
-    parser.add_argument('--dataset', type=str, default='Enron',
+    parser.add_argument('--dataset', type=str, default='Epinion',
                         help='method for DGNN training')
     parser.add_argument('--partition', type=str, nargs='?', default="Time",
                     help='How to partition the graph data')
