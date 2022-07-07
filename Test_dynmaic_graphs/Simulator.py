@@ -569,40 +569,40 @@ if __name__ == '__main__':
                     help='How to partition the graph data')
     args = vars(parser.parse_args())
 
-    # # # validation
-    # nodes_list, adjs_list = generate_test_graph()
-    # graphs = [nx.complete_graph(nodes_list[i].size(0)) for i in range(len(nodes_list))]
+    # # validation
+    nodes_list, adjs_list = generate_test_graph()
+    graphs = [nx.complete_graph(nodes_list[i].size(0)) for i in range(len(nodes_list))]
+    GCN_node_size = 256
+    RNN_node_size = 128
 
-    _, graph, adj_matrices, feats, _ = load_graphs(args)
-    # print('Generate graphs!')
-    start = len(graph) - args['time_steps']
-    # print(len(graph), args['time_steps'], start)
-    graphs = graph[start:]
+    # _, graph, adj_matrices, feats, _ = load_graphs(args)
+    # # print('Generate graphs!')
+    # start = len(graph) - args['time_steps']
+    # # print(len(graph), args['time_steps'], start)
+    # graphs = graph[start:]
 
-    Num_nodes = args['nodes_info']
-    time_steps = len(graphs)
-    nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
-    # print('Generate nodes list!')
-    adjs_list = []
-    for i in range(time_steps):
-        # print(type(adj_matrices[i]))
-        adj_coo = adj_matrices[i].tocoo()
-        values = adj_coo.data
-        indices = np.vstack((adj_coo.row, adj_coo.col))
+    # Num_nodes = args['nodes_info']
+    # time_steps = len(graphs)
+    # nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(time_steps)]
+    # # print('Generate nodes list!')
+    # adjs_list = []
+    # for i in range(time_steps):
+    #     # print(type(adj_matrices[i]))
+    #     adj_coo = adj_matrices[i].tocoo()
+    #     values = adj_coo.data
+    #     indices = np.vstack((adj_coo.row, adj_coo.col))
 
-        i = torch.LongTensor(indices)
-        v = torch.FloatTensor(values)
-        shape = adj_coo.shape
+    #     i = torch.LongTensor(indices)
+    #     v = torch.FloatTensor(values)
+    #     shape = adj_coo.shape
 
-        adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
-        adjs_list.append(adj_tensor_sp)
+    #     adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
+    #     adjs_list.append(adj_tensor_sp)
     
-    print('Number of graphs: ', len(graphs))
-    GCN_node_size = feats[0].size(0)*32
-    RNN_node_size = 256*32
+    # print('Number of graphs: ', len(graphs))
+    # GCN_node_size = feats[0].size(0)*32
+    # RNN_node_size = 256*32
 
-    # GCN_node_size = 256
-    # RNN_node_size = 128
     node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
     node_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
