@@ -183,7 +183,7 @@ class node_partition():
         # Total_time = max(GPU_total_time)
 
         print('----------------------------------------------------------')
-        print('Hybrid partition method:')
+        print('Node-level partition method:')
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
@@ -269,7 +269,7 @@ class snapshot_partition():
         # Total_time = max(GPU_total_time)
 
         print('----------------------------------------------------------')
-        print('Hybrid partition method:')
+        print('Snapshot-level partition method:')
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
@@ -431,7 +431,7 @@ class divide_and_conquer():
         self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
 
         # parameters
-        self.alpha = 1
+        self.alpha = 0.5
 
         # runtime
         P_id, Q_id, Q_node_id, P_workload, Q_workload = self.divide()
