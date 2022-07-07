@@ -471,7 +471,7 @@ class divide_and_conquer():
                 # update following snapshots
                 for k in range(self.timesteps)[time+1:]:
                     update_size = Total_workload[time].size(0)
-                    Total_workload[k] = Total_workload_temp[k][update_size:]
+                    Total_workload[k] = Total_workload[k][update_size:]
 
         return P_id, Q_id, Q_node_id, P_workload, Q_workload
     
