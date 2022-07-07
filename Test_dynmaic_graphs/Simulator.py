@@ -511,8 +511,8 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 if m == select_m:
                     for time in range(self.timesteps)[Q_id[idx]:]:
-                        self.workloads_GCN[m][time][Q_node_id[idx]] = True
-                        Scheduled_workload[time][Q_node_id[idx]] = True
+                        self.workloads_GCN[m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                        Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
 
 
 import time
