@@ -18,7 +18,7 @@ bandwidth_GB = float(1024*1024*1024*8)
 
 
 def generate_test_graph():
-    num_snapshots = 5
+    num_snapshots = 7
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
     adjs_list = [torch.ones(nodes_list[i].size(0), nodes_list[i].size(0)).to_sparse() for i in range(num_snapshots)]
 
@@ -471,10 +471,7 @@ class divide_and_conquer():
                 # update following snapshots
                 for k in range(self.timesteps)[time+1:]:
                     update_size = Total_workload[time].size(0)
-                    print('update: ', k)
-                    print('before update: ',Total_workload[k].size(0))
                     Total_workload[k] = Total_workload_temp[k][update_size:]
-                    print('after update: ',Total_workload[k].size(0))
 
         return P_id, Q_id, Q_node_id, P_workload, Q_workload
     
