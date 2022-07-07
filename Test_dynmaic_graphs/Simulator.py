@@ -446,7 +446,7 @@ class divide_and_conquer():
         Step 1: compute the average degree of each snapshots
         Step 2: divide nodes into different job set according to the degree and time-series length
         '''
-        next_workload = [torch.full_like(self.nodes_list[0], 1)]
+        Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
         Total_workload_temp = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
         P_id = [] # save the snapshot id
         Q_id = []
@@ -454,7 +454,6 @@ class divide_and_conquer():
         P_workload = [] # save the workload size
         Q_workload = []
         Degree = []
-
         for time in range(self.timesteps):
             # compute average degree of the graphs
             Degree_list = list(dict(nx.degree(self.graphs[time])).values())
@@ -462,17 +461,18 @@ class divide_and_conquer():
             Degree.append(avg_deg)
             if avg_deg > self.alpha*(self.timesteps - time): # GCN-sensitive job
                 P_id.append(time)
-                P_workload.append(next_workload[time].size(0))
-                next_workload.append(torch.full_like(self.nodes_list[time+1], 1))
+                P_workload.append(Total_workload[time].size(0))
             else:                                            # RNN-sensitive job
-                for node in range(next_workload[time].size(0)):
+                for node in range(Total_workload[time].size(0)):
                     Q_id.append(time)
-                    divided_nodes = self.nodes_list[time].size(0) - next_workload[time].size(0)
+                    divided_nodes = self.nodes_list[time].size(0) - Total_workload[time].size(0)
                     Q_node_id.append(node + divided_nodes)
                     Q_workload.append(self.timesteps - time)
                 # update following snapshots
                 for k in range(self.timesteps)[time:]:
-                    next_workload.append(Total_workload_temp[k][next_workload[time].size(0):])
+                    print('update: ', k)
+                    Total_workload[k] = Total_workload_temp[k][Total_workload[time].size(0):]
+
         return P_id, Q_id, Q_node_id, P_workload, Q_workload
     
     def conquer(self, P_id, Q_id, Q_node_id, P_workload, Q_workload):
