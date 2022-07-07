@@ -514,7 +514,7 @@ class divide_and_conquer():
                 # print(self.workloads_GCN[m][time])
                 self.workloads_GCN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
                 # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
-            Current_GCN_workload[m] = Current_GCN_workload[m] + Q_workload[idx]
+            Current_GCN_workload[select_m] = Current_GCN_workload[select_m] + Q_workload[idx]
 
         print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
 
