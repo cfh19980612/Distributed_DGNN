@@ -429,7 +429,7 @@ class divide_and_conquer():
         self.timesteps = len(nodes_list)
         self.workloads_GCN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
         self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
-
+        print(self.workloads_GCN)
         # parameters
         self.alpha = 1
 
