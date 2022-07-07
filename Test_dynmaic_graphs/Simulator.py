@@ -574,7 +574,7 @@ if __name__ == '__main__':
     # hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
     # hybrid_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
-    proposed_partition_obj = divide_and_conquer(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    proposed_partition_obj = divide_and_conquer(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
 
 
 
