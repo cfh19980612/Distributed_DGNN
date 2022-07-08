@@ -494,6 +494,7 @@ class divide_and_conquer():
         print('Q_node_id: ',Q_node_id)
         print('P_workload: ',P_workload)
         print('Q_workload: ',Q_workload)
+        print('P_snapshot: ',P_snapshot)
         self.conquer(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
 
     def divide(self):
