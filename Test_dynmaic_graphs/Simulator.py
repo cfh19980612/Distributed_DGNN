@@ -568,7 +568,7 @@ class divide_and_conquer():
     def conquer(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
         Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
         Current_GCN_workload = [0 for i in range(self.num_devices)]
-        Current_RNN_workload = [[0 for i in range(self.timesteps)]for m in range(self.num_devices)]
+        Current_RNN_workload = [[1 for i in range(self.timesteps)]for m in range(self.num_devices)]
         # compute the average workload
         GCN_avg_workload = np.sum(P_workload)/self.num_devices
         RNN_avg_workload = np.sum(Q_workload)/self.num_devices
@@ -579,7 +579,7 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_GCN_workload[m]+P_workload[idx])/GCN_avg_workload))
                 Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
-            result = np.multiply(Load, Cross_edge)
+            result = np.multiply(Load, Cross_edge).to_list()
             select_m = result.index(max(result))
             # for m in range(self.num_devices):
             #     if m == select_m:
