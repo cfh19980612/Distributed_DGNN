@@ -654,7 +654,7 @@ if __name__ == '__main__':
     print('Number of graphs: ', len(graphs))
     print('Number of features: ', feats[0].size(0))
     GCN_node_size = feats[0].size(0)*4
-    RNN_node_size = 256*4
+    RNN_node_size = 2560*4
 
     node_partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
     node_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
