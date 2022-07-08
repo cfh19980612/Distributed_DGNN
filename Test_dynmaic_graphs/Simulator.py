@@ -62,6 +62,7 @@ def GCN_comm_nodes(nodes_list, adjs_list, num_devices, workloads_GCN):
     
     return receive_list, send_list
 
+# GCN workload is the same as the RNN workload
 def RNN_comm_nodes(nodes_list, num_devices, workloads_GCN, workloads_RNN):
     '''
     Compute the communication for RNN processing
@@ -114,6 +115,26 @@ def Comm_time(num_devices, receive_list, send_list, node_size, bandwidth):
         send_comm_time[device_id] += np.around(float(total_nodes*node_size)/bandwidth, 3)
     
     return receive_comm_time, send_comm_time
+
+# GCN workload is different from the RNN workload
+def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
+    '''
+    Step 1: generate the required nodes list for each device
+    Step 2: compare the required list with the RNN(GCN) workload list to compute the number of received nodes
+    '''
+    Req = [[torch.full_like(nodes_list[time], False, dtype=torch.bool) for time in range(len(nodes_list))] for m in range(num_devices)]
+    for m in range(num_devices):
+        # compute the required node list
+        for time in range(len(workloads_RNN[m])):
+            where_need_comp = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze()
+            print(where_need_comp)
+            for k in range(len(workloads_RNN[m]))[0:time]:
+                Req[m][k][where_need_comp] = torch.ones(where_need_comp, dtype=torch.bool)
+        # remove already owned nodes
+        for time in range(len(workloads_RNN[m])):
+            where_have_nodes = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze()
+            Req[m][k][where_have_nodes] = torch.zeros(where_have_nodes, dtype=torch.bool)
+
 
 class node_partition():
     def __init__(self, args, nodes_list, adjs_list, num_devices):
@@ -522,6 +543,8 @@ class divide_and_conquer():
         '''
         Both GCN communication time and RNN communication time are needed
         '''
+        RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_RNN)
+
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
         RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
 
