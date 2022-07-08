@@ -154,11 +154,11 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
 
             others_need = torch.zeros(nodes_list[time].size(0), dtype=torch.bool)
             for k in range(num_devices):
-                where_other_need = torch.nonzero(Req[k][time] == True, as_tuple=False).squeeze()
+                where_other_need = torch.nonzero(Req[k][time] == True, as_tuple=False).view(-1)
                 others_need[where_other_need] = torch.ones(where_other_need.size(0), dtype=torch.bool)
-            where_have = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze()
+            where_have = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).view(-1)
             send_mask = others_need[where_have]
-            send = torch.nonzero(send_mask == True, as_tuple=False).squeeze()
+            send = torch.nonzero(send_mask == True, as_tuple=False).view(-1)
             send_list[m].append(send.view(-1))
     # print('receive list: ', receive_list)
     # print('send list: ', send_list)
