@@ -158,7 +158,7 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
             where_have = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze()
             send_mask = others_need[where_have]
             send = torch.nonzero(send_mask == True, as_tuple=False).squeeze()
-            send_list.append(send.view(-1))
+            send_list[m].append(send.view(-1))
     print('receive list: ', receive_list)
     print('send list: ', send_list)
 
