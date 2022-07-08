@@ -140,7 +140,7 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
                         Req[m][k][where_need] = torch.ones(where_need.size(0), dtype=torch.bool)
         # remove already owned nodes
         for time in range(len(workloads_RNN[m])):
-            where_have_nodes = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False)
+            where_have_nodes = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).view(-1)
             # print(where_have_nodes)
             if where_have_nodes!= torch.Size([]):
                 print(where_have_nodes)
