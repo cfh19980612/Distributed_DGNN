@@ -129,7 +129,7 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
     for m in range(num_devices):
         # compute the required node list
         for time in range(len(workloads_RNN[m])):
-            where_need_comp = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze().view(-1)
+            where_need_comp = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).view(-1)
             if (where_need_comp.size(0) > 0):
                 for k in range(len(workloads_RNN[m]))[0:time]:
                     idx = torch.tensor([i for i in range(Req[m][k].size(0))])
