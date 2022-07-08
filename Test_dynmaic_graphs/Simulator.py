@@ -579,7 +579,7 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_GCN_workload[m]+P_workload[idx])/GCN_avg_workload))
                 Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
-            result = np.multiply(Load, Cross_edge).to_list()
+            result = np.multiply(Load, Cross_edge).tolist()
             select_m = result.index(max(result))
             # for m in range(self.num_devices):
             #     if m == select_m:
