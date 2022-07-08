@@ -482,8 +482,8 @@ class divide_and_conquer():
         self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
 
         # parameters
-        self.alpha = 0.05
-        # self.alpha = 0.08
+        # self.alpha = 0.05
+        self.alpha = 0.08
         # self.alpha = 0.01
 
         # runtime
