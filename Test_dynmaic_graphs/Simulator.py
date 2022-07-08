@@ -159,8 +159,9 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
             send_mask = others_need[where_have]
             send = torch.nonzero(send_mask == True, as_tuple=False).squeeze()
             send_list[m].append(send.view(-1))
-    print('receive list: ', receive_list)
-    print('send list: ', send_list)
+    # print('receive list: ', receive_list)
+    # print('send list: ', send_list)
+    return receive_list, send_list
 
 
 
@@ -571,10 +572,10 @@ class divide_and_conquer():
         '''
         Both GCN communication time and RNN communication time are needed
         '''
-        RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_RNN)
+        RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_RNN)
 
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
-        RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+        # RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
 
         GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
         RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
