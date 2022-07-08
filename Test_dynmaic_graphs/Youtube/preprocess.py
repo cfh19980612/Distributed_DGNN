@@ -62,7 +62,7 @@ generate a graph per 'SLICE_DAYS'.
 '''
 SLICE_DAYS = 1
 START_DATE = min(ts) + timedelta(10)
-END_DATE = min(ts) + timedelta(20)
+END_DATE = min(ts) + timedelta(80)
 
 print ("Start date", START_DATE)
 print ("End date", END_DATE)
