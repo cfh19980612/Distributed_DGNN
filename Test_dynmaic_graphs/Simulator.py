@@ -483,7 +483,7 @@ class divide_and_conquer():
         # parameters
         # self.alpha = 0.05
         # self.alpha = 0.08
-        self.alpha = 0.01
+        self.alpha = 0.1
 
         # runtime
         P_id, Q_id, Q_node_id, P_workload, Q_workload = self.divide()
