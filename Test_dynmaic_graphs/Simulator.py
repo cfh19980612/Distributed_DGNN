@@ -568,16 +568,19 @@ class divide_and_conquer():
     def conquer(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
         Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
         Current_GCN_workload = [0 for i in range(self.num_devices)]
-        Current_RNN_workload = [0 for i in range(self.num_devices)]
+        Current_RNN_workload = [[0 for i in range(self.timesteps)]for m in range(self.num_devices)]
         # compute the average workload
         GCN_avg_workload = np.sum(P_workload)/self.num_devices
         RNN_avg_workload = np.sum(Q_workload)/self.num_devices
 
         for idx in range(len(P_id)): # schedule snapshot-level job
             Load = []
+            Cross_edge = []
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_GCN_workload[m]+P_workload[idx])/GCN_avg_workload))
-            select_m = Load.index(max(Load))
+                Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
+            result = np.multiply(Load, Cross_edge)
+            select_m = result.index(max(result))
             # for m in range(self.num_devices):
             #     if m == select_m:
             Node_start_idx = self.nodes_list[P_id[idx]].size(0) - P_workload[idx]
@@ -585,6 +588,7 @@ class divide_and_conquer():
             self.workloads_GCN[select_m][P_id[idx]][P_snapshot[idx]] = workload
             self.workloads_RNN[select_m][P_id[idx]][P_snapshot[idx]] = workload
             Current_GCN_workload[select_m] = Current_GCN_workload[select_m]+P_workload[idx]
+            Current_RNN_workload[select_m][P_id[idx]] += 1
                     # Scheduled_workload[idx][Node_start_idx:] = workload
                 # else:
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
