@@ -482,7 +482,7 @@ class divide_and_conquer():
         self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
 
         # parameters
-        self.alpha = 0.05
+        self.alpha = args['alpha']
         # self.alpha = 0.08
         # self.alpha = 0.01
         # self.alpha = 0.1
@@ -660,6 +660,8 @@ if __name__ == '__main__':
                     help='How to partition the graph data')
     parser.add_argument('--real', type=bool, nargs='?', default=True,
                     help='Whether use the real graph')
+    parser.add_argument('--alpha', type=float, nargs='?', default=0.01,
+                    help='alpha')
     args = vars(parser.parse_args())
 
     if args['real'] == False:
