@@ -579,6 +579,8 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_GCN_workload[m]+P_workload[idx])/GCN_avg_workload))
                 Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
+            
+            Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.multiply(Load, Cross_edge).tolist()
             select_m = result.index(max(result))
             # for m in range(self.num_devices):
@@ -666,6 +668,8 @@ if __name__ == '__main__':
                     help='Whether use the real graph')
     parser.add_argument('--alpha', type=float, nargs='?', default=0.01,
                     help='alpha')
+    parser.add_argument('--beta', type=float, nargs='?', default=2,
+                    help='beta')
     args = vars(parser.parse_args())
 
     if args['real'] == False:
