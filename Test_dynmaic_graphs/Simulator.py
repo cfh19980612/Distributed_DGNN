@@ -123,6 +123,9 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
     Step 2: compare the required list with the RNN(GCN) workload list to compute the number of received nodes
     '''
     Req = [[torch.full_like(nodes_list[time], False, dtype=torch.bool) for time in range(len(nodes_list))] for m in range(num_devices)]
+    receive_list = [[] for i in range(num_devices)]
+    send_list = [[] for i in range(num_devices)]
+
     for m in range(num_devices):
         # compute the required node list
         for time in range(len(workloads_RNN[m])):
@@ -132,16 +135,31 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
                     idx = torch.tensor([i for i in range(Req[m][k].size(0))])
                     need_nodes_mask = workloads_RNN[m][time][idx]
                     where_need = torch.nonzero(need_nodes_mask == True, as_tuple=False).squeeze()
-                    print(where_need)
+                    # print(where_need)
                     if (where_need.size(0) > 0):
                         Req[m][k][where_need] = torch.ones(where_need.size(0), dtype=torch.bool)
         # remove already owned nodes
         for time in range(len(workloads_RNN[m])):
             where_have_nodes = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze()
-            print(where_have_nodes)
+            # print(where_have_nodes)
             if (where_have_nodes.size(0) > 0):
                 Req[m][time][where_have_nodes] = torch.zeros(where_have_nodes.size(0), dtype=torch.bool)
-    print(Req)
+    # print(Req)
+    # Compute the number of nodes need to be sent
+    for m in range(num_devices):
+        for time in range(len(nodes_list)):
+            receive = torch.nonzero(Req[m][time] == True, as_tuple=False).squeeze()
+            receive_list[m].append(receive.view(-1))
+
+            others_need = torch.zeros(nodes_list[time].size(0), dtype=torch.bool)
+            for k in range(num_devices):
+                where_other_need = torch.nonzero(Req[k][time] == True, as_tuple=False).squeeze()
+                others_need[where_other_need] = torch.ones(where_other_need.size(0), dtype=torch.bool)
+            where_have = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze()
+            send = others_need[where_have]
+            send_list.append(send)
+    print(receive_list, send_list)
+
 
 
 class node_partition():
