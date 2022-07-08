@@ -524,7 +524,7 @@ class divide_and_conquer():
                 avg_deg = np.mean(Degree_list)
                 Degree.append(avg_deg)
 
-                workload = Total_workload[time][start:end]
+                workload = self.nodes_list[time][start:end]
                 if avg_deg > self.alpha*(self.timesteps - time): # GCN-sensitive job
                     P_id.append(time)
                     P_workload.append(workload.size(0))
