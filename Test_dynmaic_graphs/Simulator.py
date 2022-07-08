@@ -662,7 +662,7 @@ if __name__ == '__main__':
                     help='Whether use the real graph')
     args = vars(parser.parse_args())
 
-    if args['real'] = False:
+    if args['real'] == False:
         # validation
         nodes_list, adjs_list = generate_test_graph()
         graphs = [nx.complete_graph(nodes_list[i].size(0)) for i in range(len(nodes_list))]
