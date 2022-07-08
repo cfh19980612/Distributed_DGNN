@@ -537,7 +537,7 @@ class divide_and_conquer():
                     # update following snapshots
                     for k in range(self.timesteps)[time+1:]:
                         mask = torch.full_like(Total_workload[k], True, dtype=torch.bool)
-                        mask[start:end] = torch.zeros(workload.size(0), dtype=torch.bool)
+                        mask[start:end] = torch.zeros(mask[start:end].size(0), dtype=torch.bool)
                         where = torch.nonzero(mask == True, as_tuple=False).view(-1)
                         Total_workload[k] = Total_workload[k][where]
                         num_generations[k] -= 1
