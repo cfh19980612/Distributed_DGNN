@@ -456,11 +456,11 @@ class divide_and_conquer():
 
         # runtime
         P_id, Q_id, Q_node_id, P_workload, Q_workload = self.divide()
-        print('P_id: ',P_id)
-        print('Q_id: ',Q_id)
-        print('Q_node_id: ',Q_node_id)
-        print('P_workload: ',P_workload)
-        print('Q_workload: ',Q_workload)
+        # print('P_id: ',P_id)
+        # print('Q_id: ',Q_id)
+        # print('Q_node_id: ',Q_node_id)
+        # print('P_workload: ',P_workload)
+        # print('Q_workload: ',Q_workload)
         self.conquer(P_id, Q_id, Q_node_id, P_workload, Q_workload)
 
     def divide(self):
@@ -522,7 +522,7 @@ class divide_and_conquer():
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
                 #     self.workloads_RNN[select_m].append(workload)
-        print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
+        # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
         for idx in range(len(Q_id)):
             Load = []
