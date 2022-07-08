@@ -129,12 +129,12 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
     for m in range(num_devices):
         # compute the required node list
         for time in range(len(workloads_RNN[m])):
-            where_need_comp = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze()
+            where_need_comp = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).view(-1)
             if where_need_comp!= torch.Size([]):
                 for k in range(len(workloads_RNN[m]))[0:time]:
                     idx = torch.tensor([i for i in range(Req[m][k].size(0))])
                     need_nodes_mask = workloads_RNN[m][time][idx]
-                    where_need = torch.nonzero(need_nodes_mask == True, as_tuple=False).squeeze()
+                    where_need = torch.nonzero(need_nodes_mask == True, as_tuple=False).view(-1)
                     # print(where_need)
                     if (where_need.size(0) > 0):
                         Req[m][k][where_need] = torch.ones(where_need.size(0), dtype=torch.bool)
