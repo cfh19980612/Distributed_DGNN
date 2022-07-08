@@ -128,12 +128,14 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
         for time in range(len(workloads_RNN[m])):
             where_need_comp = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze()
             print(where_need_comp)
-            for k in range(len(workloads_RNN[m]))[0:time]:
-                Req[m][k][where_need_comp] = torch.ones(where_need_comp, dtype=torch.bool)
+            if (where_need_comp.size(0) > 0):
+                for k in range(len(workloads_RNN[m]))[0:time]:
+                    Req[m][k][where_need_comp] = torch.ones(where_need_comp.size(0), dtype=torch.bool)
         # remove already owned nodes
         for time in range(len(workloads_RNN[m])):
             where_have_nodes = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).squeeze()
-            Req[m][k][where_have_nodes] = torch.zeros(where_have_nodes, dtype=torch.bool)
+            if (where_need_comp.size(0) > 0):
+                Req[m][k][where_have_nodes] = torch.zeros(where_have_nodes.size(0), dtype=torch.bool)
 
 
 class node_partition():
