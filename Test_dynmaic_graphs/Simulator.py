@@ -141,6 +141,7 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workloads_RNN):
             print(where_have_nodes)
             if (where_have_nodes.size(0) > 0):
                 Req[m][time][where_have_nodes] = torch.zeros(where_have_nodes.size(0), dtype=torch.bool)
+    print(Req)
 
 
 class node_partition():
