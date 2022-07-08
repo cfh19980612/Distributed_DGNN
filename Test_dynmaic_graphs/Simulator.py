@@ -488,13 +488,13 @@ class divide_and_conquer():
         self.alpha = 0.1
 
         # runtime
-        P_id, Q_id, Q_node_id, P_workload, Q_workload = self.divide()
+        P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.divide()
         # print('P_id: ',P_id)
         # print('Q_id: ',Q_id)
         # print('Q_node_id: ',Q_node_id)
         # print('P_workload: ',P_workload)
         # print('Q_workload: ',Q_workload)
-        self.conquer(P_id, Q_id, Q_node_id, P_workload, Q_workload)
+        self.conquer(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
 
     def divide(self):
         '''
@@ -507,30 +507,62 @@ class divide_and_conquer():
         Q_id = []
         Q_node_id = []
         P_workload = [] # save the workload size
+        P_snapshot = []
         Q_workload = []
         Degree = []
         for time in range(self.timesteps):
-            # compute average degree of the graphs
-            Degree_list = list(dict(nx.degree(self.graphs[time])).values())
-            avg_deg = np.mean(Degree_list)
-            Degree.append(avg_deg)
-            if avg_deg > self.alpha*(self.timesteps - time): # GCN-sensitive job
-                P_id.append(time)
-                P_workload.append(Total_workload[time].size(0))
-            else:                                            # RNN-sensitive job
-                for node in range(Total_workload[time].size(0)):
-                    Q_id.append(time)
-                    divided_nodes = self.nodes_list[time].size(0) - Total_workload[time].size(0)
-                    Q_node_id.append(node + divided_nodes)
-                    Q_workload.append(self.timesteps - time)
-                # update following snapshots
-                for k in range(self.timesteps)[time+1:]:
-                    update_size = Total_workload[time].size(0)
-                    Total_workload[k] = Total_workload[k][update_size:]
+            for generation in range(time + 1):
+                # compute average degree of nodes in specific generation
+                if generation == 0:
+                    start = 0
+                else:
+                    start = self.nodes_list[generation - 1].size(0)
+                end = self.nodes_list[generation].size(0)
+                Degree_list = list(dict(nx.degree(self.graphs[time])).values())[start:end]
+                avg_deg = np.mean(Degree_list)
+                Degree.append(avg_deg)
 
-        return P_id, Q_id, Q_node_id, P_workload, Q_workload
+                workload = Total_workload[time][start:end]
+                if avg_deg > self.alpha*(self.timesteps - time): # GCN-sensitive job
+                    P_id.append(time)
+                    P_workload.append(workload.size(0))
+                    P_snapshot.append(workload)
+                else:
+                    for node in workload.tolist():
+                        Q_id.append(time)
+                        # divided_nodes = self.nodes_list[time].size(0) - workload.size(0)
+                        Q_node_id.append(node)
+                        Q_workload.append(self.timesteps - time)
+                    # update following snapshots
+                    for k in range(self.timesteps)[time:]:
+                        mask = torch.full_like(Total_workload[k], True, dtype=torch.bool)
+                        mask[start:end] = torch.zeros(workload.size(0), dtype=torch.bool)
+                        where = torch.nonzero(mask == True, as_tuple=False).view(-1)
+                        Total_workload[k] = Total_workload[k][where]
+
+
+            # # compute average degree of the graphs
+            # Degree_list = list(dict(nx.degree(self.graphs[time])).values())
+            # avg_deg = np.mean(Degree_list)
+            # Degree.append(avg_deg)
+
+            # if avg_deg > self.alpha*(self.timesteps - time): # GCN-sensitive job
+            #     P_id.append(time)
+            #     P_workload.append(Total_workload[time].size(0))
+            # else:                                            # RNN-sensitive job
+            #     for node in range(Total_workload[time].size(0)):
+            #         Q_id.append(time)
+            #         divided_nodes = self.nodes_list[time].size(0) - Total_workload[time].size(0)
+            #         Q_node_id.append(node + divided_nodes)
+            #         Q_workload.append(self.timesteps - time)
+            #     # update following snapshots
+            #     for k in range(self.timesteps)[time+1:]:
+            #         update_size = Total_workload[time].size(0)
+            #         Total_workload[k] = Total_workload[k][update_size:]
+
+        return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
     
-    def conquer(self, P_id, Q_id, Q_node_id, P_workload, Q_workload):
+    def conquer(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
         Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
         Current_GCN_workload = [0 for i in range(self.num_devices)]
         Current_RNN_workload = [0 for i in range(self.num_devices)]
@@ -546,9 +578,9 @@ class divide_and_conquer():
             # for m in range(self.num_devices):
             #     if m == select_m:
             Node_start_idx = self.nodes_list[P_id[idx]].size(0) - P_workload[idx]
-            workload = torch.full_like(self.nodes_list[P_id[idx]][Node_start_idx:], True, dtype=torch.bool)
-            self.workloads_GCN[select_m][P_id[idx]][Node_start_idx:] = workload
-            self.workloads_RNN[select_m][P_id[idx]][Node_start_idx:] = workload
+            workload = torch.full_like(P_snapshot[idx], True, dtype=torch.bool)
+            self.workloads_GCN[select_m][P_id[idx]][P_snapshot[idx]] = workload
+            self.workloads_RNN[select_m][P_id[idx]][P_snapshot[idx]] = workload
             Current_GCN_workload[select_m] = Current_GCN_workload[select_m]+P_workload[idx]
                     # Scheduled_workload[idx][Node_start_idx:] = workload
                 # else:
