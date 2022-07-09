@@ -601,7 +601,7 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m]+P_workload[idx])/avg_workload))
                 Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
-                Cross_node.append(Cross_nodes(self.timesteps, Current_RNN_workload[m], P_snapshot[idx]))
+                Cross_node.append(Cross_nodes(self.timesteps, self.workloads_GCN[m], P_snapshot[idx]))
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load,Cross_edge],axis=0).tolist()
             result = np.sum([Load,Cross_edge],axis=0).tolist()
