@@ -932,6 +932,7 @@ if __name__ == '__main__':
                     help='beta')
     args = vars(parser.parse_args())
 
+    print(args['real'])
     if args['real'] == False:
         # validation
         nodes_list, adjs_list = generate_test_graph()
