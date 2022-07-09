@@ -641,11 +641,10 @@ class divide_and_conquer():
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load,Cross_edge],axis=0).tolist()
             # result = np.sum([result,Cross_node],axis=0).tolist()
-            
-            # np.multiply(Load, Cross_edge).tolist()
-            select_m = result.index(max(result))
-            # for m in range(self.num_devices):
-            #     if m == select_m:
+
+            # select_m = result.index(max(result))
+            select_m = Load.index(max(Load))
+
             Node_start_idx = self.nodes_list[P_id[idx]].size(0) - P_workload[idx]
             workload = torch.full_like(P_snapshot[idx], True, dtype=torch.bool)
             self.workloads_GCN[select_m][P_id[idx]][P_snapshot[idx]] = workload
