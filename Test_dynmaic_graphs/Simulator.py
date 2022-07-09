@@ -176,7 +176,7 @@ def Cross_edges(timesteps, adjs, current_workload, workload):
 def Cross_nodes(timesteps, current_workload, workload):
     same_nodes = []
     for time in range(timesteps):
-        if current_workload[time][-1].item() >= workload[-1].item():
+        if current_workload[time][-1] >= workload[-1]:
             same_nodes.append(current_workload[time][workload])
     same_nodes_tensor = torch.concat(same_nodes, dime=0)
     has_nodes = torch.nonzero(same_nodes_tensor == True, as_tuple=False).view(-1)
