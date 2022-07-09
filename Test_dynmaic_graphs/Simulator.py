@@ -183,7 +183,7 @@ def Cross_nodes(timesteps, nodes_list, current_workload, workload):
         same_nodes_tensor = torch.cat((same_nodes), dim=0)
         has_nodes = torch.nonzero(same_nodes_tensor == True, as_tuple=False).view(-1)
         num += has_nodes.size(0)
-    print(num)
+    # print(num)
     return num
 
 # different partition methods
