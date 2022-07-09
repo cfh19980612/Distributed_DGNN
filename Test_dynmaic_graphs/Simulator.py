@@ -21,7 +21,7 @@ bandwidth_GB = float(1024*1024*1024*8)
     public communication function
 '''
 def generate_test_graph():
-    num_snapshots = 2
+    num_snapshots = 5
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
     adjs_list = [torch.ones(nodes_list[i].size(0), nodes_list[i].size(0)).to_sparse() for i in range(num_snapshots)]
 
@@ -536,12 +536,12 @@ class divide_and_conquer():
 
         # runtime
         P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.divide()
-        # print('P_id: ',P_id)
-        # print('Q_id: ',Q_id)
-        # print('Q_node_id: ',Q_node_id)
-        # print('P_workload: ',P_workload)
-        # print('Q_workload: ',Q_workload)
-        # print('P_snapshot: ',P_snapshot)
+        print('P_id: ',P_id)
+        print('Q_id: ',Q_id)
+        print('Q_node_id: ',Q_node_id)
+        print('P_workload: ',P_workload)
+        print('Q_workload: ',Q_workload)
+        print('P_snapshot: ',P_snapshot)
         self.conquer(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
 
     def divide(self):
