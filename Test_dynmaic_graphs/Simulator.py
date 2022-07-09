@@ -693,6 +693,7 @@ class snapshot_partition_schedule():
                 # divided_nodes = self.nodes_list[time].size(0) - workload.size(0)
                 Q_node_id.append(node)
                 Q_workload.append(self.timesteps - time)
+        return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
     
     def schedule(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
         Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
