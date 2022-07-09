@@ -173,7 +173,10 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload):
     # graph-graph cross edges at a timestep
     time = workload[0]
     source_nodes = workload[1]
-    adj = adjs[time]
+    adj = adjs_list[time].clone()
+    edge_source = adj._indices()[0]
+    edge_target = adj._indices()[1]
+    print(edge_source, edge_target)
     target_nodes = adj[source_nodes,:]
     print(target_nodes)
 
@@ -932,7 +935,7 @@ if __name__ == '__main__':
                     help='beta')
     args = vars(parser.parse_args())
 
-    print(args['real'])
+    # print(args['real'])
     if args['real'] == 'False':
         # validation
         nodes_list, adjs_list = generate_test_graph()
