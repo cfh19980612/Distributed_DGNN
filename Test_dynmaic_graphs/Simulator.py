@@ -134,7 +134,7 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workload_GCN, workloads_RNN):
         for time in range(len(workloads_RNN[m])):
             where_need_comp = torch.nonzero(workloads_RNN[m][time] == True, as_tuple=False).view(-1)
             if where_need_comp!= torch.Size([]):
-                for k in range(len(workloads_RNN[m]))[0:time]:
+                for k in range(len(workloads_RNN[m]))[0:time+1]:
                     idx = torch.tensor([i for i in range(Req[m][k].size(0))])
                     need_nodes_mask = workloads_RNN[m][time][idx]
                     where_need = torch.nonzero(need_nodes_mask == True, as_tuple=False).view(-1)
