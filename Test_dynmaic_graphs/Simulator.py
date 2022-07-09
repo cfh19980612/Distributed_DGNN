@@ -576,10 +576,10 @@ class divide_and_conquer():
                 Degree_list = list(dict(nx.degree(self.graphs[time])).values())[start:end]
                 avg_deg = np.mean(Degree_list)
                 Degree.append(avg_deg)
-                print('alpha: ',self.alpha)
-                print('generation; ',generation)
-                print('avg_degree: ', avg_deg)
-                print('Time length: ', self.timesteps - time)
+                # print('alpha: ',self.alpha)
+                # print('generation; ',generation)
+                # print('avg_degree: ', avg_deg)
+                # print('Time length: ', self.timesteps - time)
                 workload = self.nodes_list[time][start:end]
                 if avg_deg > self.alpha*(self.timesteps - time): # GCN-sensitive job
                     P_id.append(time)
