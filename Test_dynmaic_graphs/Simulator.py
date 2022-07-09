@@ -576,6 +576,7 @@ class divide_and_conquer():
                 Degree_list = list(dict(nx.degree(self.graphs[time])).values())[start:end]
                 avg_deg = np.mean(Degree_list)
                 Degree.append(avg_deg)
+                print('alpha: ',self.alpha)
                 print('generation; ',generation)
                 print('avg_degree: ', avg_deg)
                 print('Time length: ', self.timesteps - time)
