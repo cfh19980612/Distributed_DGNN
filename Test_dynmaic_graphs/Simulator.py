@@ -641,7 +641,7 @@ class divide_and_conquer():
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             Cross_node = [cn*self.args['beta'] for cn in Cross_node]
             result = np.sum([Load,Cross_node],axis=0).tolist()
-            # result = np.sum([result,Cross_edge],axis=0).tolist()
+            result = np.sum([result,Cross_edge],axis=0).tolist()
 
             select_m = result.index(max(result))
             # select_m = Load.index(max(Load))
