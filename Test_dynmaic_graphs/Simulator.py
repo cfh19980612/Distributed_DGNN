@@ -198,7 +198,7 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload, flag):
             # print(nodes_idx)
             has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
             num += has_nodes.size(0)
-        print(num)
+        # print(num)
     return num
 
 # compute the cross nodes when schedule workload p on m device
@@ -632,8 +632,8 @@ class divide_and_conquer():
             Cross_node = []
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m]+P_workload[idx])/avg_workload))
-                # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
-                Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
+                Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
+                # Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
             # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load,Cross_edge],axis=0).tolist()
