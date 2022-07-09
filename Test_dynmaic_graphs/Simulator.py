@@ -188,7 +188,9 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload):
         adj = adjs[time].clone()
         edge_source = adj._indices()[0]
         edge_target = adj._indices()[1]
+        print(edge_source, edge_target)
         idx = torch.nonzero(edge_source == node_id, as_tuple=False).view(-1)
+        print(idx)
         nodes_idx = edge_target[idx].unique()
         print(nodes_idx)
         has_nodes = torch.nonzero(current_workload[nodes_idx] == True, as_tuple=False).view(-1)
