@@ -644,9 +644,9 @@ class divide_and_conquer():
         print('Total communication time: {}'.format(max(GPU_total_time)))
 
 
-class snapshot_partition_schedule():
+class snapshot_partition_balance():
     def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
-        super(snapshot_partition_schedule, self).__init__()
+        super(snapshot_partition_balance, self).__init__()
         self.args = args
         self.nodes_list = nodes_list
         self.adjs_list = adjs_list
@@ -763,7 +763,105 @@ class snapshot_partition_schedule():
         print('Total communication time: {}'.format(max(GPU_total_time)))
 
 
-            
+class node_partition_balance():
+    def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
+        super(node_partition_balance, self).__init__()
+        self.args = args
+        self.nodes_list = nodes_list
+        self.adjs_list = adjs_list
+        self.num_devices = num_devices
+        self.graphs = graphs
+        self.timesteps = len(nodes_list)
+        self.workloads_GCN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+        self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+
+        # runtime
+        P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.partition()
+
+        self.schedule(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
+
+    def partition(self):
+        '''
+        Step 1: partition snapshot into P set; partition nodes into Q set
+        '''
+        Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        Total_workload_RNN = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        num_generations = [i+1 for i in range(self.timesteps)]
+        P_id = [] # save the snapshot id
+        Q_id = []
+        Q_node_id = []
+        P_workload = [] # save the workload size
+        P_snapshot = []
+        Q_workload = []
+        Degree = []
+        for time in range(self.timesteps):
+            if time == 0:
+                    start = 0
+            else:
+                start = self.nodes_list[time - 1].size(0)
+            end = self.nodes_list[time].size(0)
+            workload = self.nodes_list[time][start:end]
+            for node in workload.tolist():
+                Q_id.append(time)
+                # divided_nodes = self.nodes_list[time].size(0) - workload.size(0)
+                Q_node_id.append(node)
+                Q_workload.append(self.timesteps - time)
+        return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
+    
+    def schedule(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
+        Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
+        Current_GCN_workload = [0 for i in range(self.num_devices)]
+        Current_RNN_workload = [0 for i in range(self.num_devices)]
+        # compute the average workload
+        GCN_avg_workload = np.sum(P_workload)/self.num_devices
+        RNN_avg_workload = np.sum(Q_workload)/self.num_devices
+
+        for idx in range(len(Q_id)):  # schedule node-level job to RNN workload
+            Load = []
+            for m in range(self.num_devices):
+                Load.append(1 - float((Current_RNN_workload[m] + Q_workload[idx])/RNN_avg_workload))
+            select_m = Load.index(max(Load))
+            # for m in range(self.num_devices):
+            #     if m == select_m:
+            for time in range(self.timesteps)[Q_id[idx]:]:
+                # print(self.workloads_GCN[m][time])
+                self.workloads_GCN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                self.workloads_RNN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                
+                # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+            Current_RNN_workload[select_m] = Current_RNN_workload[select_m] + Q_workload[idx]
+        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
+    
+    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
+        '''
+        Both GCN communication time and RNN communication time are needed
+        '''
+        RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+
+        GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
+        # RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+
+        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
+        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
+
+        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_receive = [torch.cat(RNN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+
+        GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
+        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
+        GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
+        # Total_time = max(GPU_total_time)
+
+        print('----------------------------------------------------------')
+        print('node partition with workload balance method:')
+        print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
+        print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
+        print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
+        print('Total communication time: {}'.format(max(GPU_total_time)))
+
+
 import time
 
 if __name__ == '__main__':
@@ -837,8 +935,11 @@ if __name__ == '__main__':
     snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
     snapshot_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
-    proposed_partition_balance_obj = snapshot_partition_schedule(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
-    proposed_partition_balance_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+    node_partition_balance_obj = node_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+    node_partition_balance_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+
+    snapshot_partition_balance_obj = snapshot_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+    snapshot_partition_balance_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
     # hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
     # hybrid_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
