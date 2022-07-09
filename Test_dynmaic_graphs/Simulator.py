@@ -17,6 +17,9 @@ bandwidth_100MB = float(100*1024*1024*8)
 bandwidth_GB = float(1024*1024*1024*8)
 
 
+'''
+    public communication function
+'''
 def generate_test_graph():
     num_snapshots = 3
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
@@ -164,8 +167,23 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workload_GCN, workloads_RNN):
     # print('send list: ', send_list)
     return receive_list, send_list
 
+# compute the cross edges when schedule workload p(or q) on m device
+def Cross_edges(timesteps, adjs, current_workload, workload):
+    num = 0
+    return num
 
+# compute the cross nodes when schedule workload p on m device
+def Cross_nodes(timesteps, current_workload, workload):
+    same_nodes = []
+    for time in range(timesteps):
+        if current_workload[time][-1].item() >= workload[-1].item():
+            same_nodes.append(current_workload[time][workload])
+    same_nodes_tensor = torch.concat(same_nodes, dime=0)
+    has_nodes = torch.nonzero(same_nodes_tensor == True, as_tuple=False).view(-1)
+    num = has_nodes.size(0)
+    return num
 
+# different partition methods
 class node_partition():
     def __init__(self, args, nodes_list, adjs_list, num_devices):
         super(node_partition, self).__init__()
@@ -239,6 +257,7 @@ class node_partition():
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
         print('Total communication time: {}'.format(max(GPU_total_time)))
+
 
 class snapshot_partition():
     def __init__(self, args, nodes_list, adjs_list, num_devices):
@@ -325,6 +344,7 @@ class snapshot_partition():
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
         print('Total communication time: {}'.format(max(GPU_total_time)))
+
 
 class hybrid_partition():
     def __init__(self, args, nodes_list, adjs_list, num_devices):
@@ -469,6 +489,7 @@ class hybrid_partition():
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
         print('Total communication time: {}'.format(max(GPU_total_time)))
 
+
 class divide_and_conquer():
     def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
         super(divide_and_conquer, self).__init__()
@@ -568,7 +589,7 @@ class divide_and_conquer():
     def conquer(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
         Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
         Current_workload = [0 for i in range(self.num_devices)]
-        Current_RNN_workload = [[1 for i in range(self.timesteps)]for m in range(self.num_devices)]
+        Current_RNN_workload = [[0 for i in range(self.timesteps)]for m in range(self.num_devices)]
         # compute the average workload
         avg_workload = (np.sum(P_workload) + np.sum(Q_workload))/self.num_devices
         RNN_avg_workload = np.sum(Q_workload)/self.num_devices
@@ -576,12 +597,16 @@ class divide_and_conquer():
         for idx in range(len(P_id)): # schedule snapshot-level job
             Load = []
             Cross_edge = []
+            Cross_node = []
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m]+P_workload[idx])/avg_workload))
                 Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
-            
+                Cross_node.append(Cross_nodes(self.timesteps, Current_RNN_workload[m], P_snapshot[idx]))
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
-            result = np.multiply(Load, Cross_edge).tolist()
+            result = np.sum([Load,Cross_edge],axis=0).tolist()
+            result = np.sum([Load,Cross_edge],axis=0).tolist()
+            
+            # np.multiply(Load, Cross_edge).tolist()
             select_m = result.index(max(result))
             # for m in range(self.num_devices):
             #     if m == select_m:
@@ -946,11 +971,3 @@ if __name__ == '__main__':
 
     proposed_partition_obj = divide_and_conquer(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
     proposed_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
-
-
-
-
-
-
-    
-
