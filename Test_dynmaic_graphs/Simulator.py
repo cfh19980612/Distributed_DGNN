@@ -182,7 +182,7 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload, flag):
         nodes_idx = torch.cat((nodes_idx_list), dim=0)
         has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
         num += has_nodes.size(0)
-        # print(num)
+        print(num)
 
     # node-graph cross edges at multiple timesteps
     else:
