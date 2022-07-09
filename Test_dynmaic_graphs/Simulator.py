@@ -192,6 +192,7 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload):
         nodes_idx = edge_target[idx].unique()
         has_nodes = torch.nonzero(current_workload[nodes_idx] == True, as_tuple=False).view(-1)
         num += has_nodes.size(0)
+    print(num)
     return num
 
 # compute the cross nodes when schedule workload p on m device
