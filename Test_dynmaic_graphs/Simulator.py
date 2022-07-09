@@ -21,7 +21,7 @@ bandwidth_GB = float(1024*1024*1024*8)
     public communication function
 '''
 def generate_test_graph():
-    num_snapshots = 2
+    num_snapshots = 10
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
     adjs_list = [torch.ones(nodes_list[i].size(0), nodes_list[i].size(0)).to_sparse() for i in range(num_snapshots)]
 
@@ -639,11 +639,12 @@ class divide_and_conquer():
                 Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
+            Cross_node = [cn*self.args['beta'] for cn in Cross_node]
             result = np.sum([Load,Cross_edge],axis=0).tolist()
-            # result = np.sum([result,Cross_node],axis=0).tolist()
+            result = np.sum([result,Cross_node],axis=0).tolist()
 
-            # select_m = result.index(max(result))
-            select_m = Load.index(max(Load))
+            select_m = result.index(max(result))
+            # select_m = Load.index(max(Load))
 
             Node_start_idx = self.nodes_list[P_id[idx]].size(0) - P_workload[idx]
             workload = torch.full_like(P_snapshot[idx], True, dtype=torch.bool)
@@ -664,9 +665,10 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m] + Q_workload[idx])/avg_workload))
                 Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], Q_node_id[idx], flag=1))
+            Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load, Cross_edge], axis = 0).tolist()
             select_m = result.index(max(result))
-            select_m = Load.index(max(Load))
+            # select_m = Load.index(max(Load))
             # for m in range(self.num_devices):
             #     if m == select_m:
             for time in range(self.timesteps)[Q_id[idx]:]:
