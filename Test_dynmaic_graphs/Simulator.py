@@ -607,7 +607,7 @@ class divide_and_conquer():
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
             # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load,Cross_edge],axis=0).tolist()
-            # result = np.sum([result,Cross_node],axis=0).tolist()
+            result = np.sum([result,Cross_node],axis=0).tolist()
             
             # np.multiply(Load, Cross_edge).tolist()
             select_m = result.index(max(result))
