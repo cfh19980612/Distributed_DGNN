@@ -183,6 +183,7 @@ def Cross_nodes(timesteps, current_workload, workload):
         same_nodes_tensor = torch.cat((same_nodes), dim=0)
         has_nodes = torch.nonzero(same_nodes_tensor == True, as_tuple=False).view(-1)
         num += has_nodes.size(0)
+    print(num)
     return num
 
 # different partition methods
@@ -604,7 +605,7 @@ class divide_and_conquer():
                 Load.append(1 - float((Current_workload[m]+P_workload[idx])/avg_workload))
                 Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
                 Cross_node.append(Cross_nodes(self.timesteps, self.workloads_GCN[m], P_snapshot[idx]))
-            Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
+            # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load,Cross_edge],axis=0).tolist()
             # result = np.sum([result,Cross_node],axis=0).tolist()
             
