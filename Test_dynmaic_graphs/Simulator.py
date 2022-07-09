@@ -178,7 +178,7 @@ def Cross_nodes(timesteps, current_workload, workload):
     for time in range(timesteps):
         if current_workload[time][-1] >= workload[-1]:
             same_nodes.append(current_workload[time][workload])
-    same_nodes_tensor = torch.concat(same_nodes, dime=0)
+    same_nodes_tensor = torch.cat((same_nodes), dime=0)
     has_nodes = torch.nonzero(same_nodes_tensor == True, as_tuple=False).view(-1)
     num = has_nodes.size(0)
     return num
