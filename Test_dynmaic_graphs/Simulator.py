@@ -174,13 +174,15 @@ def Cross_edges(timesteps, adjs, current_workload, workload):
 
 # compute the cross nodes when schedule workload p on m device
 def Cross_nodes(timesteps, current_workload, workload):
+    num = 0
     same_nodes = []
     for time in range(timesteps):
         if current_workload[time][-1] >= workload[-1]:
             same_nodes.append(current_workload[time][workload])
-    same_nodes_tensor = torch.cat((same_nodes), dim=0)
-    has_nodes = torch.nonzero(same_nodes_tensor == True, as_tuple=False).view(-1)
-    num = has_nodes.size(0)
+    if len(same_nodes) > 0:
+        same_nodes_tensor = torch.cat((same_nodes), dim=0)
+        has_nodes = torch.nonzero(same_nodes_tensor == True, as_tuple=False).view(-1)
+        num += has_nodes.size(0)
     return num
 
 # different partition methods
