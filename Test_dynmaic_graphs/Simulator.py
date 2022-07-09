@@ -698,7 +698,7 @@ class snapshot_partition_schedule():
     def schedule(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
         Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
         Current_GCN_workload = [0 for i in range(self.num_devices)]
-        Current_RNN_workload = [[0 for i in range(self.timesteps)]for m in range(self.num_devices)]
+        Current_RNN_workload = [0 for i in range(self.num_devices)]
         # compute the average workload
         GCN_avg_workload = np.sum(P_workload)/self.num_devices
         RNN_avg_workload = np.sum(Q_workload)/self.num_devices
