@@ -733,7 +733,7 @@ class snapshot_partition_schedule():
             Current_RNN_workload[select_m] = Current_RNN_workload[select_m] + Q_workload[idx]
         # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
 
-    def communication(self, GCN_node_size, RNN_node_size, bandwidth):
+    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
         '''
         Both GCN communication time and RNN communication time are needed
         '''
