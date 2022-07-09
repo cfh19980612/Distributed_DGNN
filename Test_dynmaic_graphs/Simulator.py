@@ -557,7 +557,7 @@ class divide_and_conquer():
         '''
         Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
         Total_workload_temp = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
-        num_generations = [i+1 for i in range(self.timesteps)]
+        num_generations = [[j for j in range(i+1)] for i in range(self.timesteps)]
         P_id = [] # save the snapshot id
         Q_id = []
         Q_node_id = []
@@ -566,7 +566,7 @@ class divide_and_conquer():
         Q_workload = []
         Degree = []
         for time in range(self.timesteps):
-            for generation in range(num_generations[time]):
+            for generation in num_generations[time]:
                 # compute average degree of nodes in specific generation
                 if generation == 0:
                     start = 0
@@ -597,7 +597,7 @@ class divide_and_conquer():
                         mask[start:end] = torch.zeros(mask[start:end].size(0), dtype=torch.bool)
                         where = torch.nonzero(mask == True, as_tuple=False).view(-1)
                         Total_workload[k] = Total_workload[k][where]
-                        num_generations[k] -= 1
+                        num_generations[k] = num_generations[k][1:]
 
 
             # # compute average degree of the graphs
