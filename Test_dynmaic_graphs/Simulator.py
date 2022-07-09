@@ -924,7 +924,7 @@ if __name__ == '__main__':
                         help='method for DGNN training')
     parser.add_argument('--partition', type=str, nargs='?', default="Time",
                     help='How to partition the graph data')
-    parser.add_argument('--real', type=bool, nargs='?', default=True,
+    parser.add_argument('--real', type=str, nargs='?', default='True',
                     help='Whether use the real graph')
     parser.add_argument('--alpha', type=float, nargs='?', default=0.01,
                     help='alpha')
@@ -933,7 +933,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     print(args['real'])
-    if args['real'] == False:
+    if args['real'] == 'False':
         # validation
         nodes_list, adjs_list = generate_test_graph()
         graphs = [nx.complete_graph(nodes_list[i].size(0)) for i in range(len(nodes_list))]
