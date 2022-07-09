@@ -21,7 +21,7 @@ bandwidth_GB = float(1024*1024*1024*8)
     public communication function
 '''
 def generate_test_graph():
-    num_snapshots = 10
+    num_snapshots = 2
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
     adjs_list = [torch.ones(nodes_list[i].size(0), nodes_list[i].size(0)).to_sparse() for i in range(num_snapshots)]
 
@@ -635,7 +635,7 @@ class divide_and_conquer():
                 # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
                 Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
-            # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
+            Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load,Cross_edge],axis=0).tolist()
             # result = np.sum([result,Cross_node],axis=0).tolist()
             
