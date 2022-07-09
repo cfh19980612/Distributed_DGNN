@@ -182,7 +182,7 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload, flag):
         nodes_idx = torch.cat((nodes_idx_list), dim=0)
         has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
         num += has_nodes.size(0)
-        print(num)
+        # print(num)
 
     # node-graph cross edges at multiple timesteps
     else:
@@ -657,7 +657,7 @@ class divide_and_conquer():
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
                 #     self.workloads_RNN[select_m].append(workload)
-        print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
+        # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
         for idx in range(len(Q_id)):
             Load = []
@@ -678,7 +678,7 @@ class divide_and_conquer():
                 # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
             Current_workload[select_m] = Current_workload[select_m] + Q_workload[idx]
 
-        print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
+        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
 
     def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
         '''
