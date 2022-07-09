@@ -21,7 +21,7 @@ bandwidth_GB = float(1024*1024*1024*8)
     public communication function
 '''
 def generate_test_graph():
-    num_snapshots = 5
+    num_snapshots = 2
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
     adjs_list = [torch.ones(nodes_list[i].size(0), nodes_list[i].size(0)).to_sparse() for i in range(num_snapshots)]
 
@@ -188,11 +188,11 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload):
         adj = adjs[time].clone()
         edge_source = adj._indices()[0]
         edge_target = adj._indices()[1]
-        print(edge_source, edge_target)
+        # print(edge_source, edge_target)
         idx = torch.nonzero(edge_source == node_id, as_tuple=False).view(-1)
-        print(idx)
+        # print(idx)
         nodes_idx = edge_target[idx].unique()
-        print(nodes_idx)
+        # print(nodes_idx)
         has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
         num += has_nodes.size(0)
     print(num)
