@@ -168,34 +168,37 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workload_GCN, workloads_RNN):
     return receive_list, send_list
 
 # compute the cross edges when schedule workload p(or q) on m device
-def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload):
+def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload, flag):
     num = 0
-    # # graph-graph cross edges at a timestep
-    # time = workload[0]
-    # source_nodes = workload[1]
-    # adj = adjs_list[time].clone()
-    # edge_source = adj._indices()[0]
-    # edge_target = adj._indices()[1]
-    # print(edge_source, edge_target)
-    # target_nodes = adj[source_nodes,:]
-    # print(target_nodes)
-
-
-
-    # node-graph cross edges at multiple timesteps
-    node_id = workload
-    for time in range(timesteps):
+    if flag == 0:
+        # # graph-graph cross edges at a timestep
+        time = workload[0]
+        nodes = workload[1].tolist()
         adj = adjs[time].clone()
         edge_source = adj._indices()[0]
         edge_target = adj._indices()[1]
-        # print(edge_source, edge_target)
-        idx = torch.nonzero(edge_source == node_id, as_tuple=False).view(-1)
-        # print(idx)
-        nodes_idx = edge_target[idx].unique()
-        # print(nodes_idx)
+        idx_list = [torch.nonzero(edge_source == node, as_tuple=False).view(-1) for node in nodes]
+        nodes_idx_list = [edge_target[idx] for idx in idx_list]
+        nodes_idx = torch.cat((nodes_idx_list), dim=0)
         has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
         num += has_nodes.size(0)
-    print(num)
+        # print(num)
+
+    # node-graph cross edges at multiple timesteps
+    else:
+        node_id = workload
+        for time in range(timesteps):
+            adj = adjs[time].clone()
+            edge_source = adj._indices()[0]
+            edge_target = adj._indices()[1]
+            # print(edge_source, edge_target)
+            idx = torch.nonzero(edge_source == node_id, as_tuple=False).view(-1)
+            # print(idx)
+            nodes_idx = edge_target[idx]
+            # print(nodes_idx)
+            has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
+            num += has_nodes.size(0)
+    # print(num)
     return num
 
 # compute the cross nodes when schedule workload p on m device
@@ -539,12 +542,12 @@ class divide_and_conquer():
 
         # runtime
         P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.divide()
-        print('P_id: ',P_id)
-        print('Q_id: ',Q_id)
-        print('Q_node_id: ',Q_node_id)
-        print('P_workload: ',P_workload)
-        print('Q_workload: ',Q_workload)
-        print('P_snapshot: ',P_snapshot)
+        # print('P_id: ',P_id)
+        # print('Q_id: ',Q_id)
+        # print('Q_node_id: ',Q_node_id)
+        # print('P_workload: ',P_workload)
+        # print('Q_workload: ',Q_workload)
+        # print('P_snapshot: ',P_snapshot)
         self.conquer(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
 
     def divide(self):
@@ -630,7 +633,7 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m]+P_workload[idx])/avg_workload))
                 Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
-                # Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx])))
+                # Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
             # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load,Cross_edge],axis=0).tolist()
@@ -658,7 +661,7 @@ class divide_and_conquer():
             Cross_edge = []
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m] + Q_workload[idx])/avg_workload))
-                Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], Q_node_id[idx]))
+                Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], Q_node_id[idx], flag=1))
             result = np.sum([Load, Cross_edge], axis = 0).tolist()
             select_m = result.index(max(result))
             # for m in range(self.num_devices):
