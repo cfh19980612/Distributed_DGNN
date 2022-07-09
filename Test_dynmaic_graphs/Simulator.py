@@ -570,7 +570,7 @@ class divide_and_conquer():
         Current_workload = [0 for i in range(self.num_devices)]
         Current_RNN_workload = [[1 for i in range(self.timesteps)]for m in range(self.num_devices)]
         # compute the average workload
-        avg_workload = (np.sum(P_workload) + np,sum(Q_workload))/self.num_devices
+        avg_workload = (np.sum(P_workload) + np.sum(Q_workload))/self.num_devices
         RNN_avg_workload = np.sum(Q_workload)/self.num_devices
 
         for idx in range(len(P_id)): # schedule snapshot-level job
