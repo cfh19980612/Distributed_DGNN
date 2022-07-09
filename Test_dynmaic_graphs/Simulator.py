@@ -655,7 +655,8 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m] + Q_workload[idx])/avg_workload))
                 Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], Q_node_id[idx]))
-            select_m = Load.index(max(Load))
+            result = np.sum([Load, Cross_edge], axis = 0).tolist()
+            select_m = result.index(max(result))
             # for m in range(self.num_devices):
             #     if m == select_m:
             for time in range(self.timesteps)[Q_id[idx]:]:
