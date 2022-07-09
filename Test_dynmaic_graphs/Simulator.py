@@ -21,7 +21,7 @@ bandwidth_GB = float(1024*1024*1024*8)
     public communication function
 '''
 def generate_test_graph():
-    num_snapshots = 5
+    num_snapshots = 2
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
     adjs_list = [torch.ones(nodes_list[i].size(0), nodes_list[i].size(0)).to_sparse() for i in range(num_snapshots)]
 
