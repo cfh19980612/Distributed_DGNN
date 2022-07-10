@@ -679,11 +679,14 @@ class divide_and_conquer():
         return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
     
     def conquer(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
+        '''
+        Schedule snapshot-level jobs first or schedule timeseries-level jobs first?
+        '''
         Scheduled_workload = [torch.full_like(self.nodes_list[t], False, dtype=torch.bool) for t in range(self.timesteps)]
         Current_workload = [0 for i in range(self.num_devices)]
         Current_RNN_workload = [[0 for i in range(self.timesteps)]for m in range(self.num_devices)]
         # compute the average workload
-        avg_workload = (np.sum(P_workload) + np.sum(Q_workload))/self.num_devices
+        avg_workload = (sum(P_workload) + sum(Q_workload))/self.num_devices
         RNN_avg_workload = np.sum(Q_workload)/self.num_devices
 
 
@@ -725,7 +728,7 @@ class divide_and_conquer():
                 start = time.time()
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
                 time_cost_nodes+=  time.time() - start
-            print(Load, Cross_edge, Cross_node)
+            # print(Load, Cross_edge, Cross_node)
 
             # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             # Cross_node = [cn*self.args['beta'] for cn in Cross_node]
