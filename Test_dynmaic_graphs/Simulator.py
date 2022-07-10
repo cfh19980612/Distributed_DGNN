@@ -175,7 +175,7 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload, flag):
         # # graph-graph cross edges at a timestep
         time = workload[0]
         nodes = workload[1].tolist()
-        print('time: ', time)
+        # print('time: ', time)
         adj = adjs[time].clone()
         edge_source = adj._indices()[0]
         edge_target = adj._indices()[1]
@@ -588,7 +588,7 @@ class divide_and_conquer():
                 # print('Time length: ', self.timesteps - time)
                 workload = self.nodes_list[T][start:end]
                 if avg_deg > self.alpha*(self.timesteps - t): # GCN-sensitive job
-                    P_id.append(time_steps)
+                    P_id.append(t)
                     P_workload.append(workload.size(0))
                     P_snapshot.append(workload)
                 else:
