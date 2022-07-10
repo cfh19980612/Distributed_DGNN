@@ -413,7 +413,7 @@ class snapshot_partition():
         RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
 
         GCN_comm_time = [0 for i in range(self.num_devices)]
-        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
+        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i])*2 for i in range(len(RNN_receive_comm_time))]
         GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
         # Total_time = max(GPU_total_time)
 
@@ -723,8 +723,8 @@ class divide_and_conquer():
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
                 #     self.workloads_RNN[select_m].append(workload)
-        print('compute graph-graph cross edges time costs: ', time_cost_edges)
-        print('compute cross nodes time costs: ', time_cost_nodes)
+        # print('compute graph-graph cross edges time costs: ', time_cost_edges)
+        # print('compute cross nodes time costs: ', time_cost_nodes)
         # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
         time_cost = 0
@@ -749,7 +749,7 @@ class divide_and_conquer():
                 # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
             Current_workload[select_m] = Current_workload[select_m] + Q_workload[idx]
 
-        print('compute node-graph cross edges time costs: ', time_cost)
+        # print('compute node-graph cross edges time costs: ', time_cost)
         # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
 
     def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
@@ -890,7 +890,7 @@ class snapshot_partition_balance():
         RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
 
         GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
-        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
+        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i])*2 for i in range(len(RNN_receive_comm_time))]
         GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
         # Total_time = max(GPU_total_time)
         Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
