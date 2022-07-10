@@ -643,7 +643,7 @@ class divide_and_conquer():
                 # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
                 start = time.time()
                 Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
-                print('compute cross edges time costs: ', time.time() - start)
+                print('compute graph-graph cross edges time costs: ', time.time() - start)
                 start = time.time()
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
                 print('compute cross nodes time costs: ', time.time() - start)
@@ -674,7 +674,9 @@ class divide_and_conquer():
             Cross_edge = []
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m] + Q_workload[idx])/avg_workload))
+                start = time.time()
                 Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], Q_node_id[idx], flag=1))
+                print('compute node-graph cross edges time costs: ', time.time() - start)
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load, Cross_edge], axis = 0).tolist()
             select_m = result.index(max(result))
