@@ -663,10 +663,10 @@ class divide_and_conquer():
                 start = time.time()
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
                 time_cost_nodes+=  time.time() - start
+            print(Load, Cross_edge, Cross_node)
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             Cross_node = [cn*self.args['beta'] for cn in Cross_node]
             # print()
-            print(Load, Cross_edge, Cross_node)
             result = np.sum([Load,Cross_node],axis=0).tolist()
             result = np.sum([result,Cross_edge],axis=0).tolist()
 
