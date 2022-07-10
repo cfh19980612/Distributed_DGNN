@@ -182,6 +182,8 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload, flag):
         idx_list = [torch.nonzero(edge_source == node, as_tuple=False).view(-1) for node in nodes]
         nodes_idx_list = [edge_target[idx] for idx in idx_list]
         print(nodes_idx_list)
+        nodes_idx_list_new = filter(lambda val: val !=  torch.tensor([], dtype=torch.int64), nodes_idx_list)
+        print(nodes_idx_list_new)
         nodes_idx = torch.cat((nodes_idx_list), dim=0)
         has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
         num += has_nodes.size(0)
