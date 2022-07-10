@@ -676,18 +676,18 @@ class divide_and_conquer():
                 Load.append(1 - float((Current_workload[m]+P_workload[idx])/avg_workload))
                 # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
                 start = time.time()
-                Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
+                # Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
                 time_cost_edges += time.time() - start
                 start = time.time()
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
                 time_cost_nodes+=  time.time() - start
-            print(Load, Cross_edge, Cross_node)
+            # print(Load, Cross_edge, Cross_node)
 
             # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             # Cross_node = [cn*self.args['beta'] for cn in Cross_node]
             # print()
             result = np.sum([Load,Cross_node],axis=0).tolist()
-            result = np.sum([result,Cross_edge],axis=0).tolist()
+            # result = np.sum([result,Cross_edge],axis=0).tolist()
 
             select_m = result.index(max(result))
             # select_m = Load.index(max(Load))
@@ -714,12 +714,12 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m] + Q_workload[idx])/avg_workload))
                 start = time.time()
-                Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (Q_id[idx], Q_node_id[idx]), flag=1))
+                # Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (Q_id[idx], Q_node_id[idx]), flag=1))
                 time_cost += time.time() - start
             # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load, Cross_edge], axis = 0).tolist()
-            select_m = result.index(max(result))
-            # select_m = Load.index(max(Load))
+            # select_m = result.index(max(result))
+            select_m = Load.index(max(Load))
             # for m in range(self.num_devices):
             #     if m == select_m:
             for t in range(self.timesteps)[Q_id[idx]:]:
