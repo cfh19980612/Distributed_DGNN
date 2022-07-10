@@ -212,8 +212,8 @@ def Cross_nodes(timesteps, nodes_list, current_workload, workload):
     num = 0
     same_nodes = []
     for time in range(timesteps):
-        print(nodes_list[time])
-        print(workload)
+        print('node list: ',nodes_list[time])
+        print('workload: ',workload)
         if nodes_list[time][-1] >= workload[-1]:
             same_nodes.append(current_workload[time][workload])
     if len(same_nodes) > 0:
