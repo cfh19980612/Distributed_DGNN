@@ -572,10 +572,438 @@ class hybrid_partition():
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
         print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
 
-
-class divide_and_conquer():
+class snapshot_partition_balance():
     def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
-        super(divide_and_conquer, self).__init__()
+        super(snapshot_partition_balance, self).__init__()
+        self.args = args
+        self.nodes_list = nodes_list
+        self.adjs_list = adjs_list
+        self.num_devices = num_devices
+        self.graphs = graphs
+        self.timesteps = len(nodes_list)
+        self.workloads_GCN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+        self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+
+        # runtime
+        P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.partition()
+
+        self.schedule(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
+
+    def partition(self):
+        '''
+        Step 1: partition snapshot into P set; partition nodes into Q set
+        '''
+        Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        Total_workload_RNN = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        num_generations = [i+1 for i in range(self.timesteps)]
+        P_id = [] # save the snapshot id
+        Q_id = []
+        Q_node_id = []
+        P_workload = [] # save the workload size
+        P_snapshot = []
+        Q_workload = []
+        Degree = []
+        for time in range(self.timesteps):
+            if time == 0:
+                    start = 0
+            else:
+                start = self.nodes_list[time - 1].size(0)
+            end = self.nodes_list[time].size(0)
+
+            workload_gcn = self.nodes_list[time]
+            P_id.append(time)
+            P_workload.append(workload_gcn.size(0))
+            P_snapshot.append(workload_gcn)
+
+            workload_rnn = self.nodes_list[time][start:end]
+            for node in workload_rnn.tolist():
+                Q_id.append(time)
+                # divided_nodes = self.nodes_list[time].size(0) - workload.size(0)
+                Q_node_id.append(node)
+                Q_workload.append(self.timesteps - time)
+        return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
+    
+    def schedule(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
+        Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
+        Current_GCN_workload = [0 for i in range(self.num_devices)]
+        Current_RNN_workload = [0 for i in range(self.num_devices)]
+        # compute the average workload
+        GCN_avg_workload = np.sum(P_workload)/self.num_devices
+        RNN_avg_workload = np.sum(Q_workload)/self.num_devices
+
+        for idx in range(len(P_id)): # schedule snapshot-level job to GCN workload
+            Load = []
+            Cross_edge = []
+            for m in range(self.num_devices):
+                Load.append(1 - float((Current_GCN_workload[m]+P_workload[idx])/GCN_avg_workload))
+                # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
+            select_m = Load.index(max(Load))
+            workload = torch.full_like(P_snapshot[idx], True, dtype=torch.bool)
+            self.workloads_GCN[select_m][P_id[idx]][P_snapshot[idx]] = workload
+
+            Current_GCN_workload[select_m] = Current_GCN_workload[select_m]+P_workload[idx]
+            # Current_RNN_workload[select_m][P_id[idx]] += 1
+
+        # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
+
+        for idx in range(len(Q_id)):  # schedule node-level job to RNN workload
+            Load = []
+            for m in range(self.num_devices):
+                Load.append(1 - float((Current_RNN_workload[m] + Q_workload[idx])/RNN_avg_workload))
+            select_m = Load.index(max(Load))
+            # for m in range(self.num_devices):
+            #     if m == select_m:
+            for time in range(self.timesteps)[Q_id[idx]:]:
+                # print(self.workloads_GCN[m][time])
+                self.workloads_RNN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                
+                # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+            Current_RNN_workload[select_m] = Current_RNN_workload[select_m] + Q_workload[idx]
+        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
+
+    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
+        '''
+        Both GCN communication time and RNN communication time are needed
+        '''
+        RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+
+        GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
+        # RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+
+        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
+        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
+
+        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_receive = [torch.cat(RNN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+
+        GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
+        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i])*2 for i in range(len(RNN_receive_comm_time))]
+        GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
+        # Total_time = max(GPU_total_time)
+        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
+
+        print('----------------------------------------------------------')
+        print('snapshot partition with workload balance method:')
+        print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
+        print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
+        print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
+        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
+
+class node_partition_balance():
+    def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
+        super(node_partition_balance, self).__init__()
+        self.args = args
+        self.nodes_list = nodes_list
+        self.adjs_list = adjs_list
+        self.num_devices = num_devices
+        self.graphs = graphs
+        self.timesteps = len(nodes_list)
+        self.workloads_GCN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+        self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+
+        # runtime
+        P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.partition()
+
+        self.schedule(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
+
+    def partition(self):
+        '''
+        Step 1: partition snapshot into P set; partition nodes into Q set
+        '''
+        Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        Total_workload_RNN = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        num_generations = [i+1 for i in range(self.timesteps)]
+        P_id = [] # save the snapshot id
+        Q_id = []
+        Q_node_id = []
+        P_workload = [] # save the workload size
+        P_snapshot = []
+        Q_workload = []
+        Degree = []
+        for time in range(self.timesteps):
+            if time == 0:
+                    start = 0
+            else:
+                start = self.nodes_list[time - 1].size(0)
+            end = self.nodes_list[time].size(0)
+            workload = self.nodes_list[time][start:end]
+            for node in workload.tolist():
+                Q_id.append(time)
+                # divided_nodes = self.nodes_list[time].size(0) - workload.size(0)
+                Q_node_id.append(node)
+                Q_workload.append(self.timesteps - time)
+        return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
+    
+    def schedule(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
+        Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
+        Current_GCN_workload = [0 for i in range(self.num_devices)]
+        Current_RNN_workload = [0 for i in range(self.num_devices)]
+        # compute the average workload
+        GCN_avg_workload = np.sum(P_workload)/self.num_devices
+        RNN_avg_workload = np.sum(Q_workload)/self.num_devices
+
+        for idx in range(len(Q_id)):  # schedule node-level job to RNN workload
+            Load = []
+            for m in range(self.num_devices):
+                Load.append(1 - float((Current_RNN_workload[m] + Q_workload[idx])/RNN_avg_workload))
+            select_m = Load.index(max(Load))
+            # for m in range(self.num_devices):
+            #     if m == select_m:
+            for time in range(self.timesteps)[Q_id[idx]:]:
+                # print(self.workloads_GCN[m][time])
+                self.workloads_GCN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                self.workloads_RNN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                
+                # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+            Current_RNN_workload[select_m] = Current_RNN_workload[select_m] + Q_workload[idx]
+        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
+    
+    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
+        '''
+        Both GCN communication time and RNN communication time are needed
+        '''
+        RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+
+        GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
+        # RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+
+        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
+        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
+
+        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_receive = [torch.cat(RNN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+
+        GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
+        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
+        GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
+        # Total_time = max(GPU_total_time)
+        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
+
+        print('----------------------------------------------------------')
+        print('node partition with workload balance method:')
+        print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
+        print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
+        print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
+        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
+
+class Ours():
+    def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
+        super(Ours, self).__init__()
+        self.args = args
+        self.nodes_list = nodes_list
+        self.adjs_list = adjs_list
+        self.num_devices = num_devices
+        self.graphs = graphs
+        self.timesteps = len(nodes_list)
+        self.workloads_GCN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+        self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
+
+        self.Degrees = [list(dict(nx.degree(self.graphs[t])).values()) for t in range(self.timesteps)]
+
+        # parameters
+        self.alpha = args['alpha']
+        # self.alpha = 0.08
+        # self.alpha = 0.01
+        # self.alpha = 0.1
+
+        # runtime
+        start = time.time()
+        P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.divide()
+        # print('divide time cost: ', time.time() - start)
+        # print('P_id: ',P_id)
+        # print('Q_id: ',Q_id)
+        # print('Q_node_id: ',Q_node_id)
+        # print('P_workload: ',P_workload)
+        # print('Q_workload: ',Q_workload)
+        # print('P_snapshot: ',P_snapshot)
+        start = time.time()
+        self.conquer(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
+        # print('conquer time cost: ', time.time() - start)
+
+    def divide(self):
+        '''
+        Step 1: compute the average degree of each snapshots
+        Step 2: divide nodes into different job set according to the degree and time-series length
+        '''
+        Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        Total_workload_temp = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
+        num_generations = [[j for j in range(i+1)] for i in range(self.timesteps)]
+        P_id = [] # save the snapshot id
+        Q_id = []
+        Q_node_id = []
+        P_workload = [] # save the workload size
+        P_snapshot = []
+        Q_workload = []
+        Degree = []
+        for t in range(self.timesteps):
+            for generation in num_generations[t]:
+                # compute average degree of nodes in specific generation
+                if generation == 0:
+                    start = 0
+                else:
+                    start = self.nodes_list[generation - 1].size(0)
+                end = self.nodes_list[generation].size(0)
+                Degree_list = list(dict(nx.degree(self.graphs[t])).values())[start:end]
+                avg_deg = np.mean(Degree_list)
+                Degree.append(avg_deg)
+                # print('alpha: ',self.alpha)
+                # print('generation; ',generation)
+                workload = self.nodes_list[t][start:end]
+                if avg_deg > self.alpha*(self.timesteps - t): # GCN-sensitive job
+                    P_id.append(t)
+                    P_workload.append(workload.size(0))
+                    P_snapshot.append(workload)
+                else:
+                    for node in workload.tolist():
+                        Q_id.append(t)
+                        # divided_nodes = self.nodes_list[time].size(0) - workload.size(0)
+                        Q_node_id.append(node)
+                        Q_workload.append(self.timesteps - t)
+                    # update following snapshots
+                    for k in range(self.timesteps)[t+1:]:
+                        mask = torch.full_like(Total_workload[k], True, dtype=torch.bool)
+                        mask[start:end] = torch.zeros(mask[start:end].size(0), dtype=torch.bool)
+                        where = torch.nonzero(mask == True, as_tuple=False).view(-1)
+                        Total_workload[k] = Total_workload[k][where]
+                        num_generations[k] = num_generations[k][1:]
+
+
+            # # compute average degree of the graphs
+            # Degree_list = list(dict(nx.degree(self.graphs[time])).values())
+            # avg_deg = np.mean(Degree_list)
+            # Degree.append(avg_deg)
+
+            # if avg_deg > self.alpha*(self.timesteps - time): # GCN-sensitive job
+            #     P_id.append(time)
+            #     P_workload.append(Total_workload[time].size(0))
+            # else:                                            # RNN-sensitive job
+            #     for node in range(Total_workload[time].size(0)):
+            #         Q_id.append(time)
+            #         divided_nodes = self.nodes_list[time].size(0) - Total_workload[time].size(0)
+            #         Q_node_id.append(node + divided_nodes)
+            #         Q_workload.append(self.timesteps - time)
+            #     # update following snapshots
+            #     for k in range(self.timesteps)[time+1:]:
+            #         update_size = Total_workload[time].size(0)
+            #         Total_workload[k] = Total_workload[k][update_size:]
+
+        return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
+    
+    def conquer(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
+        '''
+        Schedule snapshot-level jobs first or schedule timeseries-level jobs first?
+        '''
+        Scheduled_workload = [torch.full_like(self.nodes_list[t], False, dtype=torch.bool) for t in range(self.timesteps)]
+        Current_workload = [0 for i in range(self.num_devices)]
+        Current_RNN_workload = [[0 for i in range(self.timesteps)]for m in range(self.num_devices)]
+        # compute the average workload
+        avg_workload = (sum(P_workload) + sum(Q_workload))/self.num_devices
+        RNN_avg_workload = np.sum(Q_workload)/self.num_devices
+
+
+        time_cost = 0
+        timeseries_per_device = len(Q_id) // self.num_devices
+        for idx in range(len(Q_id)):
+            Load = []
+            Cross_edge = []
+            for m in range(self.num_devices):
+                Load.append(1 - float((Current_workload[m] + Q_workload[idx])/avg_workload))
+                start = time.time()
+                # Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (Q_id[idx], Q_node_id[idx]), flag=1))
+                time_cost += time.time() - start
+            # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
+            # result = np.sum([Load, Cross_edge], axis = 0).tolist()
+            # select_m = result.index(max(result))
+            # select_m = Load.index(max(Load))
+            select_m = idx // timeseries_per_device
+            # for m in range(self.num_devices):
+            #     if m == select_m:
+            for t in range(self.timesteps)[Q_id[idx]:]:
+                # print(self.workloads_GCN[m][time])
+                self.workloads_GCN[select_m][t][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                self.workloads_RNN[select_m][t][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+            Current_workload[select_m] = Current_workload[select_m] + Q_workload[idx]
+        # print('compute graph-graph cross edges time costs: ', time_cost_edges)
+        # print('compute cross nodes time costs: ', time_cost_nodes)
+        # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
+
+        # print('compute node-graph cross edges time costs: ', time_cost)
+        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
+
+
+        time_cost_edges = 0
+        time_cost_nodes = 0
+        snapshot_per_device = len(P_id) // self.num_devices
+        for idx in range(len(P_id)): # schedule snapshot-level job
+            Load = []
+            Cross_edge = []
+            Cross_node = []
+            for m in range(self.num_devices):
+                Load.append(1 - float((Current_workload[m]+P_workload[idx])/avg_workload))
+                # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
+                start = time.time()
+                # Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
+                time_cost_edges += time.time() - start
+                start = time.time()
+                # Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
+                time_cost_nodes+=  time.time() - start
+            # print(Load, Cross_edge, Cross_node)
+
+            # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
+            # Cross_node = [cn*self.args['beta'] for cn in Cross_node]
+            # print()
+            # result = np.sum([Load,Cross_node],axis=0).tolist()
+            # result = np.sum([result,Cross_edge],axis=0).tolist()
+
+            select_m = idx // snapshot_per_device
+            # select_m = result.index(max(result))
+            # select_m = Load.index(max(Load))
+
+            Node_start_idx = self.nodes_list[P_id[idx]].size(0) - P_workload[idx]
+            workload = torch.full_like(P_snapshot[idx], True, dtype=torch.bool)
+            self.workloads_GCN[select_m][P_id[idx]][P_snapshot[idx]] = workload
+            self.workloads_RNN[select_m][P_id[idx]][P_snapshot[idx]] = workload
+            Current_workload[select_m] = Current_workload[select_m]+P_workload[idx]
+            Current_RNN_workload[select_m][P_id[idx]] += 1
+
+    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
+        '''
+        Both GCN communication time and RNN communication time are needed
+        '''
+        RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+
+        GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
+        # RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
+
+        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
+        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
+
+        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_receive = [torch.cat(RNN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
+        RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
+
+        GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
+        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
+        GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
+        # Total_time = max(GPU_total_time)
+        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
+
+        print('----------------------------------------------------------')
+        print('Our partition method:')
+        print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
+        print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
+        print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
+        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
+
+class Ours_balance():
+    def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
+        super(Ours_balance, self).__init__()
         self.args = args
         self.nodes_list = nodes_list
         self.adjs_list = adjs_list
@@ -774,232 +1202,11 @@ class divide_and_conquer():
         Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
 
         print('----------------------------------------------------------')
-        print('Divide-conquer partition method:')
+        print('Our partition method with workload balance:')
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
         print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
-
-
-class snapshot_partition_balance():
-    def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
-        super(snapshot_partition_balance, self).__init__()
-        self.args = args
-        self.nodes_list = nodes_list
-        self.adjs_list = adjs_list
-        self.num_devices = num_devices
-        self.graphs = graphs
-        self.timesteps = len(nodes_list)
-        self.workloads_GCN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
-        self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
-
-        # runtime
-        P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.partition()
-
-        self.schedule(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
-
-    def partition(self):
-        '''
-        Step 1: partition snapshot into P set; partition nodes into Q set
-        '''
-        Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
-        Total_workload_RNN = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
-        num_generations = [i+1 for i in range(self.timesteps)]
-        P_id = [] # save the snapshot id
-        Q_id = []
-        Q_node_id = []
-        P_workload = [] # save the workload size
-        P_snapshot = []
-        Q_workload = []
-        Degree = []
-        for time in range(self.timesteps):
-            if time == 0:
-                    start = 0
-            else:
-                start = self.nodes_list[time - 1].size(0)
-            end = self.nodes_list[time].size(0)
-
-            workload_gcn = self.nodes_list[time]
-            P_id.append(time)
-            P_workload.append(workload_gcn.size(0))
-            P_snapshot.append(workload_gcn)
-
-            workload_rnn = self.nodes_list[time][start:end]
-            for node in workload_rnn.tolist():
-                Q_id.append(time)
-                # divided_nodes = self.nodes_list[time].size(0) - workload.size(0)
-                Q_node_id.append(node)
-                Q_workload.append(self.timesteps - time)
-        return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
-    
-    def schedule(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
-        Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
-        Current_GCN_workload = [0 for i in range(self.num_devices)]
-        Current_RNN_workload = [0 for i in range(self.num_devices)]
-        # compute the average workload
-        GCN_avg_workload = np.sum(P_workload)/self.num_devices
-        RNN_avg_workload = np.sum(Q_workload)/self.num_devices
-
-        for idx in range(len(P_id)): # schedule snapshot-level job to GCN workload
-            Load = []
-            Cross_edge = []
-            for m in range(self.num_devices):
-                Load.append(1 - float((Current_GCN_workload[m]+P_workload[idx])/GCN_avg_workload))
-                # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
-            select_m = Load.index(max(Load))
-            workload = torch.full_like(P_snapshot[idx], True, dtype=torch.bool)
-            self.workloads_GCN[select_m][P_id[idx]][P_snapshot[idx]] = workload
-
-            Current_GCN_workload[select_m] = Current_GCN_workload[select_m]+P_workload[idx]
-            # Current_RNN_workload[select_m][P_id[idx]] += 1
-
-        # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
-
-        for idx in range(len(Q_id)):  # schedule node-level job to RNN workload
-            Load = []
-            for m in range(self.num_devices):
-                Load.append(1 - float((Current_RNN_workload[m] + Q_workload[idx])/RNN_avg_workload))
-            select_m = Load.index(max(Load))
-            # for m in range(self.num_devices):
-            #     if m == select_m:
-            for time in range(self.timesteps)[Q_id[idx]:]:
-                # print(self.workloads_GCN[m][time])
-                self.workloads_RNN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
-                
-                # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
-            Current_RNN_workload[select_m] = Current_RNN_workload[select_m] + Q_workload[idx]
-        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
-
-    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
-        '''
-        Both GCN communication time and RNN communication time are needed
-        '''
-        RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
-
-        GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
-        # RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
-
-        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
-        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
-
-        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
-        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
-        RNN_receive = [torch.cat(RNN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
-        RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
-
-        GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
-        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i])*2 for i in range(len(RNN_receive_comm_time))]
-        GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
-        # Total_time = max(GPU_total_time)
-        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
-
-        print('----------------------------------------------------------')
-        print('snapshot partition with workload balance method:')
-        print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
-        print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
-        print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
-        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
-
-
-class node_partition_balance():
-    def __init__(self, args, graphs, nodes_list, adjs_list, num_devices):
-        super(node_partition_balance, self).__init__()
-        self.args = args
-        self.nodes_list = nodes_list
-        self.adjs_list = adjs_list
-        self.num_devices = num_devices
-        self.graphs = graphs
-        self.timesteps = len(nodes_list)
-        self.workloads_GCN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
-        self.workloads_RNN = [[torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)] for i in range(num_devices)]
-
-        # runtime
-        P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.partition()
-
-        self.schedule(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
-
-    def partition(self):
-        '''
-        Step 1: partition snapshot into P set; partition nodes into Q set
-        '''
-        Total_workload = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
-        Total_workload_RNN = [torch.full_like(self.nodes_list[time], 1) for time in range(self.timesteps)]
-        num_generations = [i+1 for i in range(self.timesteps)]
-        P_id = [] # save the snapshot id
-        Q_id = []
-        Q_node_id = []
-        P_workload = [] # save the workload size
-        P_snapshot = []
-        Q_workload = []
-        Degree = []
-        for time in range(self.timesteps):
-            if time == 0:
-                    start = 0
-            else:
-                start = self.nodes_list[time - 1].size(0)
-            end = self.nodes_list[time].size(0)
-            workload = self.nodes_list[time][start:end]
-            for node in workload.tolist():
-                Q_id.append(time)
-                # divided_nodes = self.nodes_list[time].size(0) - workload.size(0)
-                Q_node_id.append(node)
-                Q_workload.append(self.timesteps - time)
-        return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
-    
-    def schedule(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
-        Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
-        Current_GCN_workload = [0 for i in range(self.num_devices)]
-        Current_RNN_workload = [0 for i in range(self.num_devices)]
-        # compute the average workload
-        GCN_avg_workload = np.sum(P_workload)/self.num_devices
-        RNN_avg_workload = np.sum(Q_workload)/self.num_devices
-
-        for idx in range(len(Q_id)):  # schedule node-level job to RNN workload
-            Load = []
-            for m in range(self.num_devices):
-                Load.append(1 - float((Current_RNN_workload[m] + Q_workload[idx])/RNN_avg_workload))
-            select_m = Load.index(max(Load))
-            # for m in range(self.num_devices):
-            #     if m == select_m:
-            for time in range(self.timesteps)[Q_id[idx]:]:
-                # print(self.workloads_GCN[m][time])
-                self.workloads_GCN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
-                self.workloads_RNN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
-                
-                # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
-            Current_RNN_workload[select_m] = Current_RNN_workload[select_m] + Q_workload[idx]
-        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
-    
-    def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
-        '''
-        Both GCN communication time and RNN communication time are needed
-        '''
-        RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
-
-        GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
-        # RNN_receive_list, RNN_send_list = RNN_comm_nodes(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
-
-        GCN_receive_comm_time, GCN_send_comm_time = Comm_time(self.num_devices, GCN_receive_list, GCN_send_list, GCN_node_size, bandwidth)
-        RNN_receive_comm_time, RNN_send_comm_time = Comm_time(self.num_devices, RNN_receive_list, RNN_send_list, RNN_node_size, bandwidth)
-
-        GCN_receive = [torch.cat(GCN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
-        GCN_send = [torch.cat(GCN_send_list[i], 0).size(0) for i in range(self.num_devices)]
-        RNN_receive = [torch.cat(RNN_receive_list[i], 0).size(0) for i in range(self.num_devices)]
-        RNN_send = [torch.cat(RNN_send_list[i], 0).size(0) for i in range(self.num_devices)]
-
-        GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
-        RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
-        GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
-        # Total_time = max(GPU_total_time)
-        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
-
-        print('----------------------------------------------------------')
-        print('node partition with workload balance method:')
-        print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
-        print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
-        print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
-        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
-
 
 import time
 
@@ -1086,5 +1293,8 @@ if __name__ == '__main__':
     # hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
     # hybrid_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
-    proposed_partition_obj = divide_and_conquer(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+    proposed_partition_obj = Ours(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
     proposed_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+
+    proposed_partition_balance_obj = Ours_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+    proposed_partition_balance_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
