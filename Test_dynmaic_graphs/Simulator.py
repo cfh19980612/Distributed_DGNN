@@ -920,6 +920,8 @@ class Ours():
             # select_m = result.index(max(result))
             # select_m = Load.index(max(Load))
             select_m = idx // timeseries_per_device
+            if select_m >= self.num_devices:
+                select_m = self.num_devices - 1
             # for m in range(self.num_devices):
             #     if m == select_m:
             for t in range(self.timesteps)[Q_id[idx]:]:
@@ -961,6 +963,8 @@ class Ours():
             # result = np.sum([result,Cross_edge],axis=0).tolist()
 
             select_m = idx // snapshot_per_device
+            if select_m >= self.num_devices:
+                select_m = self.num_devices - 1
             # select_m = result.index(max(result))
             # select_m = Load.index(max(Load))
 
