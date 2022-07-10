@@ -634,6 +634,8 @@ class divide_and_conquer():
         avg_workload = (np.sum(P_workload) + np.sum(Q_workload))/self.num_devices
         RNN_avg_workload = np.sum(Q_workload)/self.num_devices
 
+        time_cost_edges = 0
+        time_cost_nodes = 0
         for idx in range(len(P_id)): # schedule snapshot-level job
             Load = []
             Cross_edge = []
@@ -643,10 +645,10 @@ class divide_and_conquer():
                 # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
                 start = time.time()
                 Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
-                print('compute graph-graph cross edges time costs: ', time.time() - start)
+                time_cost_edges += time.time() - start
                 start = time.time()
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
-                print('compute cross nodes time costs: ', time.time() - start)
+                time_cost_nodes+=  time.time() - start
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             Cross_node = [cn*self.args['beta'] for cn in Cross_node]
             # print()
@@ -667,8 +669,11 @@ class divide_and_conquer():
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
                 #     self.workloads_RNN[select_m].append(workload)
+        print('compute graph-graph cross edges time costs: ', time_cost_edges)
+        print('compute cross nodes time costs: ', time_cost_nodes)
         # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
+        time_cost = 0
         for idx in range(len(Q_id)):
             Load = []
             Cross_edge = []
@@ -676,7 +681,7 @@ class divide_and_conquer():
                 Load.append(1 - float((Current_workload[m] + Q_workload[idx])/avg_workload))
                 start = time.time()
                 Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], Q_node_id[idx], flag=1))
-                print('compute node-graph cross edges time costs: ', time.time() - start)
+                time_cost += time.time() - start
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load, Cross_edge], axis = 0).tolist()
             select_m = result.index(max(result))
@@ -690,6 +695,7 @@ class divide_and_conquer():
                 # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
             Current_workload[select_m] = Current_workload[select_m] + Q_workload[idx]
 
+        print('compute node-graph cross edges time costs: ', time_cost)
         # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
 
     def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
