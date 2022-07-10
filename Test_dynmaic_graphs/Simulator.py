@@ -246,6 +246,20 @@ def Cross_nodes(timesteps, nodes_list, current_workload, workload):
     # print(num)
     return num
 
+
+def Computation_time(num_devices, timesteps, workload_GCN, workload_RNN):
+    GCN_time = [0 for i in range(num_devices)]
+    RNN_time = [0 for i in range(num_devices)]
+    for m in range(num_devices):
+        GCN_nodes = sum([torch.nonzero(workload_GCN[t] == True, as_tuple=False).view(-1).size(0) for t in range(timesteps)])
+        RNN_nodes = sum([torch.nonzero(workload_RNN[t] == True, as_tuple=False).view(-1).size(0) for t in range(timesteps)])
+        GCN_time[m] += np.around(float(GCN_nodes/100000), 3)
+        RNN_time[m] += np.around(float(RNN_nodes/10000), 3)
+
+    return max(GCN_time) + max(RNN_time)
+
+
+
 # different partition methods
 class node_partition():
     def __init__(self, args, nodes_list, adjs_list, num_devices):
@@ -312,6 +326,8 @@ class node_partition():
         GCN_comm_time = [max(GCN_receive_comm_time[i], GCN_send_comm_time[i]) for i in range(len(GCN_receive_comm_time))]
         RNN_comm_time = [0 for i in range(self.num_devices)]
         GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
+
+        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workload, self.workload)
         # Total_time = max(GPU_total_time)
 
         print('----------------------------------------------------------')
@@ -319,7 +335,7 @@ class node_partition():
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
-        print('Total communication time: {}'.format(max(GPU_total_time)))
+        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
 
 
 class snapshot_partition():
@@ -401,12 +417,14 @@ class snapshot_partition():
         GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
         # Total_time = max(GPU_total_time)
 
+        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
+
         print('----------------------------------------------------------')
         print('Snapshot-level partition method:')
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
-        print('Total communication time: {}'.format(max(GPU_total_time)))
+        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
 
 
 class hybrid_partition():
@@ -545,12 +563,14 @@ class hybrid_partition():
         GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
         # Total_time = max(GPU_total_time)
 
+        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
+
         print('----------------------------------------------------------')
         print('Hybrid partition method:')
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
-        print('Total communication time: {}'.format(max(GPU_total_time)))
+        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
 
 
 class divide_and_conquer():
@@ -753,13 +773,14 @@ class divide_and_conquer():
         RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
         GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
         # Total_time = max(GPU_total_time)
+        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
 
         print('----------------------------------------------------------')
         print('Divide-conquer partition method:')
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
-        print('Total communication time: {}'.format(max(GPU_total_time)))
+        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
 
 
 class snapshot_partition_balance():
@@ -872,13 +893,14 @@ class snapshot_partition_balance():
         RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
         GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
         # Total_time = max(GPU_total_time)
+        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
 
         print('----------------------------------------------------------')
         print('snapshot partition with workload balance method:')
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
-        print('Total communication time: {}'.format(max(GPU_total_time)))
+        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
 
 
 class node_partition_balance():
@@ -971,13 +993,14 @@ class node_partition_balance():
         RNN_comm_time = [max(RNN_receive_comm_time[i], RNN_send_comm_time[i]) for i in range(len(RNN_receive_comm_time))]
         GPU_total_time = [GCN_comm_time[i] + RNN_comm_time[i] for i in range(len(GCN_comm_time))]
         # Total_time = max(GPU_total_time)
+        Comp_time = Computation_time(self.num_devices, len(self.nodes_list), self.workloads_GCN, self.workloads_RNN)
 
         print('----------------------------------------------------------')
         print('node partition with workload balance method:')
         print('GCN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(GCN_receive, GCN_send))
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
-        print('Total communication time: {}'.format(max(GPU_total_time)))
+        print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
 
 
 import time
