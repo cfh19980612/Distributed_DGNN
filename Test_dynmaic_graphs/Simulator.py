@@ -269,8 +269,8 @@ def Distribution(nodes_list, timesteps, num_device, workload):
             distribution[idx,t-10] = m
     mask = []
     for gen in range(10):
-        for i in range(4)[-1:]:
-            mask.append(nodes_list[gen].size(0) - i)
+        for i in range(4):
+            mask.append(nodes_list[gen].size(0) + i -4)
 
     print(mask)
     mask_tensor = torch.tensor(mask)
