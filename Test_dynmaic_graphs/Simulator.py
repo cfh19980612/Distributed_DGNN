@@ -259,12 +259,20 @@ def Computation_time(num_devices, timesteps, workload_GCN, workload_RNN):
     return max(GCN_time) + max(RNN_time)
 
 def Distribution(nodes_list, timesteps, num_device, workload):
-    distribution = torch.tensor([[0 for t in range(timesteps)] for node in range(nodes_list[0].size(0))])
+    distribution = torch.tensor([[0 for t in range(timesteps - 10)] for node in range(nodes_list[9].size(0))])
+
+
     for m in range(num_device):
-        for t in range(timesteps):
-            idx = torch.nonzero(workload[m][t][:nodes_list[0].size(0)] == True, as_tuple=False).view(-1)
+        for t in range(timesteps)[9:]:
+            idx = torch.nonzero(workload[m][t][:nodes_list[9].size(0)] == True, as_tuple=False).view(-1)
             # print(idx)
-            distribution[idx,t] = m
+            distribution[idx,t-9] = m
+    mask = []
+    for gen in range(10):
+        for i in range(4)[-1:]:
+            mask.append(nodes_list[gen].size(0) - i)
+    mask_tensor = torch.tensor(mask)
+    distribution = distribution[mask_tensor,:]
     return distribution.tolist()
 
 # different partition methods
