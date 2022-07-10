@@ -1002,6 +1002,9 @@ class Ours():
         '''
         Both GCN communication time and RNN communication time are needed
         '''
+        distribution = Distribution(self.nodes_list, self.timesteps, self.num_devices, self.workloads_GCN)
+        print('ours partition distribution (no balance): ',distribution)
+
         RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
 
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
