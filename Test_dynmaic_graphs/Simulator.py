@@ -251,8 +251,8 @@ def Computation_time(num_devices, timesteps, workload_GCN, workload_RNN):
     GCN_time = [0 for i in range(num_devices)]
     RNN_time = [0 for i in range(num_devices)]
     for m in range(num_devices):
-        GCN_nodes = sum([torch.nonzero(workload_GCN[t] == True, as_tuple=False).view(-1).size(0) for t in range(timesteps)])
-        RNN_nodes = sum([torch.nonzero(workload_RNN[t] == True, as_tuple=False).view(-1).size(0) for t in range(timesteps)])
+        GCN_nodes = sum([torch.nonzero(workload_GCN[m][t] == True, as_tuple=False).view(-1).size(0) for t in range(timesteps)])
+        RNN_nodes = sum([torch.nonzero(workload_RNN[m][t] == True, as_tuple=False).view(-1).size(0) for t in range(timesteps)])
         GCN_time[m] += np.around(float(GCN_nodes/100000), 3)
         RNN_time[m] += np.around(float(RNN_nodes/10000), 3)
 
