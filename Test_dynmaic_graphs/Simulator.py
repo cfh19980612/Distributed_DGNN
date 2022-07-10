@@ -541,14 +541,18 @@ class divide_and_conquer():
         # self.alpha = 0.1
 
         # runtime
+        start = time.time()
         P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.divide()
+        print('divide time cost: ', time.time() - start)
         # print('P_id: ',P_id)
         # print('Q_id: ',Q_id)
         # print('Q_node_id: ',Q_node_id)
         # print('P_workload: ',P_workload)
         # print('Q_workload: ',Q_workload)
         # print('P_snapshot: ',P_snapshot)
+        start = time.time()
         self.conquer(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
+        print('conquer time cost: ', time.time() - start)
 
     def divide(self):
         '''
@@ -640,6 +644,7 @@ class divide_and_conquer():
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             Cross_node = [cn*self.args['beta'] for cn in Cross_node]
+            print()
             result = np.sum([Load,Cross_node],axis=0).tolist()
             result = np.sum([result,Cross_edge],axis=0).tolist()
 
