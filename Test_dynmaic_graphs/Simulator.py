@@ -717,7 +717,7 @@ class divide_and_conquer():
                 # Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (Q_id[idx], Q_node_id[idx]), flag=1))
                 time_cost += time.time() - start
             # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
-            result = np.sum([Load, Cross_edge], axis = 0).tolist()
+            # result = np.sum([Load, Cross_edge], axis = 0).tolist()
             # select_m = result.index(max(result))
             select_m = Load.index(max(Load))
             # for m in range(self.num_devices):
