@@ -190,7 +190,7 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload, flag):
         # # method 2: compute cross edges all node with dense tensor (fast but memory inefficient)
         time = workload[0]
         nodes = workload[1]
-        adj = adjs[time].clone().todense()
+        adj = adjs[time].clone().to_dense()
         source = adj[nodes,:]
         idx = torch.nonzero(source == 1, as_tuple=False).view(-1)
         has_nodes = torch.nonzero(current_workload[time][idx] == True, as_tuple=False).view(-1)
