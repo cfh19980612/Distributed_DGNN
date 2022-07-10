@@ -175,6 +175,7 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload, flag):
         # # graph-graph cross edges at a timestep
         time = workload[0]
         nodes = workload[1].tolist()
+        print('time: ', time)
         adj = adjs[time].clone()
         edge_source = adj._indices()[0]
         edge_target = adj._indices()[1]
