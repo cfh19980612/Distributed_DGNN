@@ -703,8 +703,8 @@ class divide_and_conquer():
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
                 #     self.workloads_RNN[select_m].append(workload)
-        # print('compute graph-graph cross edges time costs: ', time_cost_edges)
-        # print('compute cross nodes time costs: ', time_cost_nodes)
+        print('compute graph-graph cross edges time costs: ', time_cost_edges)
+        print('compute cross nodes time costs: ', time_cost_nodes)
         # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
         time_cost = 0
@@ -729,7 +729,7 @@ class divide_and_conquer():
                 # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
             Current_workload[select_m] = Current_workload[select_m] + Q_workload[idx]
 
-        # print('compute node-graph cross edges time costs: ', time_cost)
+        print('compute node-graph cross edges time costs: ', time_cost)
         # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
 
     def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
