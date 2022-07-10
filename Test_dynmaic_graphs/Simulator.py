@@ -592,7 +592,7 @@ class divide_and_conquer():
                 # print('generation; ',generation)
                 # print('avg_degree: ', avg_deg)
                 # print('Time length: ', self.timesteps - time)
-                workload = self.nodes_list[T][start:end]
+                workload = self.nodes_list[t][start:end]
                 if avg_deg > self.alpha*(self.timesteps - t): # GCN-sensitive job
                     P_id.append(t)
                     P_workload.append(workload.size(0))
