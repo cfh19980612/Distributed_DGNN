@@ -961,8 +961,10 @@ class Ours():
             # print()
             # result = np.sum([Load,Cross_node],axis=0).tolist()
             # result = np.sum([result,Cross_edge],axis=0).tolist()
-
-            select_m = idx // snapshot_per_device
+            if snapshot_per_device != 0:
+                select_m = idx // snapshot_per_device
+            else:
+                select_m = 0
             if select_m >= self.num_devices:
                 select_m = self.num_devices - 1
             # select_m = result.index(max(result))
