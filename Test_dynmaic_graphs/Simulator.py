@@ -635,8 +635,6 @@ class divide_and_conquer():
                 Degree.append(avg_deg)
                 # print('alpha: ',self.alpha)
                 # print('generation; ',generation)
-                print('avg_degree: ', avg_deg)
-                print('Time length: ', self.timesteps - t)
                 workload = self.nodes_list[t][start:end]
                 if avg_deg > self.alpha*(self.timesteps - t): # GCN-sensitive job
                     P_id.append(t)
@@ -1088,8 +1086,10 @@ if __name__ == '__main__':
             adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
             adjs_list.append(adj_tensor_sp)
         
+        Degrees = [list(dict(nx.degree(graphs[t])).values()) for t in range(time_steps)]
         print('Number of graphs: ', len(graphs))
         print('Number of features: ', feats[0].size(0))
+        print('Average degrees: ', [np.mean(Degrees[t]) for t in range(time_steps)])
         GCN_node_size = feats[0].size(0)*4
         RNN_node_size = 256*4
 
