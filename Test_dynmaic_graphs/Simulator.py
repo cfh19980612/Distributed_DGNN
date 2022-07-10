@@ -202,19 +202,33 @@ def Cross_edges(timesteps, adjs, nodes_list, Degrees, current_workload, workload
 
     # node-graph cross edges at multiple timesteps
     else:
-        node_id = workload
-        for time in range(timesteps):
-            adj = adjs[time].clone()
-            edge_source = adj._indices()[0]
-            edge_target = adj._indices()[1]
-            # print(edge_source, edge_target)
-            idx = torch.nonzero(edge_source == node_id, as_tuple=False).view(-1)
-            # print(idx)
-            nodes_idx = edge_target[idx]
-            # print(nodes_idx)
-            has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
-            print('all degrees: ',sum(Degrees[time]))
-            num += has_nodes.size(0)/sum(Degrees[time])
+        time = workload[0]
+        node_id = workload[1]
+        adj = adjs[time].clone()
+        edge_source = adj._indices()[0]
+        edge_target = adj._indices()[1]
+        # print(edge_source, edge_target)
+        idx = torch.nonzero(edge_source == node_id, as_tuple=False).view(-1)
+        # print(idx)
+        nodes_idx = edge_target[idx]
+        # print(nodes_idx)
+        has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
+        print('all degrees: ',sum(Degrees[time]))
+        num += has_nodes.size(0)/sum(Degrees[time])
+
+
+        # for time in range(timesteps):
+        #     adj = adjs[time].clone()
+        #     edge_source = adj._indices()[0]
+        #     edge_target = adj._indices()[1]
+        #     # print(edge_source, edge_target)
+        #     idx = torch.nonzero(edge_source == node_id, as_tuple=False).view(-1)
+        #     # print(idx)
+        #     nodes_idx = edge_target[idx]
+        #     # print(nodes_idx)
+        #     has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
+        #     print('all degrees: ',sum(Degrees[time]))
+        #     num += has_nodes.size(0)/sum(Degrees[time])
         # print(num)
     return num
 
@@ -700,7 +714,7 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m] + Q_workload[idx])/avg_workload))
                 start = time.time()
-                Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], Q_node_id[idx], flag=1))
+                Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (Q_id[idx], Q_node_id[idx]), flag=1))
                 time_cost += time.time() - start
             # Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             result = np.sum([Load, Cross_edge], axis = 0).tolist()
