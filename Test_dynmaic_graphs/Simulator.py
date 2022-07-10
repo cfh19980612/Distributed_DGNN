@@ -172,33 +172,33 @@ def RNN_comm_nodes_new(nodes_list, num_devices, workload_GCN, workloads_RNN):
 def Cross_edges(timesteps, adjs, nodes_list, Degrees, current_workload, workload, flag):
     num = 0
     if flag == 0:
-        # # graph-graph cross edges at a timestep
-        # # method 1: compute cross edges per node with sparse tensor (slow but memory efficient)
-        # time = workload[0]
-        # nodes = workload[1].tolist()
-        # adj = adjs[time].clone()
-        # edge_source = adj._indices()[0]
-        # edge_target = adj._indices()[1]
-        # idx_list = [torch.nonzero(edge_source == node, as_tuple=False).view(-1) for node in nodes]
-        # nodes_idx_list = [edge_target[idx] for idx in idx_list if idx.dim() != 0]
-        # if len(nodes_idx_list) > 0:
-        #     nodes_idx = torch.cat((nodes_idx_list), dim=0)
-        #     has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
-        #     num += has_nodes.size(0)
-        # # print(num)
-
-        # # method 2: compute cross edges all node with dense tensor (fast but memory inefficient)
+        # graph-graph cross edges at a timestep
+        # method 1: compute cross edges per node with sparse tensor (slow but memory efficient)
         time = workload[0]
-        nodes = workload[1]
-        adj = adjs[time].clone().to_dense()
-        source = adj[nodes,:]
-        idx = torch.nonzero(source == 1, as_tuple=False)
-        idx = idx.reshape([idx.size(0)*2, -1]).view(-1)
-        # print(idx.size())
-        # print(idx.reshape([idx.size(0)*2, -1]).size())
-        has_nodes = torch.nonzero(current_workload[time][idx] == True, as_tuple=False).view(-1)
-        # print('all degrees: ',sum(Degrees[time]))
-        num += has_nodes.size(0)/sum(Degrees[time])
+        nodes = workload[1].tolist()
+        adj = adjs[time].clone()
+        edge_source = adj._indices()[0]
+        edge_target = adj._indices()[1]
+        idx_list = [torch.nonzero(edge_source == node, as_tuple=False).view(-1) for node in nodes]
+        nodes_idx_list = [edge_target[idx] for idx in idx_list if idx.dim() != 0]
+        if len(nodes_idx_list) > 0:
+            nodes_idx = torch.cat((nodes_idx_list), dim=0)
+            has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
+            num += has_nodes.size(0)/sum(Degrees[time])
+        # print(num)
+
+        # # # method 2: compute cross edges all node with dense tensor (fast but memory inefficient)
+        # time = workload[0]
+        # nodes = workload[1]
+        # adj = adjs[time].clone().to_dense()
+        # source = adj[nodes,:]
+        # idx = torch.nonzero(source == 1, as_tuple=False)
+        # idx = idx.reshape([idx.size(0)*2, -1]).view(-1)
+        # # print(idx.size())
+        # # print(idx.reshape([idx.size(0)*2, -1]).size())
+        # has_nodes = torch.nonzero(current_workload[time][idx] == True, as_tuple=False).view(-1)
+        # # print('all degrees: ',sum(Degrees[time]))
+        # num += has_nodes.size(0)/sum(Degrees[time])
 
     # node-graph cross edges at multiple timesteps
     else:
