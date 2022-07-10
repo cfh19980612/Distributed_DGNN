@@ -1288,17 +1288,15 @@ if __name__ == '__main__':
     snapshot_partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
     snapshot_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
+    proposed_partition_obj = Ours(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+    proposed_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
+
+    # balance methods
     node_partition_balance_obj = node_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
     node_partition_balance_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
     snapshot_partition_balance_obj = snapshot_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
     snapshot_partition_balance_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
-
-    # hybrid_partition_obj = hybrid_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
-    # hybrid_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
-
-    proposed_partition_obj = Ours(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
-    proposed_partition_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
 
     proposed_partition_balance_obj = Ours_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
     proposed_partition_balance_obj.communication_time(GCN_node_size, RNN_node_size, bandwidth_1MB)
