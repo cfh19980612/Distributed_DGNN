@@ -666,6 +666,7 @@ class divide_and_conquer():
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             Cross_node = [cn*self.args['beta'] for cn in Cross_node]
             # print()
+            print(Load, Cross_edge, Cross_node)
             result = np.sum([Load,Cross_node],axis=0).tolist()
             result = np.sum([result,Cross_edge],axis=0).tolist()
 
@@ -683,8 +684,8 @@ class divide_and_conquer():
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
                 #     self.workloads_RNN[select_m].append(workload)
-        print('compute graph-graph cross edges time costs: ', time_cost_edges)
-        print('compute cross nodes time costs: ', time_cost_nodes)
+        # print('compute graph-graph cross edges time costs: ', time_cost_edges)
+        # print('compute cross nodes time costs: ', time_cost_nodes)
         # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
         time_cost = 0
