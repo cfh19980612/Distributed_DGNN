@@ -1150,10 +1150,9 @@ class Ours_balance():
             Current_workload[select_m] = Current_workload[select_m] + Q_workload[idx]
         # print('compute graph-graph cross edges time costs: ', time_cost_edges)
         # print('compute cross nodes time costs: ', time_cost_nodes)
-        # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
         # print('compute node-graph cross edges time costs: ', time_cost)
-        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
+        print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
 
 
         time_cost_edges = 0
@@ -1188,6 +1187,7 @@ class Ours_balance():
             self.workloads_RNN[select_m][P_id[idx]][P_snapshot[idx]] = workload
             Current_workload[select_m] = Current_workload[select_m]+P_workload[idx]
             Current_RNN_workload[select_m][P_id[idx]] += 1
+            print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
     def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
         '''
