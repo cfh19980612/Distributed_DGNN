@@ -263,10 +263,10 @@ def Distribution(nodes_list, timesteps, num_device, workload):
 
 
     for m in range(num_device):
-        for t in range(timesteps)[9:]:
+        for t in range(timesteps)[10:]:
             idx = torch.nonzero(workload[m][t][:nodes_list[9].size(0)] == True, as_tuple=False).view(-1)
             # print(idx)
-            distribution[idx,t-9] = m
+            distribution[idx,t-10] = m
     mask = []
     for gen in range(10):
         for i in range(4)[-1:]:
