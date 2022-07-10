@@ -696,7 +696,7 @@ class divide_and_conquer():
                 Load.append(1 - float((Current_workload[m]+P_workload[idx])/avg_workload))
                 # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
                 start = time.time()
-                # Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
+                Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.Degrees, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
                 time_cost_edges += time.time() - start
                 start = time.time()
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
@@ -707,7 +707,7 @@ class divide_and_conquer():
             # Cross_node = [cn*self.args['beta'] for cn in Cross_node]
             # print()
             result = np.sum([Load,Cross_node],axis=0).tolist()
-            # result = np.sum([result,Cross_edge],axis=0).tolist()
+            result = np.sum([result,Cross_edge],axis=0).tolist()
 
             select_m = result.index(max(result))
             # select_m = Load.index(max(Load))
@@ -718,11 +718,6 @@ class divide_and_conquer():
             self.workloads_RNN[select_m][P_id[idx]][P_snapshot[idx]] = workload
             Current_workload[select_m] = Current_workload[select_m]+P_workload[idx]
             Current_RNN_workload[select_m][P_id[idx]] += 1
-                    # Scheduled_workload[idx][Node_start_idx:] = workload
-                # else:
-                #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
-                #     self.workloads_GCN[select_m].append(workload)
-                #     self.workloads_RNN[select_m].append(workload)
         # print('compute graph-graph cross edges time costs: ', time_cost_edges)
         # print('compute cross nodes time costs: ', time_cost_nodes)
         # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
