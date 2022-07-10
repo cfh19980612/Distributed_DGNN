@@ -259,19 +259,19 @@ def Computation_time(num_devices, timesteps, workload_GCN, workload_RNN):
     return max(GCN_time) + max(RNN_time)
 
 def Distribution(nodes_list, timesteps, num_device, workload):
-    distribution = torch.tensor([[0 for t in range(timesteps)] for node in range(nodes_list[0].size(0))])
+    distribution = torch.tensor([[0 for t in range(timesteps - 10)] for node in range(nodes_list[9].size(0))])
 
 
     for m in range(num_device):
-        for t in range(timesteps):
-            idx = torch.nonzero(workload[m][t][:nodes_list[0].size(0)] == True, as_tuple=False).view(-1)
+        for t in range(timesteps)[10:]:
+            idx = torch.nonzero(workload[m][t][:nodes_list[9].size(0)] == True, as_tuple=False).view(-1)
             # print(idx)
-            distribution[idx,t] = m
+            distribution[idx,t-10] = m
     mask = []
-    # for gen in range(10):
-    #     for i in range(5):
-    #         mask.append(nodes_list[gen].size(0) + i -4)
-    mask = [i for i in range(50)]
+    for gen in range(10):
+        for i in range(4):
+            mask.append(nodes_list[gen].size(0) + i -4)
+
     print(mask)
     mask_tensor = torch.tensor(mask)
     distribution = distribution[mask_tensor,:]
@@ -1197,8 +1197,8 @@ class Ours_balance():
             result = np.sum([Load,Cross_node],axis=0).tolist()
             result = np.sum([result,Cross_edge],axis=0).tolist()
 
-            select_m = result.index(max(result))
-            # select_m = Load.index(max(Load))
+            # select_m = result.index(max(result))
+            select_m = Load.index(max(Load))
 
             Node_start_idx = self.nodes_list[P_id[idx]].size(0) - P_workload[idx]
             workload = torch.full_like(P_snapshot[idx], True, dtype=torch.bool)
