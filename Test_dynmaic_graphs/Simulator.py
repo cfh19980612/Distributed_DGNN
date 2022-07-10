@@ -635,8 +635,8 @@ class divide_and_conquer():
                 Degree.append(avg_deg)
                 # print('alpha: ',self.alpha)
                 # print('generation; ',generation)
-                # print('avg_degree: ', avg_deg)
-                # print('Time length: ', self.timesteps - time)
+                print('avg_degree: ', avg_deg)
+                print('Time length: ', self.timesteps - time)
                 workload = self.nodes_list[t][start:end]
                 if avg_deg > self.alpha*(self.timesteps - t): # GCN-sensitive job
                     P_id.append(t)
