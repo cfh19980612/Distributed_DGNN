@@ -197,7 +197,8 @@ def Cross_edges(timesteps, adjs, nodes_list, Degrees, current_workload, workload
         # print(idx.size())
         # print(idx.reshape([idx.size(0)*2, -1]).size())
         has_nodes = torch.nonzero(current_workload[time][idx] == True, as_tuple=False).view(-1)
-        num += has_nodes.size(0)/np.sum(Degrees[time])
+        print('all degrees: ',sum(Degrees[time]))
+        num += has_nodes.size(0)/sum(Degrees[time])
 
     # node-graph cross edges at multiple timesteps
     else:
@@ -212,6 +213,7 @@ def Cross_edges(timesteps, adjs, nodes_list, Degrees, current_workload, workload
             nodes_idx = edge_target[idx]
             # print(nodes_idx)
             has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
+            print('all degrees: ',sum(Degrees[time]))
             num += has_nodes.size(0)/sum(Degrees[time])
         # print(num)
     return num
