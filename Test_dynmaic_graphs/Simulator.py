@@ -263,7 +263,7 @@ def Distribution(nodes_list, timesteps, num_device, workload):
     for m in range(num_device):
         for t in range(timesteps):
             idx = torch.nonzero(workload[m][t][:nodes_list[0].size(0)] == True, as_tuple=False).view(-1)
-            print(idx)
+            # print(idx)
             distribution[idx,t] = m
     return distribution.tolist()
 
@@ -670,6 +670,9 @@ class snapshot_partition_balance():
         '''
         Both GCN communication time and RNN communication time are needed
         '''
+        distribution = Distribution(self.nodes_list, self.timesteps, self.num_devices, self.workloads_GCN)
+        print('snapshot-partition distribution: ',distribution)
+
         RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
 
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
@@ -769,6 +772,9 @@ class node_partition_balance():
         '''
         Both GCN communication time and RNN communication time are needed
         '''
+        distribution = Distribution(self.nodes_list, self.timesteps, self.num_devices, self.workloads_GCN)
+        print('Node-partition distribution: ',distribution)
+
         RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
 
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
@@ -819,12 +825,12 @@ class Ours():
         start = time.time()
         P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.divide()
         # print('divide time cost: ', time.time() - start)
-        print('P_id: ',P_id)
-        print('Q_id: ',Q_id)
-        print('Q_node_id: ',Q_node_id)
-        print('P_workload: ',P_workload)
-        print('Q_workload: ',Q_workload)
-        print('P_snapshot: ',P_snapshot)
+        # print('P_id: ',P_id)
+        # print('Q_id: ',Q_id)
+        # print('Q_node_id: ',Q_node_id)
+        # print('P_workload: ',P_workload)
+        # print('Q_workload: ',Q_workload)
+        # print('P_snapshot: ',P_snapshot)
         start = time.time()
         self.conquer(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
         # print('conquer time cost: ', time.time() - start)
@@ -1152,7 +1158,7 @@ class Ours_balance():
         # print('compute cross nodes time costs: ', time_cost_nodes)
 
         # print('compute node-graph cross edges time costs: ', time_cost)
-        print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
+        # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
 
 
         time_cost_edges = 0
@@ -1187,7 +1193,7 @@ class Ours_balance():
             self.workloads_RNN[select_m][P_id[idx]][P_snapshot[idx]] = workload
             Current_workload[select_m] = Current_workload[select_m]+P_workload[idx]
             Current_RNN_workload[select_m][P_id[idx]] += 1
-            print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
+            # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
     def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
         '''
@@ -1195,7 +1201,7 @@ class Ours_balance():
         '''
 
         distribution = Distribution(self.nodes_list, self.timesteps, self.num_devices, self.workloads_GCN)
-        print(distribution)
+        print('ours partition distribution: ',distribution)
 
         RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
 
