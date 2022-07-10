@@ -1,3 +1,4 @@
+from re import T
 from select import select
 import scipy
 import numpy as np
@@ -569,34 +570,34 @@ class divide_and_conquer():
         P_snapshot = []
         Q_workload = []
         Degree = []
-        for time in range(self.timesteps):
-            for generation in num_generations[time]:
+        for t in range(self.timesteps):
+            for generation in num_generations[t]:
                 # compute average degree of nodes in specific generation
                 if generation == 0:
                     start = 0
                 else:
                     start = self.nodes_list[generation - 1].size(0)
                 end = self.nodes_list[generation].size(0)
-                Degree_list = list(dict(nx.degree(self.graphs[time])).values())[start:end]
+                Degree_list = list(dict(nx.degree(self.graphs[t])).values())[start:end]
                 avg_deg = np.mean(Degree_list)
                 Degree.append(avg_deg)
                 # print('alpha: ',self.alpha)
                 # print('generation; ',generation)
                 # print('avg_degree: ', avg_deg)
                 # print('Time length: ', self.timesteps - time)
-                workload = self.nodes_list[time][start:end]
-                if avg_deg > self.alpha*(self.timesteps - time): # GCN-sensitive job
-                    P_id.append(time)
+                workload = self.nodes_list[T][start:end]
+                if avg_deg > self.alpha*(self.timesteps - t): # GCN-sensitive job
+                    P_id.append(time_steps)
                     P_workload.append(workload.size(0))
                     P_snapshot.append(workload)
                 else:
                     for node in workload.tolist():
-                        Q_id.append(time)
+                        Q_id.append(t)
                         # divided_nodes = self.nodes_list[time].size(0) - workload.size(0)
                         Q_node_id.append(node)
-                        Q_workload.append(self.timesteps - time)
+                        Q_workload.append(self.timesteps - t)
                     # update following snapshots
-                    for k in range(self.timesteps)[time+1:]:
+                    for k in range(self.timesteps)[t+1:]:
                         mask = torch.full_like(Total_workload[k], True, dtype=torch.bool)
                         mask[start:end] = torch.zeros(mask[start:end].size(0), dtype=torch.bool)
                         where = torch.nonzero(mask == True, as_tuple=False).view(-1)
@@ -626,7 +627,7 @@ class divide_and_conquer():
         return P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload
     
     def conquer(self, P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload):
-        Scheduled_workload = [torch.full_like(self.nodes_list[time], False, dtype=torch.bool) for time in range(self.timesteps)]
+        Scheduled_workload = [torch.full_like(self.nodes_list[t], False, dtype=torch.bool) for t in range(self.timesteps)]
         Current_workload = [0 for i in range(self.num_devices)]
         Current_RNN_workload = [[0 for i in range(self.timesteps)]for m in range(self.num_devices)]
         # compute the average workload
@@ -640,11 +641,15 @@ class divide_and_conquer():
             for m in range(self.num_devices):
                 Load.append(1 - float((Current_workload[m]+P_workload[idx])/avg_workload))
                 # Cross_edge.append(Current_RNN_workload[m][P_id[idx]])
+                start = time.time()
                 Cross_edge.append(Cross_edges(self.timesteps, self.adjs_list, self.nodes_list, self.workloads_GCN[m], (P_id[idx],P_snapshot[idx]), flag=0))
+                print('compute cross edges time costs: ', time.time() - start)
+                start = time.time()
                 Cross_node.append(Cross_nodes(self.timesteps, self.nodes_list, self.workloads_GCN[m], P_snapshot[idx]))
+                print('compute cross nodes time costs: ', time.time() - start)
             Cross_edge = [ce*self.args['beta'] for ce in Cross_edge]
             Cross_node = [cn*self.args['beta'] for cn in Cross_node]
-            print()
+            # print()
             result = np.sum([Load,Cross_node],axis=0).tolist()
             result = np.sum([result,Cross_edge],axis=0).tolist()
 
@@ -676,10 +681,10 @@ class divide_and_conquer():
             # select_m = Load.index(max(Load))
             # for m in range(self.num_devices):
             #     if m == select_m:
-            for time in range(self.timesteps)[Q_id[idx]:]:
+            for t in range(self.timesteps)[Q_id[idx]:]:
                 # print(self.workloads_GCN[m][time])
-                self.workloads_GCN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
-                self.workloads_RNN[select_m][time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                self.workloads_GCN[select_m][t][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
+                self.workloads_RNN[select_m][t][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
                 # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
             Current_workload[select_m] = Current_workload[select_m] + Q_workload[idx]
 
