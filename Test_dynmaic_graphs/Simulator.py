@@ -22,7 +22,7 @@ bandwidth_GB = float(1024*1024*1024*8)
     public communication function
 '''
 def generate_test_graph():
-    num_snapshots = 10
+    num_snapshots = 2
     nodes_list = [torch.tensor(np.array([j for j in range(3+i*3)])) for i in range(num_snapshots)]
     adjs_list = [torch.ones(nodes_list[i].size(0), nodes_list[i].size(0)).to_sparse() for i in range(num_snapshots)]
 
@@ -258,7 +258,13 @@ def Computation_time(num_devices, timesteps, workload_GCN, workload_RNN):
 
     return max(GCN_time) + max(RNN_time)
 
-
+def Distribution(nodes_list, timesteps, num_device, workload):
+    distribution = torch.tensor([[0 for t in range(timesteps)] for node in range(nodes_list[0].size(0))])
+    for m in range(num_device):
+        for t in range(timesteps):
+            idx = torch.nonzero(workload[m][t] == True, as_tuple=False).view(-1)
+            distribution[idx,t] = m
+    return distribution.tolist()
 
 # different partition methods
 class node_partition():
@@ -336,7 +342,6 @@ class node_partition():
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
         print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
-
 
 class snapshot_partition():
     def __init__(self, args, nodes_list, adjs_list, num_devices):
@@ -425,7 +430,6 @@ class snapshot_partition():
         print('RNN | Each GPU receives nodes: {} | Each GPU sends nodes: {}'.format(RNN_receive, RNN_send))
         print('Each GPU with communication time: {} ( GCN: {} | RNN: {})'.format(GPU_total_time, GCN_comm_time, RNN_comm_time))
         print('Total time: {} | Computation time: {}, Communication time: {}'.format(max(GPU_total_time) + Comp_time, Comp_time, max(GPU_total_time)))
-
 
 class hybrid_partition():
     def __init__(self, args, nodes_list, adjs_list, num_devices):
@@ -1188,6 +1192,10 @@ class Ours_balance():
         '''
         Both GCN communication time and RNN communication time are needed
         '''
+
+        distribution = Distribution(self.nodes_list, self.timesteps, self.num_devices, self.workloads_GCN)
+        print(distribution)
+
         RNN_receive_list, RNN_send_list = RNN_comm_nodes_new(self.nodes_list, self.num_devices, self.workloads_GCN, self.workloads_RNN)
 
         GCN_receive_list, GCN_send_list = GCN_comm_nodes(self.nodes_list, self.adjs_list, self.num_devices, self.workloads_GCN)
