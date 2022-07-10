@@ -173,22 +173,28 @@ def Cross_edges(timesteps, adjs, nodes_list, current_workload, workload, flag):
     num = 0
     if flag == 0:
         # # graph-graph cross edges at a timestep
+        # # method 1: compute cross edges per node with sparse tensor (slow but memory efficient)
+        # time = workload[0]
+        # nodes = workload[1].tolist()
+        # adj = adjs[time].clone()
+        # edge_source = adj._indices()[0]
+        # edge_target = adj._indices()[1]
+        # idx_list = [torch.nonzero(edge_source == node, as_tuple=False).view(-1) for node in nodes]
+        # nodes_idx_list = [edge_target[idx] for idx in idx_list if idx.dim() != 0]
+        # if len(nodes_idx_list) > 0:
+        #     nodes_idx = torch.cat((nodes_idx_list), dim=0)
+        #     has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
+        #     num += has_nodes.size(0)
+        # # print(num)
+
+        # # method 2: compute cross edges all node with dense tensor (fast but memory inefficient)
         time = workload[0]
-        nodes = workload[1].tolist()
-        # print('time: ', time)
-        adj = adjs[time].clone()
-        edge_source = adj._indices()[0]
-        edge_target = adj._indices()[1]
-        idx_list = [torch.nonzero(edge_source == node, as_tuple=False).view(-1) for node in nodes]
-        nodes_idx_list = [edge_target[idx] for idx in idx_list if idx.dim() != 0]
-        # print(nodes_idx_list)
-        # nodes_idx_list_new = list(filter(lambda val: val !=  torch.tensor([], dtype=torch.int64), nodes_idx_list))
-        # print(nodes_idx_list_new)
-        if len(nodes_idx_list) > 0:
-            nodes_idx = torch.cat((nodes_idx_list), dim=0)
-            has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
-            num += has_nodes.size(0)
-        # print(num)
+        nodes = workload[1]
+        adj = adjs[time].clone().todense()
+        source = adj[nodes,:]
+        idx = torch.nonzero(source == 1, as_tuple=False).view(-1)
+        has_nodes = torch.nonzero(current_workload[time][idx] == True, as_tuple=False).view(-1)
+        num += has_nodes.size(0)
 
     # node-graph cross edges at multiple timesteps
     else:
@@ -212,8 +218,6 @@ def Cross_nodes(timesteps, nodes_list, current_workload, workload):
     num = 0
     same_nodes = []
     for time in range(timesteps):
-        print('node list: ',nodes_list[time])
-        print('workload: ',workload)
         if nodes_list[time][-1] >= workload[-1]:
             same_nodes.append(current_workload[time][workload])
     if len(same_nodes) > 0:
@@ -551,16 +555,16 @@ class divide_and_conquer():
         # runtime
         start = time.time()
         P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload = self.divide()
-        print('divide time cost: ', time.time() - start)
-        print('P_id: ',P_id)
-        print('Q_id: ',Q_id)
-        print('Q_node_id: ',Q_node_id)
-        print('P_workload: ',P_workload)
-        print('Q_workload: ',Q_workload)
-        print('P_snapshot: ',P_snapshot)
+        # print('divide time cost: ', time.time() - start)
+        # print('P_id: ',P_id)
+        # print('Q_id: ',Q_id)
+        # print('Q_node_id: ',Q_node_id)
+        # print('P_workload: ',P_workload)
+        # print('Q_workload: ',Q_workload)
+        # print('P_snapshot: ',P_snapshot)
         start = time.time()
         self.conquer(P_id, Q_id, Q_node_id, P_workload, P_snapshot, Q_workload)
-        print('conquer time cost: ', time.time() - start)
+        # print('conquer time cost: ', time.time() - start)
 
     def divide(self):
         '''
@@ -676,8 +680,8 @@ class divide_and_conquer():
                 #     workload = torch.full_like(self.nodes_list[idx], False, dtype=torch.bool)
                 #     self.workloads_GCN[select_m].append(workload)
                 #     self.workloads_RNN[select_m].append(workload)
-        print('compute graph-graph cross edges time costs: ', time_cost_edges)
-        print('compute cross nodes time costs: ', time_cost_nodes)
+        # print('compute graph-graph cross edges time costs: ', time_cost_edges)
+        # print('compute cross nodes time costs: ', time_cost_nodes)
         # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
 
         time_cost = 0
@@ -702,7 +706,7 @@ class divide_and_conquer():
                 # Scheduled_workload[time][Q_node_id[idx]] = torch.ones(1, dtype=torch.bool)
             Current_workload[select_m] = Current_workload[select_m] + Q_workload[idx]
 
-        print('compute node-graph cross edges time costs: ', time_cost)
+        # print('compute node-graph cross edges time costs: ', time_cost)
         # print('GCN workload after scheduling timeseries-level jobs: ', self.workloads_GCN)
 
     def communication_time(self, GCN_node_size, RNN_node_size, bandwidth):
