@@ -262,7 +262,7 @@ def Distribution(nodes_list, timesteps, num_device, workload):
     distribution = torch.tensor([[0 for t in range(timesteps)] for node in range(nodes_list[0].size(0))])
     for m in range(num_device):
         for t in range(timesteps):
-            idx = torch.nonzero(workload[m][t][nodes_list[0].size(0):] == True, as_tuple=False).view(-1)
+            idx = torch.nonzero(workload[m][t][:nodes_list[0].size(0)] == True, as_tuple=False).view(-1)
             print(idx)
             distribution[idx,t] = m
     return distribution.tolist()
