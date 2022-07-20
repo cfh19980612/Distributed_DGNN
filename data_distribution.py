@@ -127,7 +127,7 @@ def workload_balance(P_id, P_workload, P_snapshot, Q_id, Q_node_id, Q_workload, 
         Current_workload[select_m] = Current_workload[select_m]+P_workload[idx]
         Current_RNN_workload[select_m][P_id[idx]] += 1
         # print('GCN workload after scheduling snapshot-level jobs: ', self.workloads_GCN)
-
+    return workloads_GCN, workloads_RNN
 
 class node_partition():
     def __init__(self, args, nodes_list, adjs_list, num_devices):
