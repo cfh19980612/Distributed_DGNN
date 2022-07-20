@@ -467,7 +467,7 @@ class DySAT(nn.Module):
             node_local_idx = torch.nonzero(self.local_workload_GCN[t] == True, as_tuple=False).view(-1)
             if node_local_idx != torch.Size([]):
                 send_list, receive_list = _structural_comm_nodes(self.args['adjs_list'], self.local_workload_GCN)
-                str_time = _structural_comm(send_list, receive_list)
+                str_time = _structural_comm(self.args, send_list, receive_list)
                 node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
                 subgraph = graphs[t].subgraph(node_idx)
                 out = self.structural_attn(subgraph.x, subgraph.edge_index)
