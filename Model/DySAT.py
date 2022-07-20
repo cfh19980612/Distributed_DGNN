@@ -459,8 +459,8 @@ class DySAT(nn.Module):
             Step 1: communication for aggregating remote time-series information
             Step 2: feed the time-series input [N, T, F] into the ATT(RNN) layer
         '''
-        GCN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.structural_layer_config[-1])[:,None,:] for t in range(self.args['timesteps'])]
-        RNN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.temporal_layer_config[-1])[:,None,:] for t in range(self.args['timesteps'])]
+        GCN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.structural_layer_config[-1])[:,None,:] for t in range(self.args['timesteps'])].to(self.device)
+        RNN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.temporal_layer_config[-1])[:,None,:] for t in range(self.args['timesteps'])].to(self.device)
 
         # structural attention forward
         structural_out = []
