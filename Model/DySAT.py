@@ -458,8 +458,8 @@ class DySAT(nn.Module):
             Step 1: communication for aggregating remote time-series information
             Step 2: feed the time-series input [N, T, F] into the ATT(RNN) layer
         '''
-        GCN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.structural_layer_config)[:,None,:] for t in range(self.args['timesteps'])]
-        RNN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.temporal_layer_config)[:,None,:] for t in range(self.args['timesteps'])]
+        GCN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.structural_layer_config[-1])[:,None,:] for t in range(self.args['timesteps'])]
+        RNN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.temporal_layer_config[-1])[:,None,:] for t in range(self.args['timesteps'])]
 
         # structural attention forward
         structural_out = []
@@ -568,8 +568,8 @@ class DySAT(nn.Module):
         input_dim = self.num_features
         # 1: Structural Attention Layers
         structural_attention_layers = nn.Sequential()
-        if self.args['rank'] == 3:
-            print('start to initialize structural attention layer')
+        # if self.args['rank'] == 3:
+        #     print('start to initialize structural attention layer')
         for i in range(len(self.structural_layer_config)):
             layer = StructuralAttentionLayer(args=self.args,
                                              input_dim=input_dim,
@@ -584,8 +584,8 @@ class DySAT(nn.Module):
         # 2: Temporal Attention Layers
         input_dim = self.structural_layer_config[-1]
         temporal_attention_layers = nn.Sequential()
-        if self.args['rank'] == 3:
-            print('start to initialize temporal attention layer')
+        # if self.args['rank'] == 3:
+        #     print('start to initialize temporal attention layer')
         for i in range(len(self.temporal_layer_config)):
             layer = TemporalAttentionLayer(method=0,
                                            input_dim=input_dim,
