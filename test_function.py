@@ -64,7 +64,7 @@ class _My_DGNN(torch.nn.Module):
 Comm_backend='nccl'
 
 def _gate(args):
-    global_time_steps = args['time_steps']
+    global_time_steps = args['timesteps']
     world_size = args['world_size']
     gate = torch.zeros(world_size, global_time_steps).bool()
 
@@ -88,10 +88,10 @@ def _pre_comm_group(num_workers):
             ]
     return group
 
-def _pre_comm_group_gate(num_workers, time_steps, gate):
+def _pre_comm_group_gate(num_workers, timesteps, gate):
     comm_method = Comm_backend
-    temporal_list = torch.tensor(range(time_steps))
-    num_graph_per_worker = int(time_steps/num_workers)
+    temporal_list = torch.tensor(range(timesteps))
+    num_graph_per_worker = int(timesteps/num_workers)
     custom_group = []
     group_member = [[0,0]]
     for worker in range(num_workers):
@@ -137,7 +137,7 @@ def run_dgnn_distributed(args):
     _, graphs, load_adj, load_feats, num_feats = load_graphs(args)
     num_graph = len(graphs)
     adjs_list = []
-    for i in range(args['time_steps']):
+    for i in range(args['timesteps']):
         # print(type(adj_matrices[i]))
         adj_coo = load_adj[i].tocoo()
         values = adj_coo.data
@@ -152,8 +152,8 @@ def run_dgnn_distributed(args):
     args['adjs_list'] = adjs_list
     # Graph distribution: launch partition algorithm
     Num_nodes = args['nodes_info']
-    nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(args['time_steps'])]
-    Degrees = [list(dict(nx.degree(graphs[t])).values()) for t in range(args['time_steps'])]
+    nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(args['timesteps'])]
+    Degrees = [list(dict(nx.degree(graphs[t])).values()) for t in range(args['timesteps'])]
     if args['partition'] == 'node':
         if args['balance']:
             partition_obj = node_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
@@ -187,7 +187,7 @@ def run_dgnn_distributed(args):
     # gate = _gate(args)
     # # print(args['gate'])
     # # if args['gate']:
-    # #     args['gated_group_member'], args['gated_group'] = _pre_comm_group_gate(args['world_size'], args['time_steps'], gate)
+    # #     args['gated_group_member'], args['gated_group'] = _pre_comm_group_gate(args['world_size'], args['timesteps'], gate)
     # args['dist_group'] = _pre_comm_group(world_size)
 
 
@@ -195,14 +195,14 @@ def run_dgnn_distributed(args):
     # args['structural_time_steps'] = num_graph
     # if args['connection']:
     #     if args['gate']:
-    #         temporal_list = torch.tensor(range(args['time_steps']))
+    #         temporal_list = torch.tensor(range(args['timesteps']))
     #         args['temporal_time_steps'] = len(temporal_list[gate[rank,:]].numpy())
     #     else:
     #         args['temporal_time_steps'] = num_graph*(rank + 1)
     # else:
     #     args['temporal_time_steps'] = num_graph
     # print("Worer {} loads {}/{} graphs, where {} local graphs, and {} remote graphs. The dimension of node feature is {}".format(
-    #     rank, num_graph, args['time_steps'],
+    #     rank, num_graph, args['timesteps'],
     #     num_graph, args['temporal_time_steps'] - num_graph,
     #     num_feats))
 
@@ -367,9 +367,9 @@ def run_dgnn_distributed(args):
 
         if args['save_log']:
             df_loss=pd.DataFrame(data=log_loss)
-            df_loss.to_csv('./experiment_results/{}_{}_{}_{}_loss.csv'.format(args['dataset'], args['time_steps'], args['partition'], args['world_size']))
+            df_loss.to_csv('./experiment_results/{}_{}_{}_{}_loss.csv'.format(args['dataset'], args['timesteps'], args['partition'], args['world_size']))
             df_acc=pd.DataFrame(data=log_acc)
-            df_acc.to_csv('./experiment_results/{}_{}_{}_{}_acc.csv'.format(args['dataset'], args['time_steps'], args['partition'], args['world_size']))
+            df_acc.to_csv('./experiment_results/{}_{}_{}_{}_acc.csv'.format(args['dataset'], args['timesteps'], args['partition'], args['world_size']))
 
 def run_dgnn(args):
     r"""
@@ -379,14 +379,14 @@ def run_dgnn(args):
     args['method'] = 'local'
     args['connection'] = False
     device = args['device']
-    # args['time_steps'] = 4
+    # args['timesteps'] = 4
 
     # TODO: Unevenly slice graphs
     # load graphs
     _, load_g, load_adj, load_feats = slice_graph(*load_graphs(args))
     # print('features: ',load_feats)
     num_graph = len(load_g)
-    print("Loaded {}/{} graphs".format(num_graph, args['time_steps']))
+    print("Loaded {}/{} graphs".format(num_graph, args['timesteps']))
     args['structural_time_steps'] = num_graph
     args['temporal_time_steps'] = num_graph
 
@@ -506,9 +506,9 @@ def run_dgnn(args):
 
     if args['save_log']:
         df_loss=pd.DataFrame(data=log_loss)
-        df_loss.to_csv('./experiment_results/{}_{}_{}_loss.csv'.format(args['dataset'], args['time_steps'], args['test_type']))
+        df_loss.to_csv('./experiment_results/{}_{}_{}_loss.csv'.format(args['dataset'], args['timesteps'], args['test_type']))
         df_acc=pd.DataFrame(data=log_acc)
-        df_acc.to_csv('./experiment_results/{}_{}_{}_acc.csv'.format(args['dataset'], args['time_steps'], args['test_type']))
+        df_acc.to_csv('./experiment_results/{}_{}_{}_acc.csv'.format(args['dataset'], args['timesteps'], args['test_type']))
 
 
 
