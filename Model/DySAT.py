@@ -407,6 +407,7 @@ class DySAT(nn.Module):
         self.args = args
 
         self.rank = args['rank']
+        self.device = args['device']
         
         self.workload_GCN = workload_GCN
         self.workload_RNN = workload_RNN
@@ -472,7 +473,7 @@ class DySAT(nn.Module):
                 if self.rank == 0:
                     print(node_local_idx, receive_list[t],node_idx)
                 subgraph = graphs[t].subgraph(node_idx)
-                out = self.structural_attn(subgraph.x, subgraph.edge_index)
+                out = self.structural_attn(subgraph.x.to(self.device), subgraph.edge_index.to(self.device))
                 GCN_emb_list[t][node_idx] = out
                 structural_out.append(out)
 
