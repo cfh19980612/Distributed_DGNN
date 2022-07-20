@@ -28,11 +28,11 @@ torch.cuda.manual_seed(0)
 np.random.seed(0)
 
 class _My_DGNN(torch.nn.Module):
-    def __init__(self, args, in_feats = None):
+    def __init__(self, args, in_feats = None, total_workloads_GCN = None, total_workloads_RNN = None):
         super(_My_DGNN, self).__init__()
         if args['rank'] == 3:
             print('start to initialize dgnn')
-        self.dgnn = DySAT(args, num_features = in_feats)
+        self.dgnn = DySAT(args, num_features = in_feats, workload_GCN=total_workloads_GCN, workload_RNN=total_workloads_RNN)
         if args['rank'] == 3:
             print('start to initialize classifier')
         self.classificer = Classifier(in_feature = self.dgnn.out_feats)
@@ -225,7 +225,7 @@ def run_dgnn_distributed(args):
     graphs = convert_graphs(graphs, load_adj, load_feats, args['data_str'])
     print('Worker {} has already converted graphs'.format(rank, args['device']))
 
-    model = _My_DGNN(args, in_feats=num_feats)
+    model = _My_DGNN(args, in_feats=num_feats, total_workloads_GCN = total_workload_GCN, total_workloads_RNN = total_workload_RNN)
     print('Worker {} has already initialized DGNN model'.format(rank, args['device']))
     model = model.to(device)
     print('Worker {} has already put the model to device {}'.format(rank, args['device']))
