@@ -395,6 +395,7 @@ class hybrid_partition():
         # self.alpha = 0.08
         # self.alpha = 0.01
         # self.alpha = 0.1
+        self.alpha = 0.001
 
         # runtime
         self.P_id, self.Q_id, self.Q_node_id, self.P_workload, self.P_snapshot, self.Q_workload = self.group()
@@ -530,7 +531,7 @@ class hybrid_partition_balance():
         # self.alpha = args['alpha']
         # self.alpha = 0.08
         # self.alpha = 0.01
-        # self.alpha = 0.1
+        self.alpha = 0.001
 
         # runtime
         self.P_id, self.Q_id, self.Q_node_id, self.P_workload, self.P_snapshot, self.Q_workload = self.group()
