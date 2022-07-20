@@ -187,7 +187,6 @@ def load_graphs(args):
         Edge_info.append(graphs[i].number_of_edges())
     args['nodes_info'] = Nodes_info
     args['edges_info'] = Edge_info
-    print('Graphs average nodes: {}, average edges: {}'.format(mean(Nodes_info), mean(Edge_info)))
 
     adj_matrices = list(map(lambda x: nx.adjacency_matrix(x), graphs))
     # print("Loaded {} graphs ".format(len(graphs)))

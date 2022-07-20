@@ -173,7 +173,14 @@ def run_dgnn_distributed(args):
     total_workload_GCN, total_workload_RNN = partition_obj.workload_partition()
     local_workload_GCN = total_workload_GCN[rank]
     local_workload_RNN = total_workload_RNN[rank]
-    print('workload size:', total_workload_GCN.size(), total_workload_RNN.size())
+    # summary
+    if rank == 0:
+        print('Graphs average nodes: {}, average edges: {}'.format(np.mean(args['nodes_info']), np.mean(args['edges_info'])))
+    GCN_nodes_compute = [torch.nonzero(local_workload_GCN[t] == True, as_tuple=False).view(-1) for t in range (args['timesteps'])]
+    RNN_nodes_compute = [torch.nonzero(local_workload_RNN[t] == True, as_tuple=False).view(-1) for t in range (args['timesteps'])]
+    GCN_nodes = torch.cat(GCN_nodes_compute, dim=0)
+    RNN_nodes = torch.cat(RNN_nodes_compute, dim=0)
+    print('Worker {} has structural workload {} nodes, temporal workloads {} nodes:'.format(rank, GCN_nodes.size(0), RNN_nodes.size(0)))
 
     # Graph distribution: distribute graphs according to the result of partition algorithm
     
