@@ -472,7 +472,7 @@ class DySAT(nn.Module):
                 node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
                 if self.args['data_str'] == 'dgl':
                     subgraph = graphs[t].subgraph(node_idx.tolist())
-                    out = self.structural_attn(subgraph.ndata['feat'].to(self.device), subgraph.edges())
+                    out = self.structural_attn(subgraph)
                     GCN_emb_list[t][node_idx] = out
                     structural_out.append(out)
                 else: return 0

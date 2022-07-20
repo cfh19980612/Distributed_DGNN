@@ -38,7 +38,7 @@ class GAT_Layer(nn.Module):
         if self.residual:
             self.lin_residual = nn.Linear(input_dim, n_heads * self.out_dim, bias=False)
     
-    def forward(self, input, edge_index):
+    def forward(self, graph):
         '''
             input: feature tensor of training nodes
         '''
@@ -46,9 +46,11 @@ class GAT_Layer(nn.Module):
         # edge_weight = graph.edge_weight.reshape(-1, 1)
         # H, C = self.n_heads, self.out_dim
         # x = self.lin(graph.x).view(-1, H, C) # [N, heads, out_dim]
-
+        graph = graph.to(self.args['device'])
+        feat = graph.ndata['feat']
+        edge_index = graph.edges()
         H, C = self.n_heads, self.out_dim
-        x = self.lin(input).view(-1, H, C)
+        x = self.lin(feat).view(-1, H, C)
 
 
         # attention
