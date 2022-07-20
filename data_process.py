@@ -106,7 +106,8 @@ def _build_pyg_graphs(features, adjs):
 def _build_dgl_graphs(graphs, features):
     dgl_graphs = []  # graph list
     for graph, feat in zip(graphs, features):
-        x = torch.Tensor(feat)
+        # x = torch.Tensor(feat)
+        x = feat
         dgl_graph = dgl.from_networkx(graph)
         dgl_graph = dgl.add_self_loop(dgl_graph)
         dgl_graph.ndata['feat'] = x
