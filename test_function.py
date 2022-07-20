@@ -282,7 +282,7 @@ def run_dgnn_distributed(args):
             loss = loss_func(out.squeeze(dim=-1), batch_y)
             Loss.append(loss.item())
             optimizer.zero_grad()
-            loss.backward()
+            # loss.backward()
             # print('epoch {} worker {} completes gradients computation!'.format(epoch, args['rank']))
             optimizer.step()
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
