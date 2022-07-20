@@ -473,7 +473,7 @@ class DySAT(nn.Module):
                 if self.args['data_str'] == 'dgl':
                     subgraph = graphs[t].subgraph(node_idx.tolist())
                     out = self.structural_attn(subgraph)
-                    GCN_emb_list[t][node_idx, :, :] = out
+                    GCN_emb_list[t][node_idx] = out[:,None,:]  # to [N, 1, F]
                     structural_out.append(out)
                 else: return 0
 
