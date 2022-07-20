@@ -471,7 +471,7 @@ class DySAT(nn.Module):
                 str_time = _structural_comm(self.args, send_list, receive_list)
                 node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
                 if self.rank == 0:
-                    print(node_local_idx, receive_list[t],node_idx)
+                    print(type(node_local_idx), type(receive_list[t]),type(node_idx))
                 subgraph = graphs[t].subgraph(node_idx)
                 out = self.structural_attn(subgraph.x.to(self.device), subgraph.edge_index.to(self.device))
                 GCN_emb_list[t][node_idx] = out
