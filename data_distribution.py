@@ -391,7 +391,7 @@ class hybrid_partition():
         self.Degrees = [list(dict(nx.degree(self.graphs[t])).values()) for t in range(self.timesteps)]
 
         # parameters
-        self.alpha = args['alpha']
+        # self.alpha = args['alpha']
         # self.alpha = 0.08
         # self.alpha = 0.01
         # self.alpha = 0.1
@@ -527,7 +527,7 @@ class hybrid_partition_balance():
         self.Degrees = [list(dict(nx.degree(self.graphs[t])).values()) for t in range(self.timesteps)]
 
         # parameters
-        self.alpha = args['alpha']
+        # self.alpha = args['alpha']
         # self.alpha = 0.08
         # self.alpha = 0.01
         # self.alpha = 0.1
