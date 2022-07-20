@@ -173,7 +173,7 @@ def run_dgnn_distributed(args):
     total_workload_GCN, total_workload_RNN = partition_obj.workload_partition()
     local_workload_GCN = total_workload_GCN[rank]
     local_workload_RNN = total_workload_RNN[rank]
-    print()
+    print('workload size:', total_workload_GCN.size(), total_workload_RNN.size())
 
     # Graph distribution: distribute graphs according to the result of partition algorithm
     

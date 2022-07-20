@@ -128,6 +128,8 @@ def _get_args():
                         help='method for DGNN training')
     parser.add_argument('--partition', type=str, nargs='?', default="Time",
                     help='How to partition the graph data')
+    parser.add_argument('--balance', type=bool, nargs='?', default=True,
+                    help='balance workload')
     args = vars(parser.parse_args())
     with open(args['json_path'],'r') as load_f:
         para = json.load(load_f)

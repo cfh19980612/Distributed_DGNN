@@ -44,6 +44,14 @@ with open(file_path) as f:
 print ("Min ts", min(ts), "max ts", max(ts))
 print ("Total time span: {} days".format((max(ts) - min(ts)).days))
 links.sort(key =lambda x: x[2])
+print ("# temporal links", len(links))
+
+import networkx as nx
+agg_G = nx.Graph()
+for a,b,t in links:
+    agg_G.add_edge(a,b)
+
+print ("Agg graph", len(agg_G.nodes()), len(agg_G.edges()))
 
 import networkx as nx
 import numpy as np
@@ -56,14 +64,15 @@ SLICE_DAYS = 3
 START_DATE = min(ts) + timedelta(100)
 END_DATE = min(ts) + timedelta(800)
 
-# END_DATE = timedelta(100)
+print ("Start date", START_DATE)
+print ("End date", END_DATE)
 
 slices_links = defaultdict(lambda : nx.MultiGraph())
 slices_features = defaultdict(lambda : {})
 
 print ("Start date", START_DATE)
 
-slice_id = 0
+slice_id = -1
 # Split the set of links in order by slices to create the graphs.
 for (a, b, time) in links:
     prev_slice_id = slice_id
@@ -86,15 +95,8 @@ for (a, b, time) in links:
         assert (len(slices_links[slice_id].edges()) ==0)
         #assert len(slices_links[slice_id].nodes()) >0
 
-    if slice_id ==0:
+    if slice_id ==0 and slice_id == prev_slice_id + 1:
         slices_links[slice_id] = nx.MultiGraph()
-
-    # if days_diff % SLICE_DAYS == 7 or days_diff % SLICE_DAYS == 6 or days_diff % SLICE_DAYS == 5:
-    #     if a not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(a)
-    #     if b not in slices_links[slice_id]:
-    #         slices_links[slice_id].add_node(b)
-    #     slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
     if a not in slices_links[slice_id]:
         slices_links[slice_id].add_node(a)
@@ -102,15 +104,17 @@ for (a, b, time) in links:
         slices_links[slice_id].add_node(b)
     slices_links[slice_id].add_edge(a,b, date=datetime_object)
 
+
+
 for slice_id in slices_links:
     print ("# nodes in slice", slice_id, len(slices_links[slice_id].nodes()))
     print ("# edges in slice", slice_id, len(slices_links[slice_id].edges()))
 
-    temp = np.identity(len(slices_links[max(slices_links.keys())].nodes()))
-    print ("Shape of temp matrix", temp.shape)
+    # temp = np.identity(len(slices_links[max(slices_links.keys())].nodes()))/
+    # print ("Shape of temp matrix", temp.shape)
     slices_features[slice_id] = {}
-    for idx, node in enumerate(slices_links[slice_id].nodes()):
-        slices_features[slice_id][node] = temp[idx]
+    # for idx, node in enumerate(slices_links[slice_id].nodes()):
+    #     slices_features[slice_id][node] = temp[idx]
 
 # TODO : remap and output.
 from scipy.sparse import csr_matrix
@@ -118,7 +122,7 @@ from scipy.sparse import csr_matrix
 def remap(slices_graph, slices_features):
     all_nodes = []
     for slice_id in slices_graph:
-        assert len(slices_graph[slice_id].nodes()) == len(slices_features[slice_id])
+        # assert len(slices_graph[slice_id].nodes()) == len(slices_features[slice_id])
         all_nodes.extend(slices_graph[slice_id].nodes())
     all_nodes = list(set(all_nodes))
     print ("Total # nodes", len(all_nodes), "max idx", max(all_nodes))
@@ -188,20 +192,26 @@ slices_links_remap, slices_features_remap = remap(slices_links, slices_features)
 
 all_nodes = []
 for slice_id in slices_links:
-    assert len(slices_links[slice_id].nodes()) == len(slices_features[slice_id])
+    # assert len(slices_links[slice_id].nodes()) == len(slices_features[slice_id])
     all_nodes.extend(slices_links[slice_id].nodes())
 all_nodes = list(set(all_nodes))
 Links=[]
 Nodes = []
 Differences = []
+Nodes_add = []
 for i in range (len(slices_links_remap)):
     Nodes.append(len(slices_links[i].nodes()))
     Links.append(len(slices_links[i].edges()))
+    if i ==0:
+        Nodes_add.append(len(slices_links[i].nodes()))
+    else:
+        Nodes_add.append(len(slices_links[i].nodes()) - len(slices_links[i-1].nodes()))
     # temp = []
     # for j in range (len(slices_links_remap)):
     #     temp.append(comparison(slices_links[i], slices_links[j], all_nodes))
     # Differences.append(temp)
 print(Links,Nodes)
+print("Nodes dynamicity: ", Nodes_add)
 
 print('average nodes: {}; average edges: {}'.format(np.mean(Nodes), np.mean(Links)))
 np.savez(save_graph_path, graph=slices_links_remap)  # graph为字典的key
