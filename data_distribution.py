@@ -217,7 +217,8 @@ class node_partition_balance():
     
     def workload_partition(self):
 
-        workloads_GCN, workloads_RNN = workload_balance(self.P_id, self.P_workload, self.P_snapshot, self.Q_id, self.Q_node_id, self.Q_workload, self.graphs, self.nodes_list, self.timesteps, self.num_devices)
+        workloads_GCN, workloads_RNN = workload_balance(self.P_id, self.P_workload, self.P_snapshot, self.Q_id, self.Q_node_id, self.Q_workload, 
+                                                            self.graphs, self.nodes_list, self.adjs_list, self.timesteps, self.num_devices)
         
         return workloads_GCN, workloads_RNN
 
@@ -596,5 +597,6 @@ class hybrid_partition_balance():
         '''
         Schedule snapshot-level jobs first or schedule timeseries-level jobs first?
         '''
-        workloads_GCN, workloads_RNN = workload_balance(self.P_id, self.P_workload, self.P_snapshot, self.Q_id, self.Q_node_id, self.Q_workload, self.graphs, self.nodes_list, self.timesteps, self.num_devices)
+        workloads_GCN, workloads_RNN = workload_balance(self.P_id, self.P_workload, self.P_snapshot, self.Q_id, self.Q_node_id, self.Q_workload, 
+                                                        self.graphs, self.nodes_list, self.adjs_list, self.timesteps, self.num_devices)
         return workloads_GCN, workloads_RNN
