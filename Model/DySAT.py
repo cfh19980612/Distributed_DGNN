@@ -484,9 +484,9 @@ class DySAT(nn.Module):
         for t in range(self.args['timesteps']):
             # send_list, receive_list = _temporal_comm_nodes(self.args['adjs_list'], self.local_workload_GCN)
             node_idx = torch.nonzero(self.local_workload_RNN[t] == True, as_tuple=False).view(-1)
-            if node_local_idx != torch.Size([]):
+            if node_idx != torch.Size([]):
                 emb_input = temporal_input[node_idx,:t+1,:]
-                print(emb_input.size())
+                # print(emb_input.size())
                 out = self.temporal_attn(emb_input)[:,-1,:]
                 RNN_emb_list[t][node_idx] = out[:,None,:]
                 temporal_output.append(out)
