@@ -487,7 +487,7 @@ class DySAT(nn.Module):
             if node_local_idx != torch.Size([]):
                 emb_input = temporal_input[node_idx,:t+1,:]
                 out = self.temporal_attn(emb_input)[:,-1,:]
-                RNN_emb_list[t][node_idx] = out
+                RNN_emb_list[t][node_idx] = out[:,None,:]
                 temporal_output.append(out)
         final_out = torch.cat(RNN_emb_list, 1)
         return final_out
