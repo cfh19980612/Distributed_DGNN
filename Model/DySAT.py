@@ -399,8 +399,10 @@ class DySAT(nn.Module):
             method: adding time interval information methods
         '''
         super(DySAT, self).__init__()
-        structural_time_steps = args['structural_time_steps']
-        temporal_time_steps = args['temporal_time_steps']
+        # structural_time_steps = args['structural_time_steps']
+        # temporal_time_steps = args['temporal_time_steps']
+        structural_time_steps = args['timesteps']
+        temporal_time_steps = args['timesteps']
         args['window'] = -1
         self.args = args
 
