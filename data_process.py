@@ -64,10 +64,10 @@ def _generate_one_hot_feats(graphs, adjs, max_degree):
     return new_feats
 
 
-def _generate_feats(adjs, time_steps):
-    assert time_steps <= len(adjs), "Time steps is illegal"
-    feats = [scipy.sparse.identity(adjs[time_steps - 1].shape[0]).tocsr()[range(0, x.shape[0]), :] for x in adjs if
-             x.shape[0] <= adjs[time_steps - 1].shape[0]]
+def _generate_feats(adjs, timesteps):
+    assert timesteps <= len(adjs), "Time steps is illegal"
+    feats = [scipy.sparse.identity(adjs[timesteps - 1].shape[0]).tocsr()[range(0, x.shape[0]), :] for x in adjs if
+             x.shape[0] <= adjs[timesteps - 1].shape[0]]
     new_features = []
 
     # nomorlization
@@ -160,12 +160,12 @@ def load_graphs(args):
     param:
         dataset_name: dataset's name
         platform: converse graph to which platform. dgl or pyg
-        time_steps: the num of graphs for experiments
+        timesteps: the num of graphs for experiments
         features (bool): whether generate features with one-hot encoding
         graph_id: which graphs should be loaded
     """
     dataset_name = args['dataset']
-    time_steps = args['time_steps']
+    timesteps = args['timesteps']
     features = args['featureless']
 
     new_graphs = []
@@ -177,12 +177,12 @@ def load_graphs(args):
     else:
         graphs = np.load(graph_path, allow_pickle=True, encoding='latin1')['graph']
     
-    graphs = graphs[1:time_steps+1]
+    graphs = graphs[1:timesteps+1]
 
     # get num of nodes for each snapshot
     Nodes_info = []
     Edge_info = []
-    for i in range(args['time_steps']):
+    for i in range(args['timesteps']):
         Nodes_info.append(graphs[i].number_of_nodes())
         Edge_info.append(graphs[i].number_of_edges())
     args['nodes_info'] = Nodes_info
@@ -193,18 +193,18 @@ def load_graphs(args):
 
     if features:
         # if args['method'] == 'dist':
-        #     feats_path = current_path + "/Data/{}/data/eval_{}_dist_{}_feats.npy".format(args['dataset'], str(args['time_steps']), args['world_size'])
+        #     feats_path = current_path + "/Data/{}/data/eval_{}_dist_{}_feats.npy".format(args['dataset'], str(args['timesteps']), args['world_size'])
         # else:
-        #     feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
-        # feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['time_steps']))
+        #     feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['timesteps']))
+        # feats_path = current_path + "/Data/{}/data/eval_{}_feats.npy".format(args['dataset'], str(args['timesteps']))
 
         # save as sparse matrix
-        feats_path = current_path + "/Data/{}/data/eval_{}_feats/".format(args['dataset'], str(args['time_steps']))
+        feats_path = current_path + "/Data/{}/data/eval_{}_feats/".format(args['dataset'], str(args['timesteps']))
         try:
             # feats = np.load(feats_path, allow_pickle=True)
             num_feats = 0
             feats = []
-            for time in range(time_steps):
+            for time in range(timesteps):
                 path = feats_path+'no_{}.npz'.format(time)
                 feat = sp.load_npz(path)
                 if time == 0:
@@ -233,7 +233,7 @@ def load_graphs(args):
             # max_deg, _ = _count_max_deg(graphs, adj_matrices)
             # feats = _generate_one_hot_feats(graphs, adj_matrices, max_deg)
             # method 2:
-            feats = _generate_feats(adj_matrices, time_steps)
+            feats = _generate_feats(adj_matrices, timesteps)
             # print('saved feats, ',feats)
 
             folder_in = os.path.exists(feats_path)
@@ -278,9 +278,9 @@ def get_data_example(graphs, args, local_time_steps):
     next_graph = graphs[eval_idx+1]
 
     if args['method'] == 'dist':
-        eval_path = current_path + "/Data/{}/data/eval_{}_{}_{}_worker{}.npz".format(dataset, str(args['time_steps']), method, args['world_size'], rank)
+        eval_path = current_path + "/Data/{}/data/eval_{}_{}_{}_worker{}.npz".format(dataset, str(args['timesteps']), method, args['world_size'], rank)
     else:
-        eval_path = current_path + "/Data/{}/data/eval_{}_{}.npz".format(dataset, str(args['time_steps']), method)
+        eval_path = current_path + "/Data/{}/data/eval_{}_{}.npz".format(dataset, str(args['timesteps']), method)
     try:
         train_edges, train_edges_false, val_edges, val_edges_false, test_edges, test_edges_false = \
             np.load(eval_path, encoding='bytes', allow_pickle=True)['data']
