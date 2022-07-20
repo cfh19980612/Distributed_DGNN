@@ -12,8 +12,11 @@ import torch.nn.functional as F
 import multiprocessing as mp
 from torch.nn.modules.loss import BCEWithLogitsLoss
 
-from Model.layers import StructuralAttentionLayer
-from Model.layers import TemporalAttentionLayer
+# from Model.layers import StructuralAttentionLayer
+# from Model.layers import TemporalAttentionLayer
+
+from Model.layers_mb import GAT_Layer as StructuralAttentionLayer
+from Model.layers_mb import ATT_layer as TemporalAttentionLayer
 
 from utils import *
 
