@@ -259,7 +259,8 @@ def load_graphs(args):
     #normlized adj
     adj_matrices = [_normalize_graph_gcn(adj) for adj in adj_matrices]
 
-    return (args, graphs, adj_matrices, feats, num_feats)
+    # return (args, graphs, adj_matrices, feats, num_feats)
+    return args, graphs, adj_matrices, feats, num_feats
 
 def get_data_example(graphs, args, local_time_steps):
     r"""
@@ -339,3 +340,6 @@ def slice_graph(args, graphs, adj, feats, num_feats):
     sliced_feats = feats[rank*num_parts: (rank+1)*num_parts]
 
     return graphs, sliced_graphs, sliced_adj, sliced_feats, num_feats
+
+def graph_distribution(graphs, workloads):
+    return 0

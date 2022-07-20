@@ -1,5 +1,3 @@
-from re import T
-from select import select
 import scipy
 import numpy as np
 import scipy.sparse as sp
@@ -187,19 +185,6 @@ def Cross_edges(timesteps, adjs, nodes_list, Degrees, current_workload, workload
             num += has_nodes.size(0)/sum(Degrees[time])
         # print(num)
 
-        # # # method 2: compute cross edges all node with dense tensor (fast but memory inefficient)
-        # time = workload[0]
-        # nodes = workload[1]
-        # adj = adjs[time].clone().to_dense()
-        # source = adj[nodes,:]
-        # idx = torch.nonzero(source == 1, as_tuple=False)
-        # idx = idx.reshape([idx.size(0)*2, -1]).view(-1)
-        # # print(idx.size())
-        # # print(idx.reshape([idx.size(0)*2, -1]).size())
-        # has_nodes = torch.nonzero(current_workload[time][idx] == True, as_tuple=False).view(-1)
-        # # print('all degrees: ',sum(Degrees[time]))
-        # num += has_nodes.size(0)/sum(Degrees[time])
-
     # node-graph cross edges at multiple timesteps
     else:
         time = workload[0]
@@ -215,21 +200,6 @@ def Cross_edges(timesteps, adjs, nodes_list, Degrees, current_workload, workload
         has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
         # print('all degrees: ',sum(Degrees[time]))
         num += has_nodes.size(0)/sum(Degrees[time])
-
-
-        # for time in range(timesteps):
-        #     adj = adjs[time].clone()
-        #     edge_source = adj._indices()[0]
-        #     edge_target = adj._indices()[1]
-        #     # print(edge_source, edge_target)
-        #     idx = torch.nonzero(edge_source == node_id, as_tuple=False).view(-1)
-        #     # print(idx)
-        #     nodes_idx = edge_target[idx]
-        #     # print(nodes_idx)
-        #     has_nodes = torch.nonzero(current_workload[time][nodes_idx] == True, as_tuple=False).view(-1)
-        #     print('all degrees: ',sum(Degrees[time]))
-        #     num += has_nodes.size(0)/sum(Degrees[time])
-        # print(num)
     return num
 
 # compute the cross nodes when schedule workload p on m device

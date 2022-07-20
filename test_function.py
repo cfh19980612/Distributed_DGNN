@@ -13,6 +13,8 @@ from data_process import load_dataset
 from data_process import slice_graph
 from data_process import convert_graphs
 
+from data_distribution import *
+
 from Model.DySAT import DySAT
 from Model.MLP import Classifier
 from sklearn.metrics import f1_score, roc_auc_score
@@ -129,52 +131,75 @@ def run_dgnn_distributed(args):
 
     # TODO: Unevenly slice graphs
     # load graphs
-    total_graph, load_g, load_adj, load_feats, num_feats = slice_graph(*load_graphs(args))
-    num_graph = len(load_g)
-    gate = _gate(args)
-    # print(args['gate'])
-    if args['gate']:
-        args['gated_group_member'], args['gated_group'] = _pre_comm_group_gate(args['world_size'], args['time_steps'], gate)
-    args['dist_group'] = _pre_comm_group(world_size)
+    # total_graph, load_g, load_adj, load_feats, num_feats = slice_graph(*load_graphs(args))
 
+    # get a complete DTDG
+    _, graphs, load_adj, load_feats, num_feats = load_graphs(args)
+    num_graph = len(graphs)
+    adjs_list = []
+    for i in range(args['time_steps']):
+        # print(type(adj_matrices[i]))
+        adj_coo = load_adj[i].tocoo()
+        values = adj_coo.data
+        indices = np.vstack((adj_coo.row, adj_coo.col))
 
-    # generate the num of graphs for each module in DGNN
-    args['structural_time_steps'] = num_graph
-    if args['connection']:
-        if args['gate']:
-            temporal_list = torch.tensor(range(args['time_steps']))
-            args['temporal_time_steps'] = len(temporal_list[gate[rank,:]].numpy())
+        i = torch.LongTensor(indices)
+        v = torch.FloatTensor(values)
+        shape = adj_coo.shape
+
+        adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
+        adjs_list.append(adj_tensor_sp)
+    args['adjs_list'] = adjs_list
+    # Graph distribution: launch partition algorithm
+    Num_nodes = args['nodes_info']
+    nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(args['time_steps'])]
+    Degrees = [list(dict(nx.degree(graphs[t])).values()) for t in range(args['time_steps'])]
+    if args['partition'] == 'node':
+        if args['balance']:
+            partition_obj = node_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
         else:
-            args['temporal_time_steps'] = num_graph*(rank + 1)
-    else:
-        args['temporal_time_steps'] = num_graph
-    print("Worer {} loads {}/{} graphs, where {} local graphs, and {} remote graphs. The dimension of node feature is {}".format(
-        rank, num_graph, args['time_steps'],
-        num_graph, args['temporal_time_steps'] - num_graph,
-        num_feats))
+            partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    elif args['partition'] == 'snapshot':
+        if args['balance']:
+            partition_obj = snapshot_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+        else:
+            partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    elif args['partition'] == 'hybrid':
+        if args['balance']:
+            partition_obj = hybrid_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+        else:
+            partition_obj = hybrid_partition(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+    
+    total_workload_GCN, total_workload_RNN = partition_obj.workload_partition()
+    local_workload_GCN = total_workload_GCN[rank]
+    local_workload_RNN = total_workload_RNN[rank]
+    print()
 
-    # generate dataset
-    # if args['partition'] == 'Time':
-    #     dataset = load_dataset(*get_data_example(load_g, args, num_graph))
-    # else: 
-    #     dataset = load_dataset(*get_data_example(total_graph, args, len(total_graph)))
+    # Graph distribution: distribute graphs according to the result of partition algorithm
+    
+    # gate = _gate(args)
+    # # print(args['gate'])
+    # # if args['gate']:
+    # #     args['gated_group_member'], args['gated_group'] = _pre_comm_group_gate(args['world_size'], args['time_steps'], gate)
+    # args['dist_group'] = _pre_comm_group(world_size)
 
-    #     Total_edges = len(dataset['train_data'])
-    #     # Total_nodes = args['nodes_info'][-1]
-    #     Num_edges_per_worker = int(Total_edges//world_size)
-    #     if rank != world_size - 1:
-    #         end = (rank+1)*Num_edges_per_worker
+
+    # # generate the num of graphs for each module in DGNN
+    # args['structural_time_steps'] = num_graph
+    # if args['connection']:
+    #     if args['gate']:
+    #         temporal_list = torch.tensor(range(args['time_steps']))
+    #         args['temporal_time_steps'] = len(temporal_list[gate[rank,:]].numpy())
     #     else:
-    #         end = Total_edges  
-    #     # print('start:{}, end:{}'.format(rank*Num_edges_per_worker, end))
-    #     # print('total training nodes:', dataset['train_data'])
-    #     dataset['train_data'] = dataset['train_data'][rank*Num_edges_per_worker:end,:]
-    #     dataset['train_labels'] = dataset['train_labels'][rank*Num_edges_per_worker:end,:]
-    #     dataset['test_data'] = dataset['test_data'][rank*Num_edges_per_worker:end,:]
-    #     dataset['test_labels'] = dataset['test_labels'][rank*Num_edges_per_worker:end]
-    #     # print('Training data: ', dataset['train_data'])
+    #         args['temporal_time_steps'] = num_graph*(rank + 1)
+    # else:
+    #     args['temporal_time_steps'] = num_graph
+    # print("Worer {} loads {}/{} graphs, where {} local graphs, and {} remote graphs. The dimension of node feature is {}".format(
+    #     rank, num_graph, args['time_steps'],
+    #     num_graph, args['temporal_time_steps'] - num_graph,
+    #     num_feats))
 
-    dataset = load_dataset(*get_data_example(load_g, args, num_graph))
+    dataset = load_dataset(*get_data_example(graphs, args, num_graph))
 
     train_dataset = Data.TensorDataset(
                 torch.tensor(dataset['train_data']), 
@@ -190,7 +215,7 @@ def run_dgnn_distributed(args):
 
     # TODO: How to take the global forward?
     # convert graphs to dgl or pyg graphs
-    graphs = convert_graphs(load_g, load_adj, load_feats, args['data_str'])
+    graphs = convert_graphs(graphs, load_adj, load_feats, args['data_str'])
     print('Worker {} has already converted graphs'.format(rank, args['device']))
 
     model = _My_DGNN(args, in_feats=num_feats)
@@ -245,7 +270,7 @@ def run_dgnn_distributed(args):
 
             graphs = [graph.to(device) for graph in graphs]
             train_start_time = time.time()
-            out = model(graphs, batch_x, gate)
+            out = model(graphs, batch_x)
             # print(out)
             loss = loss_func(out.squeeze(dim=-1), batch_y)
             Loss.append(loss.item())
@@ -278,12 +303,12 @@ def run_dgnn_distributed(args):
         # test
         if epoch % args['test_freq'] == 0 and rank != world_size - 1:
             graphs = [graph.to(device) for graph in graphs]
-            test_result = model(graphs, torch.tensor(dataset['test_data']).to(device), gate)
+            test_result = model(graphs, torch.tensor(dataset['test_data']).to(device))
 
         elif epoch % args['test_freq'] == 0 and rank == world_size - 1:
             # model.eval()
             graphs = [graph.to(device) for graph in graphs]
-            test_result = model(graphs, torch.tensor(dataset['test_data']).to(device), gate)
+            test_result = model(graphs, torch.tensor(dataset['test_data']).to(device))
             prob_f1 = []
             prob_auc = []
             prob_f1.extend(np.argmax(test_result.detach().cpu().numpy(), axis = 1))

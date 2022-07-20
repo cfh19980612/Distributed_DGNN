@@ -1,10 +1,11 @@
 import copy
-from ctypes import pointer
 import os
 import sys
 import copy
 import torch
 import time
+import numpy as np
+
 import torch.nn as nn
 import torch.nn.functional as F
 # import torch.multiprocessing as mp
@@ -40,9 +41,7 @@ def _multi_process_gather(rank, dest, x_comm, world_size, Num_nodes_per_worker, 
         torch.distributed.gather(x_send, gather_list=None, dst=dest, group=group)
     torch.distributed.destroy_process_group()
     if rank == dest:
-        print(gather_dict)
-
-    
+        print(gather_dict)  
 
 def _node_partition_comm_before(args, x):
     device = args['device']
@@ -120,31 +119,6 @@ def _node_partition_comm_after(args, x):
     # print('input size: ',x.size())
     final_list = []
     comm_time = []
-    # print(Total_nodes, Num_nodes_per_worker)
-    # for i in range (world_size):
-    #     if i != rank: # receiver
-    #         if i != world_size - 1:
-    #             comm_tensor = torch.zeros(Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
-    #             # print('rank {} is a receiver with tensor size {}'.format(rank, comm_tensor.size()))
-    #         else:
-    #             comm_tensor = torch.zeros(Total_nodes - (world_size -1)*Num_nodes_per_worker, x.size(1), x.size(2)).to(device)
-    #             # print('rank {} is a receiver with tensor size {}'.format(rank, comm_tensor.size()))
-    #     else:
-    #         comm_tensor = x.clone().detach()
-    #         final_list.append(x)
-    #         # print('rank {} is a sender with tensor size {}'.format(rank, comm_tensor.size()))
-
-    #     comm_start = time.time()
-    #     torch.distributed.broadcast(comm_tensor, i, group = mp_group[i])
-    #     comm_time.append(time.time() - comm_start)
-    #     # args['comm_cost'] += time.time() - comm_start
-    #     if i != rank:
-    #         final_list.append(comm_tensor)
-    
-    # # args['comm_cost'] += max(comm_time)
-    
-    # new_final_list = [emb[:,rank*Num_times_per_worker:(rank+1)*Num_times_per_worker,:] for emb in final_list]
-    # final = torch.cat(new_final_list, 0)
 
     Pad_total_node = Total_nodes - (world_size - 1)*Num_nodes_per_worker
     x_temp = x.clone().detach()
@@ -177,59 +151,6 @@ def _node_partition_comm_after(args, x):
 
 
     return final
-
-def _gated_emb_comm(args, x, gate):
-    # gather()
-    # mp_group = args['gated_group']
-    # world_size = args['world_size']
-    # global_time_steps = args['time_steps']
-    # rank = args['rank']
-    # device = args['device']
-    # num_graph_per_worker = int(global_time_steps/world_size)
-    # output = []
-    # # print(x.size())
-
-    # for worker in range(world_size):
-    #     if worker == 0:
-    #         continue
-    #     current_process_worker = gate[worker, :]
-    #     # print(current_process_worker)
-    #     local_temp = current_process_worker[rank*num_graph_per_worker: (rank+1)*num_graph_per_worker]
-    #     # print(local_temp)
-    #     # comm_emb = x.clone().detach()[:,local_temp,:]
-    #     # print(worker, rank, comm_emb.size(), comm_emb.dtype)
-    #     # print(args['gated_group_member'][worker])
-    #     if rank in args['gated_group_member'][worker]:
-    #         if worker == rank:
-    #             output = [torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device) for _ in range(len(args['gated_group_member'][worker]))]
-    #             comm_emb = torch.zeros((args['nodes_info'][rank*num_graph_per_worker - 1], 1, x.size(2))).to(device)
-    #             # print('worker {} will receive embeedings at current {} communication round!'.format(rank, worker))
-    #             comm_start = time.time()
-    #             torch.distributed.gather(comm_emb, gather_list=output, dst=worker, group=mp_group[worker])
-    #             args['comm_cost'] += time.time() - comm_start
-    #         else:
-    #             comm_emb = x.clone().detach()[:,local_temp,:]
-    #             # print(worker, rank, comm_emb.size(), comm_emb.dtype)
-    #             # print('worker {} will send embeedings at current {} communication round!'.format(rank, worker))
-    #             comm_start = time.time()
-    #             torch.distributed.gather(comm_emb, gather_list=None, dst=worker, group=mp_group[worker])
-    #             args['comm_cost'] += time.time() - comm_start
-    # #     print('worker, ', worker, 'complete!')
-    # # print('communication complete!')
-
-    # if len(output) > 0:
-    #     output.pop()
-    #     # print(output)
-    #     for i in range(len(output)):
-    #         zero_pad = torch.zeros(x.shape[0] - output[i].size(0), output[i].size(1), x.shape[2]).to(device)
-    #         output[i] = torch.cat((output[i], zero_pad), dim=0).to(device)
-    #     output.append(x)
-    #     final = torch.cat(output, 1)
-    # else:
-    #     final = x.clone()
-    
-    # return final
-    return 0
 
 # TODO: realize the masked communication
 def _customized_embedding_comm(args, x, gate):
@@ -348,8 +269,124 @@ def _embedding_comm(args, x):
     return final
 
 
+def _simulate_comm_time(send_list, receive_list, node_size, bandwidth):
+    # compute time
+    receive_comm_time = [0 for i in range(num_devices)]
+    send_comm_time = [0 for i in range(num_devices)]
+    for device_id in range(num_devices):
+        # receive
+        total_nodes = 0
+        for receive in receive_list[device_id]:
+            if receive != torch.Size([]):
+                total_nodes += receive.view(-1).size(0)
+        receive_comm_time[device_id] += np.around(float(total_nodes*node_size)/bandwidth, 3)
+
+        # send
+        total_nodes = 0
+        for send in send_list[device_id]:
+            if send != torch.Size([]):
+                total_nodes += send.view(-1).size(0)
+        send_comm_time[device_id] += np.around(float(total_nodes*node_size)/bandwidth, 3)
+    
+    return receive_comm_time, send_comm_time
+
+def _temporal_comm_nodes(rank, nodes_list, num_devices, workload_GCN, workloads_RNN):
+    '''
+    Step 1: generate the required nodes list for each device
+    Step 2: compare the required list with the RNN(GCN) workload list to compute the number of received nodes
+    '''
+    timesteps = len(nodes_list)
+    Req = [[torch.full_like(nodes_list[time], False, dtype=torch.bool) for time in range(len(nodes_list))] for m in range(num_devices)]
+    receive_list = [[] for i in range(num_devices)]
+    send_list = [[] for i in range(num_devices)]
+
+    # compute the required node list
+    for time in range(timesteps):
+        where_need_comp = torch.nonzero(workloads_RNN[rank][time] == True, as_tuple=False).view(-1)
+        if where_need_comp!= torch.Size([]):
+            for k in range(timesteps)[0:time+1]:
+                idx = torch.tensor([i for i in range(Req[rank][k].size(0))])
+                nodes_mask = workloads_RNN[rank][time][idx]
+                where_need = torch.nonzero(nodes_mask == True, as_tuple=False).view(-1) # the previous nodes of the owned workload are needed
+                # print(where_need)
+                if (where_need.size(0) > 0):
+                    Req[rank][k][where_need] = torch.ones(where_need.size(0), dtype=torch.bool)
+    # remove already owned nodes
+    for time in range(timesteps):
+        where_have_nodes = torch.nonzero(workload_GCN[rank][time] == True, as_tuple=False).view(-1)
+        # print(where_have_nodes)
+        if where_have_nodes!= torch.Size([]):
+            # print(where_have_nodes)
+            Req[rank][time][where_have_nodes] = torch.zeros(where_have_nodes.size(0), dtype=torch.bool)
+
+    # print(Req)
+    # Compute the number of nodes need to be sent and received
+    for time in range(timesteps):
+        # receive nodes list
+        receive = torch.nonzero(Req[rank][time] == True, as_tuple=False).squeeze() # dimension = 2
+        receive_list.append(receive.view(-1))
+
+        # send nodes list
+        need_send = torch.nonzero(workloads_RNN[-1] == False, as_tuple=False).view(-1)[:workloads_RNN[time].size(0)]
+        if need_send!= torch.Size([]):
+            send_nodes = workload_GCN[time][need_send]
+            send = torch.nonzero(send_nodes == True, as_tuple=False).view(-1)
+            send_list.append(send)
+        else: send_list.append([])
+
+    return send_list, receive_list
+
+def _structural_comm_nodes(adjs_list, local_workload_GCN):
+    # compute need nodes
+    receive_list = []
+    send_list = []
+    for time in range(len(local_workload_GCN)):
+        adj = adjs_list[time].clone()
+        local_node_mask = local_workload_GCN[time]
+        remote_node_mask = ~local_node_mask
+        edge_source = adj._indices()[0]
+        edge_target = adj._indices()[1]
+
+        # receive
+        edge_source_local_mask = local_node_mask[edge_source] # check each source node whether it belongs to device_id
+        need_receive_nodes = torch.unique(edge_target[edge_source_local_mask]) # get the target nodes with the source nodes belong to device_id
+        receive_node_local = local_node_mask[need_receive_nodes] # check whether the received nodes in local?
+        receive = torch.nonzero(receive_node_local == False, as_tuple=False).view(-1) # only receive nodes not in local (return indices)
+        receive_list.append(receive)
+
+        # send
+        edge_source_remote_mask = remote_node_mask[edge_source] # check each source node whether it belongs to other devices
+        need_send_nodes = torch.unique(edge_target[edge_source_remote_mask]) # get the target nodes with the source nodes belong to other devices
+        send_node_local = local_node_mask[need_send_nodes] # check whether the send nodes in local?
+        send = torch.nonzero(send_node_local == True, as_tuple=False).view(-1) # only send nodes in local
+        send_list.append(send)
+    
+    return send_list, receive_list
+
+def _structural_comm(args, send_list, receive_list):
+    '''
+    Args:
+        workloads: list of bool matrix, workloads[rank][time] represents the partitioned time-th
+        workloads on device rank
+    Communicate node features snapshot by snapshot? only need neighborhoods
+    '''
+    rank = args['rank']
+    world_size = args['world_size']
+    device = args['device']
+    # TODO: communicaiton component
+    return 0
+
+def _temporal_comm(args, send_list, receive_list):
+    rank = args['rank']
+    world_size = args['world_size']
+    device = args['device']
+    timesteps = args['timesteps']
+    # TODO: communicaiton component
+    return 0
+
+
 class DySAT(nn.Module):
-    def __init__(self, args, num_features):
+    def __init__(self, args, num_features, workload_GCN, workload_RNN):
         '''
         Args:
             args: hyperparameters
@@ -363,7 +400,13 @@ class DySAT(nn.Module):
         temporal_time_steps = args['temporal_time_steps']
         args['window'] = -1
         self.args = args
+
+        self.rank = args['rank']
         
+        self.workload_GCN = workload_GCN
+        self.workload_RNN = workload_RNN
+        self.local_workload_GCN = workload_GCN[self.rank]
+        self.local_workload_RNN = workload_RNN[self.rank]
 
         if args['window'] < 0:
             self.structural_time_steps = structural_time_steps # training graph per 'num_time_steps'
@@ -400,6 +443,45 @@ class DySAT(nn.Module):
 
     def forward(self, graphs, gate):
         # TODO: communicate the imtermediate embeddings after StructureAtt
+
+        '''
+        Input: workloads[rank]
+        Compute the GCN embedding in a 'for' loop
+            Step 1: communication for aggregating remote neighborhoods
+            Step 2: feed the subgraph into the GAT(GCN) layer
+        Compute the RNN embedding in a mini-batch manner [N, T, F]
+            Step 1: communication for aggregating remote time-series information
+            Step 2: feed the time-series input [N, T, F] into the ATT(RNN) layer
+        '''
+        GCN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.structural_layer_config)[:,None,:] for t in range(self.args['timesteps'])]
+        RNN_emb_list = [torch.Tensor(self.args['nodes_info'][-1], self.temporal_layer_config)[:,None,:] for t in range(self.args['timesteps'])]
+
+        # structural attention forward
+        structural_out = []
+        for t in range(self.args['timesteps']):
+            node_local_idx = torch.nonzero(self.local_workload_GCN[t] == True, as_tuple=False).view(-1)
+            if node_local_idx != torch.Size([]):
+                send_list, receive_list = _structural_comm_nodes()(self.args['adjs_list'], self.local_workload_GCN)
+                str_time = _structural_comm(send_list, receive_list)
+                node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
+                subgraph = graphs[t].subgraph(node_idx)
+                out = self.structural_attn(subgraph.x, subgraph.edge_index)
+                GCN_emb_list[t][node_idx] = out
+                structural_out.append(out)
+
+
+        # temporal attention forward
+        temporal_output = []
+        temporal_input = torch.cat(GCN_emb_list, dim=1)
+        for t in range(self.args['timesteps']):
+            # send_list, receive_list = _temporal_comm_nodes(self.args['adjs_list'], self.local_workload_GCN)
+            node_idx = torch.nonzero(self.local_workload_RNN[t] == True, as_tuple=False).view(-1)
+            emb_input = temporal_input[node_idx,:t+1,:]
+            out = self.temporal_attn(emb_input)[:,-1,:]
+            RNN_emb_list[t][node_idx] = out
+            temporal_output.append(out)
+        final_out = torch.cat(RNN_emb_list, 1)
+        return final_out
 
         # Structural Attention forward
         structural_out = []
