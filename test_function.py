@@ -314,7 +314,7 @@ def run_dgnn_distributed(args):
 
         elif epoch % args['test_freq'] == 0 and rank == world_size - 1:
             # model.eval()
-            graphs = [graph.to(device) for graph in graphs]
+            # graphs = [graph.to(device) for graph in graphs]
             test_result = model(graphs, torch.tensor(dataset['test_data']).to(device))
             prob_f1 = []
             prob_auc = []
