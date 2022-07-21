@@ -306,7 +306,7 @@ def run_dgnn_distributed(args):
             epoch_comm_time.append(args['str_comm'] + args['tem_comm'])
             epoch_str_comm_time.append(args['str_comm'])
             epoch_tem_comm_time.append(args['str_comm'])
-            if epoch >= 5:
+            if epoch >= 0:
                 total_str_comm.append(args['str_comm'])
                 total_tem_comm.append(args['tem_comm'])
         else: epoch_comm_time.append(0)
@@ -315,7 +315,7 @@ def run_dgnn_distributed(args):
         epoch_gcn_time.append(args['gcn_time'])
         epoch_att_time.append(args['att_time'])
 
-        if epoch >= 5:
+        if epoch >= 0:
             total_train_time.append(np.sum(epoch_train_time))
             total_gcn_time.append(args['gcn_time'])
             total_att_time.append(args['att_time'])
