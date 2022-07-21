@@ -300,8 +300,8 @@ def _temporal_comm_nodes(rank, nodes_list, num_devices, workloads_GCN, workloads
     '''
     timesteps = len(nodes_list)
     Req = [[torch.full_like(nodes_list[time], False, dtype=torch.bool) for time in range(len(nodes_list))] for m in range(num_devices)]
-    receive_list = [[] for i in range(num_devices)]
-    send_list = [[] for i in range(num_devices)]
+    receive_list = []
+    send_list = []
 
     # compute the required node list
     for time in range(timesteps):
