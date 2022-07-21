@@ -14,7 +14,7 @@ os.environ[
     "TORCH_DISTRIBUTED_DEBUG"
 ] = "DETAIL"
 
-Comm_backend = 'nccl'
+Comm_backend = 'gloo'
 # comm_method = 'gloo' # currently use 'gloo' for CPU process communication
 
 # TODO: implement the test with pytest framework

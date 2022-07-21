@@ -61,7 +61,7 @@ class _My_DGNN(torch.nn.Module):
         # print(input_emb)
         return self.classificer(input_emb)
 
-Comm_backend='nccl'
+# Comm_backend='gloo'
 
 def _gate(args):
     global_time_steps = args['timesteps']
