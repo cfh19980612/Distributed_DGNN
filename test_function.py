@@ -249,8 +249,8 @@ def run_dgnn_distributed(args):
     total_train_time = []
     total_gcn_time = []
     total_att_time = []
-    total_comm_time = []
-    total_comm_time_second = []
+    total_str_comm = []
+    total_tem_comm = []
 
     log_loss = []
     log_acc = []
@@ -264,10 +264,10 @@ def run_dgnn_distributed(args):
         epoch_att_time = []
         epoch_mem = []
         epoch_time_start = time.time()
-        args['comm_cost'] = 0
         args['gcn_time'] = 0
         args['att_time'] = 0
-        args['comm_cost_second'] = 0
+        args['str_comm'] = 0
+        args['tem_comm'] = 0
         for step, (batch_x, batch_y) in enumerate(loader):
             model.train()
             batch_x = batch_x.to(device)
@@ -292,10 +292,10 @@ def run_dgnn_distributed(args):
         torch.cuda.empty_cache()
         # communication time
         if args['connection']:
-            epoch_comm_time.append(args['comm_cost'])
+            epoch_comm_time.append(args['str_comm'] + args['tem_comm'])
             if epoch >= 5:
-                total_comm_time.append(args['comm_cost'])
-                total_comm_time_second.append(args['comm_cost_second'])
+                total_str_comm.append(args['str_comm'])
+                total_tem_comm.append(args['tem_comm'])
         else: epoch_comm_time.append(0)
 
         # individual module computation costs
@@ -351,8 +351,8 @@ def run_dgnn_distributed(args):
         total_train_time.remove(max(total_train_time))
         total_gcn_time.remove(max(total_gcn_time))
         total_att_time.remove(max(total_att_time))
-        total_comm_time.remove(max(total_comm_time))
-        total_comm_time_second.remove(max(total_comm_time_second))
+        total_str_comm.remove(max(total_str_comm))
+        total_tem_comm.remove(max(total_tem_comm))
 
         print("Best f1 score epoch: {}, Best f1 score: {}".format(best_f1_epoch, max(epochs_f1_score)))
         print("Best auc epoch: {}, Best auc score: {}".format(best_auc_epoch, max(epochs_auc)))
@@ -361,9 +361,9 @@ def run_dgnn_distributed(args):
                                                                     sum(total_train_time), 
                                                                     sum(total_gcn_time),
                                                                     sum(total_att_time),
-                                                                    sum(total_comm_time),
-                                                                    sum(total_comm_time_second)))
-        print('{:.3f},  {:.3f},  {:.3f},  {:.3f}, {:.3f}'.format(sum(total_train_time), sum(total_gcn_time), sum(total_att_time), sum(total_comm_time), sum(total_comm_time_second)))
+                                                                    sum(total_str_comm),
+                                                                    sum(total_tem_comm)))
+        print('{:.3f},  {:.3f},  {:.3f},  {:.3f}, {:.3f}'.format(sum(total_train_time), sum(total_gcn_time), sum(total_att_time), sum(total_str_comm), sum(total_tem_comm)))
 
         if args['save_log']:
             df_loss=pd.DataFrame(data=log_loss)
@@ -428,7 +428,7 @@ def run_dgnn(args):
         epoch_comm_time = []
         epoch_mem = []
         epoch_time_start = time.time()
-        args['comm_cost'] = 0
+        args['str_comm'] = 0
         args['gcn_time'] = 0
         args['att_time'] = 0
         for step, (batch_x, batch_y) in enumerate(loader):

@@ -398,6 +398,7 @@ def _structural_comm(args, features, workload_GCN, send_list, receive_list, node
     send_node = send_list.size(0)
     send_time = np.around(float(send_node*node_size)/bandwidth, 3)
     comm_time = max(receive_time, send_time)
+    args['str_comm'] += comm_time
 
     return comm_time, final_feature
 
@@ -427,6 +428,8 @@ def _temporal_comm(args, embedding, workload_GCN, send_list, receive_list, node_
     send_node = send_list.size(0)
     send_time = np.around(float(send_node*node_size)/bandwidth, 3)
     comm_time = max(receive_time, send_time)
+
+    args['tem_comm'] += comm_time
 
     return comm_time, final_embedding
 
@@ -515,7 +518,7 @@ class DySAT(nn.Module):
                     node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
                     subgraph = graphs[t].subgraph(node_idx.tolist())
                     features = graphs[t].ndata['feat']
-                    str_time, fusion_features = _structural_comm(self.args, features, self.workload_GCN[:][t], send_list[t], receive_list[t])
+                    str_time, fusion_features = _structural_comm(self.args, features, self.workload_GCN[:][t], send_list[t], receive_list[t], self.num_features, bandwidth=float(1024*1024*8))
                     feature_input = fusion_features[node_idx]
                     subgraph.ndata['feat'] = feature_input
                     out = self.structural_attn(subgraph)
@@ -526,7 +529,7 @@ class DySAT(nn.Module):
 
         # temporal attention forward
         for t in range(self.args['timesteps']):
-            str_time, fusion_embedding = _temporal_comm(self.args, GCN_emb_list[t], self.workload_GCN[:][t], send_list[t], receive_list[t])
+            str_time, fusion_embedding = _temporal_comm(self.args, GCN_emb_list[t], self.workload_GCN[:][t], send_list[t], receive_list[t], self.structural_layer_config[-1], bandwidth=float(1024*1024*8))
             GCN_emb_list[t] = fusion_embedding
 
         temporal_output = []
