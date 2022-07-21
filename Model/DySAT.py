@@ -509,16 +509,19 @@ class DySAT(nn.Module):
         RNN_emb_list = [torch.ones(self.args['nodes_info'][-1], self.temporal_layer_config[-1])[:,None,:].to(self.device) for t in range(self.args['timesteps'])]
 
         # structural attention forward
-        for t in range(self.args['timesteps']):
-            features = graphs[t].ndata['feat']
-            str_time, fusion_features = _structural_comm(self.args, features, self.workload_GCN[:][t], send_list[t], receive_list[t], self.num_features, bandwidth=float(1024*1024*8))
-            graphs[t].ndata['feat'] = fusion_features
+        # for t in range(self.args['timesteps']):
+        #     features = graphs[t].ndata['feat']
+        #     str_time, fusion_features = _structural_comm(self.args, features, self.workload_GCN[:][t], send_list[t], receive_list[t], self.num_features, bandwidth=float(1024*1024*8))
+        #     graphs[t].ndata['feat'] = fusion_features
 
         structural_out = []
         for t in range(self.args['timesteps']):
             node_local_idx = torch.nonzero(self.local_workload_GCN[t] == True, as_tuple=False).view(-1)
+            send_list, receive_list = _structural_comm_nodes(self.args['adjs_list'], self.local_workload_GCN)
+            features = graphs[t].ndata['feat']
+            _, fusion_features = _structural_comm(self.args, features, self.workload_GCN[:][t], send_list[t], receive_list[t], self.num_features, bandwidth=float(1024*1024*8))
+            graphs[t].ndata['feat'] = fusion_features
             if node_local_idx != torch.Size([]) and node_local_idx.size(0) > 0:
-                send_list, receive_list = _structural_comm_nodes(self.args['adjs_list'], self.local_workload_GCN)
                 if self.args['data_str'] == 'dgl':
                     node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
                     subgraph = graphs[t].subgraph(node_idx.tolist())
