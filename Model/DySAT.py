@@ -382,7 +382,7 @@ def _structural_comm(args, features, workload_GCN, send_list, receive_list, node
     # TODO: communicaiton component
     gather_lists = [torch.zeros_like(features) for j in range(world_size)]
     # comm_start = time.time()
-    torch.distributed.all_gather(gather_lists, features, group=dp_group[0])
+    torch.distributed.all_gather(gather_lists, features, group=dp_group)
     # args['comm_cost'] += time.time() - comm_start
 
     # feature fusion
@@ -412,7 +412,7 @@ def _temporal_comm(args, embedding, workload_GCN, send_list, receive_list, node_
     # TODO: communicaiton component
     gather_lists = [torch.zeros_like(embedding) for j in range(world_size)]
     # comm_start = time.time()
-    torch.distributed.all_gather(gather_lists, embedding, group=dp_group[0])
+    torch.distributed.all_gather(gather_lists, embedding, group=dp_group)
     # args['comm_cost'] += time.time() - comm_start
 
     # embedding fusion
