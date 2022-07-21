@@ -380,7 +380,8 @@ def _structural_comm(args, features, workload_GCN, send_list, receive_list, node
     dp_group = args['dp_group'] # [rank_0, ..., rank_N]
 
     # TODO: communicaiton component
-    gather_lists = [torch.zeros_like(features) for j in range(world_size)]
+    features_dense = features.to_dense().to(device)
+    gather_lists = [torch.zeros_like(features).to(device) for j in range(world_size)]
     # comm_start = time.time()
     torch.distributed.all_gather(gather_lists, features, group=dp_group)
     # args['comm_cost'] += time.time() - comm_start
@@ -534,7 +535,7 @@ class DySAT(nn.Module):
         # temporal attention forward
         for t in range(self.args['timesteps']):
             send_list, receive_list = _temporal_comm_nodes(self.rank, self.args['nodes_list'], self.args['world_size'], self.workload_GCN, self.workload_RNN)
-            str_time, fusion_embedding = _temporal_comm(self.args, GCN_emb_list[t], self.workload_GCN[:][t], send_list[t], receive_list[t], self.structural_layer_config[-1], bandwidth=float(1024*1024*8))
+            _, fusion_embedding = _temporal_comm(self.args, GCN_emb_list[t], self.workload_GCN[:][t], send_list[t], receive_list[t], self.structural_layer_config[-1], bandwidth=float(1024*1024*8))
             GCN_emb_list[t] = fusion_embedding
 
         temporal_output = []
