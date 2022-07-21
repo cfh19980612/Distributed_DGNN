@@ -401,13 +401,34 @@ def _structural_comm(args, features, workload_GCN, send_list, receive_list, node
 
     return comm_time, final_feature
 
-def _temporal_comm(args, send_list, receive_list):
+def _temporal_comm(args, embedding, workload_GCN, send_list, receive_list, node_size, bandwidth):
     rank = args['rank']
     world_size = args['world_size']
     device = args['device']
     timesteps = args['timesteps']
+    dp_group = args['dp_group'] # [rank_0, ..., rank_N]
+
     # TODO: communicaiton component
-    return 0
+    gather_lists = [torch.zeros_like(embedding) for j in range(world_size)]
+    # comm_start = time.time()
+    torch.distributed.all_gather(gather_lists, embedding, group=dp_group[0])
+    # args['comm_cost'] += time.time() - comm_start
+
+    # embedding fusion
+    final_embedding = embedding.clone().detach()
+    for m in range(world_size):
+        need_node = workload_GCN[m][receive_list]
+        have_node = torch.nonzero(need_node == True, as_tuple=False).view(-1)
+        final_embedding[have_node] = workload_GCN[m][have_node]
+
+    # simulated communication time
+    receive_node = receive_list.size(0)
+    receive_time = np.around(float(receive_node*node_size)/bandwidth, 3)
+    send_node = send_list.size(0)
+    send_time = np.around(float(send_node*node_size)/bandwidth, 3)
+    comm_time = max(receive_time, send_time)
+
+    return comm_time, final_embedding
 
 
 class DySAT(nn.Module):
@@ -504,6 +525,10 @@ class DySAT(nn.Module):
 
 
         # temporal attention forward
+        for t in range(self.args['timesteps']):
+            str_time, fusion_embedding = _temporal_comm(self.args, GCN_emb_list[t], self.workload_GCN[:][t], send_list[t], receive_list[t])
+            GCN_emb_list[t] = fusion_embedding
+
         temporal_output = []
         temporal_input = torch.cat(GCN_emb_list, dim=1)
         for t in range(self.args['timesteps']):
