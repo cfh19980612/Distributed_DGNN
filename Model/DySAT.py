@@ -525,8 +525,9 @@ class DySAT(nn.Module):
             node_local_idx = torch.nonzero(self.local_workload_GCN[t] == True, as_tuple=False).view(-1)
             send_list, receive_list = _structural_comm_nodes(self.args['adjs_list'], self.local_workload_GCN)
             features = graphs[t].ndata['feat']
-            _, fusion_features = _structural_comm(self.args, features, [self.workload_GCN[m][t] for m in range(self.args['world_size'])], send_list[t], receive_list[t], self.num_features, bandwidth=float(1024*1024*8))
-            graphs[t].ndata['feat'] = fusion_features
+            if self.args['dp']: # data parallel
+                _, fusion_features = _structural_comm(self.args, features, [self.workload_GCN[m][t] for m in range(self.args['world_size'])], send_list[t], receive_list[t], self.num_features, bandwidth=float(1024*1024*8))
+                graphs[t].ndata['feat'] = fusion_features
             if node_local_idx != torch.Size([]) and node_local_idx.size(0) > 0:
                 if self.args['data_str'] == 'dgl':
                     node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
@@ -542,8 +543,9 @@ class DySAT(nn.Module):
         # temporal attention forward
         for t in range(self.args['timesteps']):
             send_list, receive_list = _temporal_comm_nodes(self.rank, self.args['nodes_list'], self.args['world_size'], self.workload_GCN, self.workload_RNN)
-            _, fusion_embedding = _temporal_comm(self.args, GCN_emb_list[t], [self.workload_GCN[m][t] for m in range(self.args['world_size'])], send_list[t], receive_list[t], self.structural_layer_config[-1], bandwidth=float(1024*1024*8))
-            GCN_emb_list[t] = fusion_embedding
+            if self.args['dp']: # data parallel
+                _, fusion_embedding = _temporal_comm(self.args, GCN_emb_list[t], [self.workload_GCN[m][t] for m in range(self.args['world_size'])], send_list[t], receive_list[t], self.structural_layer_config[-1], bandwidth=float(1024*1024*8))
+                GCN_emb_list[t] = fusion_embedding
 
         temporal_output = []
         temporal_input = torch.cat(GCN_emb_list, dim=1)

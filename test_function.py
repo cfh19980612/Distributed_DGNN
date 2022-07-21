@@ -116,7 +116,7 @@ def _pre_comm_group_gate(num_workers, timesteps, gate):
 # TODO: complete the global forward
 def run_dgnn_distributed(args):
     args['method'] = 'dist'
-    args['connection'] = True
+    args['dp'] = True
     args['gate'] = False
     device = args['device']
     rank = args['rank']
@@ -392,7 +392,7 @@ def run_dgnn(args):
     """
 
     args['method'] = 'local'
-    args['connection'] = False
+    args['dp'] = False
     device = args['device']
     # args['timesteps'] = 4
 
@@ -440,22 +440,21 @@ def run_dgnn(args):
     local_workload_GCN = total_workload_GCN[0]
     local_workload_RNN = total_workload_RNN[0]
     # summary
-    if rank == 0:
-        print("""----Data statistics------'
-            #Graphs average nodes: %d
-            #Average edges: %d
-            #Timesteps %d
-            #Number of feats %d""" %
-                (np.mean(args['nodes_info']), np.mean(args['edges_info']),
-                len(graphs), load_feats[0].size(1)))
+    print("""----Data statistics------'
+        #Graphs average nodes: %d
+        #Average edges: %d
+        #Timesteps %d
+        #Number of feats %d""" %
+            (np.mean(args['nodes_info']), np.mean(args['edges_info']),
+            len(graphs), load_feats[0].size(1)))
         # print('Graphs average nodes: {}, average edges: {}'.format(np.mean(args['nodes_info']), np.mean(args['edges_info'])))
     GCN_nodes_compute = [torch.nonzero(local_workload_GCN[t] == True, as_tuple=False).view(-1) for t in range (args['timesteps'])]
     RNN_nodes_compute = [torch.nonzero(local_workload_RNN[t] == True, as_tuple=False).view(-1) for t in range (args['timesteps'])]
     GCN_nodes = torch.cat(GCN_nodes_compute, dim=0)
     RNN_nodes = torch.cat(RNN_nodes_compute, dim=0)
-    print('Worker {} has structural workload {} nodes, temporal workloads {} nodes:'.format(rank, GCN_nodes.size(0), RNN_nodes.size(0)))
+    print('Worker has structural workload {} nodes, temporal workloads {} nodes:'.format(GCN_nodes.size(0), RNN_nodes.size(0)))
 
-    dataset = load_dataset(*get_data_example(load_g, args, num_graph))
+    dataset = load_dataset(*get_data_example(graphs, args, num_graph))
 
     train_dataset = Data.TensorDataset(
                 torch.tensor(dataset['train_data']), 
@@ -469,9 +468,9 @@ def run_dgnn(args):
     )
 
     # convert graphs to dgl or pyg graphs
-    graphs = convert_graphs(load_g, load_adj, load_feats, args['data_str'])
-
-    model = _My_DGNN(args, in_feats=load_feats[0].shape[1]).to(device)
+    graphs = convert_graphs(graphs, load_adj, load_feats, args['data_str'])
+    model = _My_DGNN(args, in_feats=num_feats, total_workloads_GCN = total_workload_GCN, total_workloads_RNN = total_workload_RNN)
+    model = model.to(device)
 
     # loss_func = nn.BCELoss()
     loss_func = nn.CrossEntropyLoss()
@@ -481,6 +480,10 @@ def run_dgnn(args):
     epochs_f1_score = []
     epochs_auc = []
     epochs_acc = []
+
+    total_train_time = []
+    total_gcn_time = []
+    total_att_time = []
     log_loss = []
     log_acc = []
     total_train_time = 0
@@ -490,49 +493,53 @@ def run_dgnn(args):
         epoch_train_time = []
         epoch_gcn_time = []
         epoch_att_time = []
-        epoch_comm_time = []
         epoch_mem = []
         epoch_time_start = time.time()
-        args['str_comm'] = 0
         args['gcn_time'] = 0
         args['att_time'] = 0
+        args['str_comm'] = 0
+        args['tem_comm'] = 0
         for step, (batch_x, batch_y) in enumerate(loader):
             model.train()
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device)
-            graphs = [graph.to(device) for graph in graphs]
+            # gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
+            # print('GPU memory uses {} after loaded the training data!'.format(gpu_mem_alloc))
+
+            # graphs = [graph.to(device) for graph in graphs]
             train_start_time = time.time()
             out = model(graphs, batch_x)
-            # print('outputs: ',out)
-            # print('true_labels: ',batch_y)
+            # print(out)
             loss = loss_func(out.squeeze(dim=-1), batch_y)
             Loss.append(loss.item())
             optimizer.zero_grad()
-            loss.backward()
+            # loss.backward()
+            # print('epoch {} worker {} completes gradients computation!'.format(epoch, args['rank']))
             optimizer.step()
             gpu_mem_alloc = torch.cuda.max_memory_allocated() / 1000000 if torch.cuda.is_available() else 0
             epoch_mem.append(gpu_mem_alloc)
             epoch_train_time.append(time.time() - train_start_time)
-
-        # communication time
-        epoch_comm_time.append(0)
+            torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
 
         # individual module computation costs
         epoch_gcn_time.append(args['gcn_time'])
         epoch_att_time.append(args['att_time'])
 
         if epoch >= 5:
-            total_train_time += np.sum(epoch_train_time)
+            total_train_time.append(np.sum(epoch_train_time))
+            total_gcn_time.append(args['gcn_time'])
+            total_att_time.append(args['att_time'])
         # print(out)
         # test
         if epoch % args['test_freq'] == 0:
-            # test_source_id = test_data[:, 0]
-            # test_target_id = test_data[:, 1]
-            # model.eval()
             graphs = [graph.to(device) for graph in graphs]
             test_result = model(graphs, torch.tensor(dataset['test_data']).to(device))
-            # print('outputs: ',test_result)
-            # print('True labels: ',dataset['test_labels'])
+
+        elif epoch % args['test_freq'] == 0:
+            # model.eval()
+            # graphs = [graph.to(device) for graph in graphs]
+            test_result = model(graphs, torch.tensor(dataset['test_data']).to(device))
             prob_f1 = []
             prob_auc = []
             prob_f1.extend(np.argmax(test_result.detach().cpu().numpy(), axis = 1))
@@ -546,7 +553,7 @@ def run_dgnn(args):
             log_loss.append(np.mean(Loss))
             log_acc.append(ACC)
             print("Epoch {:<3}, Loss = {:.3f}, F1 Score = {:.3f}, AUC = {:.3f}, ACC = {:.3f}, Time = " \
-                "{:.5f}:[{:.5f}({:.3f}%)|{:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage = {:.2f}MB ({:.2f}%)".format(
+                "{:.5f}[Computation: {:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage = {:.2f}MB ({:.2f}%)".format(
                                                                 epoch,
                                                                 np.mean(Loss),
                                                                 F1_result,
@@ -555,7 +562,7 @@ def run_dgnn(args):
                                                                 np.sum(epoch_train_time), 
                                                                 np.sum(epoch_gcn_time),(np.sum(epoch_gcn_time)/np.sum(epoch_train_time))*100,
                                                                 np.sum(epoch_att_time),(np.sum(epoch_att_time)/np.sum(epoch_train_time))*100,
-                                                                np.sum(epoch_comm_time),(np.sum(epoch_comm_time)/np.sum(epoch_train_time))*100,
+                                                                # np.sum(epoch_comm_time),(np.sum(epoch_comm_time)/np.sum(epoch_train_time))*100,
                                                                 np.mean(epoch_mem), (np.mean(epoch_mem)/16160)*100
                                                                 ))
 
@@ -564,10 +571,18 @@ def run_dgnn(args):
     best_auc_epoch = epochs_auc.index(max(epochs_auc))
     best_acc_epoch = epochs_acc.index(max(epochs_acc))
 
+    total_train_time.remove(max(total_train_time))
+    total_gcn_time.remove(max(total_gcn_time))
+    total_att_time.remove(max(total_att_time))
+
     print("Best f1 score epoch: {}, Best f1 score: {}".format(best_f1_epoch, max(epochs_f1_score)))
     print("Best auc epoch: {}, Best auc score: {}".format(best_auc_epoch, max(epochs_auc)))
     print("Best acc epoch: {}, Best acc score: {}".format(best_acc_epoch, max(epochs_acc)))
-    print("Total training cost: {:.3f}".format(total_train_time))
+    print("Total training cost: {:.3f}, total GCN cost: {:.3f}, total ATT cost: {:.3f}".format(
+                                                                sum(total_train_time), 
+                                                                sum(total_gcn_time),
+                                                                sum(total_att_time)))
+    print('{:.3f},  {:.3f},  {:.3f}'.format(sum(total_train_time), sum(total_gcn_time), sum(total_att_time)))
 
     if args['save_log']:
         df_loss=pd.DataFrame(data=log_loss)
