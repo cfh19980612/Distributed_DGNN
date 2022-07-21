@@ -533,6 +533,7 @@ class DySAT(nn.Module):
 
         # temporal attention forward
         for t in range(self.args['timesteps']):
+            send_list, receive_list = _temporal_comm_nodes(self.rank, self.args['nodes_list'], self.args['world_size'], self.workload_GCN, self.workload_RNN)
             str_time, fusion_embedding = _temporal_comm(self.args, GCN_emb_list[t], self.workload_GCN[:][t], send_list[t], receive_list[t], self.structural_layer_config[-1], bandwidth=float(1024*1024*8))
             GCN_emb_list[t] = fusion_embedding
 

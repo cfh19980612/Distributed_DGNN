@@ -154,6 +154,8 @@ def run_dgnn_distributed(args):
     Num_nodes = args['nodes_info']
     nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(args['timesteps'])]
     Degrees = [list(dict(nx.degree(graphs[t])).values()) for t in range(args['timesteps'])]
+    args['nodes_list'] = nodes_list
+    args['degrees'] = Degrees
     if args['partition'] == 'node':
         if args['balance']:
             partition_obj = node_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
