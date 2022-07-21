@@ -330,9 +330,8 @@ def _temporal_comm_nodes(rank, nodes_list, num_devices, workloads_GCN, workloads
         receive_list.append(receive.view(-1))
 
         # send nodes list
-        will_send = torch.nonzero(workloads_RNN[rank][-1] == False, as_tuple=False).view(-1)
-        if will_send!= torch.Size([]):
-            need_send = will_send[:workloads_GCN[rank][time].size(0)]
+        need_send = torch.nonzero(workloads_RNN[rank][-1][:workloads_GCN[rank][time].size(0)] == False, as_tuple=False).view(-1)
+        if need_send!= torch.Size([]):
             send_nodes = workloads_GCN[rank][time][need_send]
             send = torch.nonzero(send_nodes == True, as_tuple=False).view(-1)
             send_list.append(send)
