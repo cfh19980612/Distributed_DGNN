@@ -530,7 +530,7 @@ class DySAT(nn.Module):
                 graphs[t].ndata['feat'] = fusion_features
             if node_local_idx != torch.Size([]) and node_local_idx.size(0) > 0:
                 if self.args['data_str'] == 'dgl':
-                    node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
+                    node_idx = torch.unique(torch.cat((node_local_idx, receive_list[t]), dim=0), sorted = False)
                     subgraph = graphs[t].subgraph(node_idx.tolist())
                     start = time.time()
                     out = self.structural_attn(subgraph)
