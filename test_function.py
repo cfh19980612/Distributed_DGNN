@@ -262,6 +262,8 @@ def run_dgnn_distributed(args):
         Loss = []
         epoch_train_time = []
         epoch_comm_time = []
+        epoch_str_comm_time = []
+        epoch_tem_comm_time = []
         epoch_gcn_time = []
         epoch_att_time = []
         epoch_mem = []
@@ -295,6 +297,8 @@ def run_dgnn_distributed(args):
         # communication time
         if args['connection']:
             epoch_comm_time.append(args['str_comm'] + args['tem_comm'])
+            epoch_str_comm_time.append(args['str_comm'])
+            epoch_tem_comm_time.append(args['str_comm'])
             if epoch >= 5:
                 total_str_comm.append(args['str_comm'])
                 total_tem_comm.append(args['tem_comm'])
@@ -331,7 +335,7 @@ def run_dgnn_distributed(args):
             log_loss.append(np.mean(Loss))
             log_acc.append(ACC)
             print("Epoch {:<3}, Loss = {:.3f}, F1 Score = {:.3f}, AUC = {:.3f}, ACC = {:.3f}, Time = " \
-                "{:.5f}:[{:.5f}({:.3f}%)|{:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage = {:.2f}MB ({:.2f}%)".format(
+                "{:.5f}[Computation: {:.5f}({:.3f}%)|{:.5f}({:.3f}%), Communication: {:.5f}({:.3f}%)|{:.5f}({:.3f}%)], Memory Usage = {:.2f}MB ({:.2f}%)".format(
                                                                 epoch,
                                                                 np.mean(Loss),
                                                                 F1_result,
@@ -340,7 +344,9 @@ def run_dgnn_distributed(args):
                                                                 np.sum(epoch_train_time), 
                                                                 np.sum(epoch_gcn_time),(np.sum(epoch_gcn_time)/np.sum(epoch_train_time))*100,
                                                                 np.sum(epoch_att_time),(np.sum(epoch_att_time)/np.sum(epoch_train_time))*100,
-                                                                np.sum(epoch_comm_time),(np.sum(epoch_comm_time)/np.sum(epoch_train_time))*100,
+                                                                np.sum(epoch_str_comm_time),(np.sum(epoch_str_comm_time)/np.sum(epoch_train_time))*100,
+                                                                np.sum(epoch_tem_comm_time),(np.sum(epoch_tem_comm_time)/np.sum(epoch_train_time))*100,
+                                                                # np.sum(epoch_comm_time),(np.sum(epoch_comm_time)/np.sum(epoch_train_time))*100,
                                                                 np.mean(epoch_mem), (np.mean(epoch_mem)/16160)*100
                                                                 ))
 
