@@ -381,13 +381,13 @@ def _structural_comm(args, features, workload_GCN, send_list, receive_list, node
 
     # TODO: communicaiton component
     features_dense = features.to_dense().to(device)
-    gather_lists = [torch.zeros_like(features).to(device) for j in range(world_size)]
+    gather_lists = [torch.zeros_like(features_dense).to(device) for j in range(world_size)]
     # comm_start = time.time()
-    torch.distributed.all_gather(gather_lists, features, group=dp_group)
+    torch.distributed.all_gather(gather_lists, features_dense, group=dp_group)
     # args['comm_cost'] += time.time() - comm_start
 
     # feature fusion
-    final_feature = features.clone().detach()
+    final_feature = features_dense.clone().detach()
     for m in range(world_size):
         need_node = workload_GCN[m][receive_list]
         have_node = torch.nonzero(need_node == True, as_tuple=False).view(-1)
