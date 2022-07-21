@@ -366,9 +366,10 @@ def _structural_comm_nodes(adjs_list, local_workload_GCN):
     
     return send_list, receive_list
 
-def _structural_comm(args, send_list, receive_list):
+def _structural_comm(args, features, workload_GCN, send_list, receive_list, node_size, bandwidth):
     '''
     Args:
+        features: [N_i, F]
         workloads: list of bool matrix, workloads[rank][time] represents the partitioned time-th
         workloads on device rank
     Communicate node features snapshot by snapshot? only need neighborhoods
@@ -376,8 +377,29 @@ def _structural_comm(args, send_list, receive_list):
     rank = args['rank']
     world_size = args['world_size']
     device = args['device']
+    dp_group = args['dp_group'] # [rank_0, ..., rank_N]
+
     # TODO: communicaiton component
-    return 0
+    gather_lists = [torch.zeros_like(features) for j in range(world_size)]
+    # comm_start = time.time()
+    torch.distributed.all_gather(gather_lists, features, group=dp_group[0])
+    # args['comm_cost'] += time.time() - comm_start
+
+    # feature fusion
+    final_feature = features.clone().detach()
+    for m in range(world_size):
+        need_node = workload_GCN[m][receive_list]
+        have_node = torch.nonzero(need_node == True, as_tuple=False).view(-1)
+        final_feature[have_node] = workload_GCN[m][have_node]
+
+    # simulated communication time
+    receive_node = receive_list.size(0)
+    receive_time = np.around(float(receive_node*node_size)/bandwidth, 3)
+    send_node = send_list.size(0)
+    send_time = np.around(float(send_node*node_size)/bandwidth, 3)
+    comm_time = max(receive_time, send_time)
+
+    return comm_time, final_feature
 
 def _temporal_comm(args, send_list, receive_list):
     rank = args['rank']
@@ -466,12 +488,15 @@ class DySAT(nn.Module):
         structural_out = []
         for t in range(self.args['timesteps']):
             node_local_idx = torch.nonzero(self.local_workload_GCN[t] == True, as_tuple=False).view(-1)
-            if node_local_idx != torch.Size([]):
+            if node_local_idx != torch.Size([]) and node_local_idx.size(0) > 0:
                 send_list, receive_list = _structural_comm_nodes(self.args['adjs_list'], self.local_workload_GCN)
-                str_time = _structural_comm(self.args, send_list, receive_list)
-                node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
                 if self.args['data_str'] == 'dgl':
+                    node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
                     subgraph = graphs[t].subgraph(node_idx.tolist())
+                    features = graphs[t].ndata['feat']
+                    str_time, fusion_features = _structural_comm(self.args, features, self.workload_GCN[:][t], send_list[t], receive_list[t])
+                    feature_input = fusion_features[node_idx]
+                    subgraph.ndata['feat'] = feature_input
                     out = self.structural_attn(subgraph)
                     GCN_emb_list[t][node_idx] = out[:,None,:]  # to [N, 1, F]
                     structural_out.append(out)
