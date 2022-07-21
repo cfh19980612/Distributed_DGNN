@@ -293,7 +293,7 @@ def _simulate_comm_time(send_list, receive_list, node_size, bandwidth):
     
     return receive_comm_time, send_comm_time
 
-def _temporal_comm_nodes(rank, nodes_list, num_devices, workload_GCN, workloads_RNN):
+def _temporal_comm_nodes(rank, nodes_list, num_devices, workloads_GCN, workloads_RNN):
     '''
     Step 1: generate the required nodes list for each device
     Step 2: compare the required list with the RNN(GCN) workload list to compute the number of received nodes
@@ -316,7 +316,7 @@ def _temporal_comm_nodes(rank, nodes_list, num_devices, workload_GCN, workloads_
                     Req[rank][k][where_need] = torch.ones(where_need.size(0), dtype=torch.bool)
     # remove already owned nodes
     for time in range(timesteps):
-        where_have_nodes = torch.nonzero(workload_GCN[rank][time] == True, as_tuple=False).view(-1)
+        where_have_nodes = torch.nonzero(workloads_GCN[rank][time] == True, as_tuple=False).view(-1)
         # print(where_have_nodes)
         if where_have_nodes!= torch.Size([]):
             # print(where_have_nodes)
@@ -330,9 +330,9 @@ def _temporal_comm_nodes(rank, nodes_list, num_devices, workload_GCN, workloads_
         receive_list.append(receive.view(-1))
 
         # send nodes list
-        need_send = torch.nonzero(workloads_RNN[-1] == False, as_tuple=False).view(-1)[:workloads_RNN[time].size(0)]
+        need_send = torch.nonzero(workloads_RNN[rank][-1] == False, as_tuple=False).view(-1)[:workloads_RNN[rank][time].size(0)]
         if need_send!= torch.Size([]):
-            send_nodes = workload_GCN[time][need_send]
+            send_nodes = workloads_GCN[rank][time][need_send]
             send = torch.nonzero(send_nodes == True, as_tuple=False).view(-1)
             send_list.append(send)
         else: send_list.append([])
@@ -390,10 +390,10 @@ def _structural_comm(args, features, workload_GCN, send_list, receive_list, node
     final_feature = features_dense.clone().detach()
     for m in range(world_size):
         if receive_list != torch.Size([]) and receive_list.size(0) > 0:
-            print('info:', final_feature.size(), workload_GCN[m].size(), gather_lists[m].size())
+            # print('info:', final_feature.size(), workload_GCN[m].size(), gather_lists[m].size())
             need_node = workload_GCN[m][receive_list]
             have_node = torch.nonzero(need_node == True, as_tuple=False).view(-1)
-            print('info:', final_feature.size(), have_node.size(), workload_GCN[m].size(), gather_lists[m].size())
+            # print('info:', final_feature.size(), have_node.size(), workload_GCN[m].size(), gather_lists[m].size())
             final_feature[have_node] = gather_lists[m][have_node]
     final_feature = final_feature.to_sparse()
 
