@@ -30,11 +30,11 @@ np.random.seed(0)
 class _My_DGNN(torch.nn.Module):
     def __init__(self, args, in_feats = None, total_workloads_GCN = None, total_workloads_RNN = None):
         super(_My_DGNN, self).__init__()
-        if args['rank'] == 3:
-            print('start to initialize dgnn')
+        # if args['rank'] == 3:
+            # print('start to initialize dgnn')
         self.dgnn = DySAT(args, num_features = in_feats, workload_GCN=total_workloads_GCN, workload_RNN=total_workloads_RNN)
-        if args['rank'] == 3:
-            print('start to initialize classifier')
+        # if args['rank'] == 3:
+            # print('start to initialize classifier')
         self.classificer = Classifier(in_feature = self.dgnn.out_feats)
 
     # def set_comm(self):
@@ -177,7 +177,14 @@ def run_dgnn_distributed(args):
     local_workload_RNN = total_workload_RNN[rank]
     # summary
     if rank == 0:
-        print('Graphs average nodes: {}, average edges: {}'.format(np.mean(args['nodes_info']), np.mean(args['edges_info'])))
+        print("""----Data statistics------'
+            #Graphs average nodes: %d
+            #Average edges: %d
+            #Timesteps %d
+            #Number of feats %d""" %
+                (np.mean(args['nodes_info']), np.mean(args['edges_info']),
+                len(graphs), load_feats[0].size(1)))
+        # print('Graphs average nodes: {}, average edges: {}'.format(np.mean(args['nodes_info']), np.mean(args['edges_info'])))
     GCN_nodes_compute = [torch.nonzero(local_workload_GCN[t] == True, as_tuple=False).view(-1) for t in range (args['timesteps'])]
     RNN_nodes_compute = [torch.nonzero(local_workload_RNN[t] == True, as_tuple=False).view(-1) for t in range (args['timesteps'])]
     GCN_nodes = torch.cat(GCN_nodes_compute, dim=0)
@@ -365,7 +372,7 @@ def run_dgnn_distributed(args):
         print("Best f1 score epoch: {}, Best f1 score: {}".format(best_f1_epoch, max(epochs_f1_score)))
         print("Best auc epoch: {}, Best auc score: {}".format(best_auc_epoch, max(epochs_auc)))
         print("Best acc epoch: {}, Best acc score: {}".format(best_acc_epoch, max(epochs_acc)))
-        print("Total training cost: {:.3f}, total GCN cost: {:.3f}, total ATT cost: {:.3f}, total communication cost: {:.3f}, total_communication_second cost: {:.3f}".format(
+        print("Total training cost: {:.3f}, total GCN cost: {:.3f}, total ATT cost: {:.3f}, total structural communication cost: {:.3f}, total temporal communication cost: {:.3f}".format(
                                                                     sum(total_train_time), 
                                                                     sum(total_gcn_time),
                                                                     sum(total_att_time),
