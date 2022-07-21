@@ -397,13 +397,63 @@ def run_dgnn(args):
     # args['timesteps'] = 4
 
     # TODO: Unevenly slice graphs
-    # load graphs
-    _, load_g, load_adj, load_feats = slice_graph(*load_graphs(args))
-    # print('features: ',load_feats)
-    num_graph = len(load_g)
-    print("Loaded {}/{} graphs".format(num_graph, args['timesteps']))
-    args['structural_time_steps'] = num_graph
-    args['temporal_time_steps'] = num_graph
+    # get a complete DTDG
+    _, graphs, load_adj, load_feats, num_feats = load_graphs(args)
+    num_graph = len(graphs)
+    adjs_list = []
+    for i in range(args['timesteps']):
+        # print(type(adj_matrices[i]))
+        adj_coo = load_adj[i].tocoo()
+        values = adj_coo.data
+        indices = np.vstack((adj_coo.row, adj_coo.col))
+
+        i = torch.LongTensor(indices)
+        v = torch.FloatTensor(values)
+        shape = adj_coo.shape
+
+        adj_tensor_sp = torch.sparse_coo_tensor(i, v, torch.Size(shape))
+        adjs_list.append(adj_tensor_sp)
+    args['adjs_list'] = adjs_list
+    # Graph distribution: launch partition algorithm
+    Num_nodes = args['nodes_info']
+    nodes_list = [torch.tensor([j for j in range(Num_nodes[i])]) for i in range(args['timesteps'])]
+    Degrees = [list(dict(nx.degree(graphs[t])).values()) for t in range(args['timesteps'])]
+    args['nodes_list'] = nodes_list
+    args['degrees'] = Degrees
+    if args['partition'] == 'node':
+        if args['balance']:
+            partition_obj = node_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+        else:
+            partition_obj = node_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    elif args['partition'] == 'snapshot':
+        if args['balance']:
+            partition_obj = snapshot_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+        else:
+            partition_obj = snapshot_partition(args, nodes_list, adjs_list, num_devices=args['world_size'])
+    elif args['partition'] == 'hybrid':
+        if args['balance']:
+            partition_obj = hybrid_partition_balance(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+        else:
+            partition_obj = hybrid_partition(args, graphs, nodes_list, adjs_list, num_devices=args['world_size'])
+    
+    total_workload_GCN, total_workload_RNN = partition_obj.workload_partition()
+    local_workload_GCN = total_workload_GCN[0]
+    local_workload_RNN = total_workload_RNN[0]
+    # summary
+    if rank == 0:
+        print("""----Data statistics------'
+            #Graphs average nodes: %d
+            #Average edges: %d
+            #Timesteps %d
+            #Number of feats %d""" %
+                (np.mean(args['nodes_info']), np.mean(args['edges_info']),
+                len(graphs), load_feats[0].size(1)))
+        # print('Graphs average nodes: {}, average edges: {}'.format(np.mean(args['nodes_info']), np.mean(args['edges_info'])))
+    GCN_nodes_compute = [torch.nonzero(local_workload_GCN[t] == True, as_tuple=False).view(-1) for t in range (args['timesteps'])]
+    RNN_nodes_compute = [torch.nonzero(local_workload_RNN[t] == True, as_tuple=False).view(-1) for t in range (args['timesteps'])]
+    GCN_nodes = torch.cat(GCN_nodes_compute, dim=0)
+    RNN_nodes = torch.cat(RNN_nodes_compute, dim=0)
+    print('Worker {} has structural workload {} nodes, temporal workloads {} nodes:'.format(rank, GCN_nodes.size(0), RNN_nodes.size(0)))
 
     dataset = load_dataset(*get_data_example(load_g, args, num_graph))
 
