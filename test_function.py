@@ -302,7 +302,7 @@ def run_dgnn_distributed(args):
             torch.cuda.empty_cache()
         torch.cuda.empty_cache()
         # communication time
-        if args['connection']:
+        if args['dp']:
             epoch_comm_time.append(args['str_comm'] + args['tem_comm'])
             epoch_str_comm_time.append(args['str_comm'])
             epoch_tem_comm_time.append(args['str_comm'])
