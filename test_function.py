@@ -378,6 +378,12 @@ def run_dgnn_distributed(args):
                                                                     sum(total_att_time),
                                                                     sum(total_str_comm),
                                                                     sum(total_tem_comm)))
+        print("Average training cost: {:.3f}, average GCN cost: {:.3f}, average ATT cost: {:.3f}, average structural communication cost: {:.3f}, average temporal communication cost: {:.3f}".format(
+                                                                    np.mean(total_train_time), 
+                                                                    np.mean(total_gcn_time),
+                                                                    np.mean(total_att_time),
+                                                                    np.mean(total_str_comm),
+                                                                    np.mean(total_tem_comm)))
         print('{:.3f},  {:.3f},  {:.3f},  {:.3f}, {:.3f}'.format(sum(total_train_time), sum(total_gcn_time), sum(total_att_time), sum(total_str_comm), sum(total_tem_comm)))
 
         if args['save_log']:
