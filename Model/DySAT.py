@@ -425,7 +425,7 @@ def _temporal_comm(args, embedding, workload_GCN, send_list, receive_list, node_
     for m in range(world_size):
         need_node = workload_GCN[m][receive_list]
         have_node = torch.nonzero(need_node == True, as_tuple=False).view(-1)
-        final_embedding[have_node] = workload_GCN[m][have_node]
+        final_embedding[have_node] = gather_lists[m][have_node]
 
     # simulated communication time
     receive_node = receive_list.size(0)
