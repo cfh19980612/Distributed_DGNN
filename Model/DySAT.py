@@ -523,7 +523,7 @@ class DySAT(nn.Module):
             send_list, receive_list = _structural_comm_nodes(self.args['adjs_list'], self.local_workload_GCN)
             features = graphs[t].ndata['feat']
             _, fusion_features = _structural_comm(self.args, features, self.workload_GCN[:][t], send_list[t], receive_list[t], self.num_features, bandwidth=float(1024*1024*8))
-            graphs[t].ndata['feat'] = fusion_features
+            graphs[t].ndata['feat'] = fusion_features.to('cpu')
             if node_local_idx != torch.Size([]) and node_local_idx.size(0) > 0:
                 if self.args['data_str'] == 'dgl':
                     node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
