@@ -391,6 +391,7 @@ def _structural_comm(args, features, workload_GCN, send_list, receive_list, node
     for m in range(world_size):
         need_node = workload_GCN[m][receive_list]
         have_node = torch.nonzero(need_node == True, as_tuple=False).view(-1)
+        print('info:', final_feature.size(), have_node.size(), workload_GCN[m].size())
         final_feature[have_node] = workload_GCN[m][have_node]
     final_feature = final_feature.to_sparse()
 
