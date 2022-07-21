@@ -46,7 +46,7 @@ class GAT_Layer(nn.Module):
         # edge_weight = graph.edge_weight.reshape(-1, 1)
         # H, C = self.n_heads, self.out_dim
         # x = self.lin(graph.x).view(-1, H, C) # [N, heads, out_dim]
-        graph = graph.to(self.args['device'])
+        # graph = graph.to(self.args['device'])
         feat = graph.ndata['feat']
         edge_index = graph.edges()
         H, C = self.n_heads, self.out_dim
