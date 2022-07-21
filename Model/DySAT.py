@@ -392,6 +392,7 @@ def _structural_comm(args, features, workload_GCN, send_list, receive_list, node
         need_node = workload_GCN[m][receive_list]
         have_node = torch.nonzero(need_node == True, as_tuple=False).view(-1)
         final_feature[have_node] = workload_GCN[m][have_node]
+    final_feature = final_feature.to_sparse()
 
     # simulated communication time
     receive_node = receive_list.size(0)
