@@ -380,7 +380,7 @@ def _structural_comm(args, features, workload_GCN, send_list, receive_list, node
     dp_group = args['dp_group'] # [rank_0, ..., rank_N]
 
     # TODO: communicaiton component
-    features_dense = features.to_dense().to(device)
+    features_dense = features.to_dense()
     gather_lists = [torch.zeros_like(features_dense).to(device) for j in range(world_size)]
     # comm_start = time.time()
     torch.distributed.all_gather(gather_lists, features_dense, group=dp_group)
@@ -525,7 +525,7 @@ class DySAT(nn.Module):
             node_local_idx = torch.nonzero(self.local_workload_GCN[t] == True, as_tuple=False).view(-1)
             send_list, receive_list = _structural_comm_nodes(self.args['adjs_list'], self.local_workload_GCN)
             features = graphs[t].ndata['feat']
-            _, fusion_features = _structural_comm(self.args, features, self.workload_GCN[:][t], send_list[t], receive_list[t], self.num_features, bandwidth=float(1024*1024*8))
+            _, fusion_features = _structural_comm(self.args, features, [self.workload_GCN[m][t] for m in range(self.args['world_size'])], send_list[t], receive_list[t], self.num_features, bandwidth=float(1024*1024*8))
             graphs[t].ndata['feat'] = fusion_features
             if node_local_idx != torch.Size([]) and node_local_idx.size(0) > 0:
                 if self.args['data_str'] == 'dgl':
