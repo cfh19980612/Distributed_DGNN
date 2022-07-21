@@ -531,7 +531,9 @@ class DySAT(nn.Module):
                 if self.args['data_str'] == 'dgl':
                     node_idx = torch.cat((node_local_idx, receive_list[t]), dim=0)
                     subgraph = graphs[t].subgraph(node_idx.tolist())
+                    start = time.time()
                     out = self.structural_attn(subgraph)
+                    self.args['gcn_time'] += time.time() - start
                     GCN_emb_list[t][node_idx] = out[:,None,:]  # to [N, 1, F]
                     structural_out.append(out)
                 else: return 0
@@ -551,7 +553,9 @@ class DySAT(nn.Module):
             if node_idx != torch.Size([]) and node_idx.size(0) > 0:
                 emb_input = temporal_input[node_idx,:t+1,:]
                 # print(emb_input.size())
+                start = time.time()
                 out = self.temporal_attn(emb_input)[:,-1,:]
+                self.args['att_time'] += time.time() - start
                 RNN_emb_list[t][node_idx] = out[:,None,:]
                 temporal_output.append(out)
         final_out = torch.cat(RNN_emb_list, 1)
